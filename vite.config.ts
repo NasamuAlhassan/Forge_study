@@ -1,0 +1,19 @@
+// @lovable.dev/vite-tanstack-config removed.
+// Manually wiring up the same plugins it bundled: TanStack Start, React, Tailwind, tsconfigPaths.
+import { defineConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+export default defineConfig({
+  plugins: [
+    tanstackStart({ server: { entry: "server" } }),
+    react(),
+    tailwindcss(),
+    tsconfigPaths(),
+  ],
+  // Uncomment to deploy on Cloudflare Workers:
+  // import cloudflare from "@cloudflare/vite-plugin"
+  // plugins: [..., cloudflare()]
+});
