@@ -198,6 +198,7 @@ export async function persistStudySessions(
     subject: string;
     focus: string;
     intensity: string;
+    category?: string;
   }>,
   subjects: Subject[],
 ) {
@@ -208,16 +209,21 @@ export async function persistStudySessions(
         name.toLowerCase().includes(s.name.toLowerCase()),
     );
 
-  const rows = sessions.map((s) => ({
-    user_id: userId,
-    subject_id: findSub(s.subject)?.id ?? null,
-    title: `${s.subject}: ${s.focus}`,
-    type: "study",
-    day_of_week: dayToIndex(s.day),
-    start_minute: timeToMinutes(s.start),
-    end_minute: timeToMinutes(s.end),
-    notes: s.intensity,
-  }));
+  const rows = sessions.map((s) => {
+    const isStudy = !s.category || s.category === "study";
+    const sub = isStudy ? findSub(s.subject) : null;
+    return {
+      user_id: userId,
+      subject_id: sub?.id ?? null,
+      // Study blocks: "Subject: focus". Life blocks: just the block title.
+      title: isStudy ? `${s.subject}: ${s.focus}` : s.subject,
+      type: isStudy ? "study" : "break",
+      day_of_week: dayToIndex(s.day),
+      start_minute: timeToMinutes(s.start),
+      end_minute: timeToMinutes(s.end),
+      notes: s.intensity,
+    };
+  });
 
   const { error } = await supabase.from("events").insert(rows);
   if (error) throw error;

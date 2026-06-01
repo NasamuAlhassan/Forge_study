@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SessionEditDialog, type EditableSession } from "@/components/dashboard/SessionEditDialog";
 import { transcribeAudio } from "@/lib/forge-ai";
 
+import type { LifeCategory } from "@/services/ai";
+
 type Session = {
   day: string;
   start: string;
@@ -19,12 +21,25 @@ type Session = {
   focus: string;
   intensity: "light" | "moderate" | "deep";
   venue: string;
+  category: LifeCategory;
 };
 
+// Study sessions: coloured by intensity
 const intensityConfig: Record<Session["intensity"], { from: string; to: string; label: string }> = {
   light:    { from: "oklch(0.60 0.18 160 / 0.22)", to: "oklch(0.65 0.17 175 / 0.1)",  label: "oklch(0.72 0.15 160)" },
   moderate: { from: "oklch(0.55 0.22 250 / 0.22)", to: "oklch(0.62 0.21 285 / 0.1)",  label: "oklch(0.74 0.19 295)" },
   deep:     { from: "oklch(0.62 0.21 285 / 0.25)", to: "oklch(0.55 0.23 250 / 0.1)",  label: "oklch(0.74 0.19 295)" },
+};
+
+// Life blocks: coloured by category
+const categoryConfig: Record<Exclude<LifeCategory, "study">, { from: string; to: string; accent: string; tag: string }> = {
+  sleep:    { from: "oklch(0.20 0.05 265 / 0.5)",  to: "oklch(0.16 0.03 275 / 0.18)", accent: "oklch(0.62 0.10 265)", tag: "Sleep" },
+  meal:     { from: "oklch(0.60 0.19 55 / 0.24)",  to: "oklch(0.64 0.16 44 / 0.09)",  accent: "oklch(0.72 0.18 55)",  tag: "Meal" },
+  nap:      { from: "oklch(0.48 0.13 280 / 0.24)", to: "oklch(0.44 0.10 270 / 0.09)", accent: "oklch(0.68 0.12 280)", tag: "Rest" },
+  exercise: { from: "oklch(0.56 0.21 142 / 0.24)", to: "oklch(0.60 0.18 158 / 0.09)", accent: "oklch(0.70 0.19 144)", tag: "Exercise" },
+  social:   { from: "oklch(0.60 0.20 20 / 0.24)",  to: "oklch(0.64 0.17 32 / 0.09)",  accent: "oklch(0.72 0.19 22)",  tag: "Social" },
+  leisure:  { from: "oklch(0.56 0.16 196 / 0.24)", to: "oklch(0.60 0.13 208 / 0.09)", accent: "oklch(0.70 0.15 198)", tag: "Leisure" },
+  personal: { from: "oklch(0.50 0.09 242 / 0.24)", to: "oklch(0.46 0.07 252 / 0.09)", accent: "oklch(0.65 0.09 244)", tag: "Personal" },
 };
 
 export function StudyPlanGenerator() {
@@ -118,7 +133,7 @@ export function StudyPlanGenerator() {
         : context;
       const res = await generate({ data: { context: fullContext } });
       setRationale(res.rationale);
-      setSessions(res.sessions.map((s) => ({ ...s, venue: "" })));
+      setSessions(res.sessions.map((s) => ({ ...s, venue: "", category: s.category ?? "study" })));
       toast.success("Your study plan is ready");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Generation failed");
@@ -174,10 +189,10 @@ export function StudyPlanGenerator() {
               className="text-[14px] font-semibold leading-tight"
               style={{ letterSpacing: "-0.02em" }}
             >
-              Tell Forge about your week
+              Tell Forge about your life
             </h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Courses, free time, sleep, exams — anything that matters.
+              Sleep, meals, gym, social life, study goals — the full picture.
             </p>
           </div>
 
@@ -236,7 +251,7 @@ export function StudyPlanGenerator() {
           value={context}
           onChange={(e) => setContext(e.target.value)}
           rows={12}
-          placeholder={"Describe your week — e.g.\n\nCourses: Calculus II (hard), Data Structures (medium).\nFree periods: Mon 10–13, Wed 14–17.\nSleep: 11pm–7am. Best focus: morning.\nGoal: 20h study/week. Exam in 3 weeks: Calculus II."}
+          placeholder={"Describe your week — e.g.\n\nCourses: Calculus II (hard), Data Structures (medium).\nSleep: 11pm–7am. Wake up: 6:30am. Best focus: mornings.\nGoal: 20h study/week. Exam in 3 weeks: Calculus II.\nLife: gym Mon/Wed/Fri at 6pm, lunch with friends on Wed,\n  usually cook dinner, like to scroll in the evening.\n  Need downtime — don't pack every hour."}
           className="mt-4 w-full rounded-xl p-3 text-[13px] outline-none resize-none placeholder:text-muted-foreground/40 transition-all duration-200 relative"
           style={{
             background: "oklch(1 0 0 / 0.04)",
@@ -358,13 +373,19 @@ export function StudyPlanGenerator() {
             ))}
 
           {sessions.map((s, i) => {
-            const cfg = intensityConfig[s.intensity];
+            const isStudy = !s.category || s.category === "study";
+            const studyCfg = isStudy ? intensityConfig[s.intensity] : null;
+            const lifeCfg = !isStudy ? categoryConfig[s.category as Exclude<LifeCategory, "study">] : null;
+            const fromColor = studyCfg?.from ?? lifeCfg?.from ?? intensityConfig.moderate.from;
+            const toColor   = studyCfg?.to   ?? lifeCfg?.to   ?? intensityConfig.moderate.to;
+            const accentColor = studyCfg?.label ?? lifeCfg?.accent ?? intensityConfig.moderate.label;
+
             return (
               <div
                 key={i}
                 className="group relative p-3 rounded-xl overflow-hidden"
                 style={{
-                  background: `linear-gradient(135deg, ${cfg.from}, ${cfg.to})`,
+                  background: `linear-gradient(135deg, ${fromColor}, ${toColor})`,
                   border: "1px solid oklch(1 0 0 / 0.08)",
                   boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
                 }}
@@ -375,7 +396,7 @@ export function StudyPlanGenerator() {
                 <div className="flex items-center justify-between text-[11px] relative">
                   <span
                     className="font-bold uppercase tracking-wider"
-                    style={{ letterSpacing: "0.06em", color: cfg.label }}
+                    style={{ letterSpacing: "0.06em", color: accentColor }}
                   >
                     {s.day}
                   </span>
@@ -390,32 +411,28 @@ export function StudyPlanGenerator() {
                 <div className="text-[12px] text-muted-foreground relative">{s.focus}</div>
                 <div
                   className="mt-1 text-[10px] uppercase tracking-wider relative"
-                  style={{ color: cfg.label, letterSpacing: "0.07em", opacity: 0.7 }}
+                  style={{ color: accentColor, letterSpacing: "0.07em", opacity: 0.7 }}
                 >
-                  {s.intensity} focus
+                  {isStudy ? `${s.intensity} focus` : (lifeCfg?.tag ?? s.category)}
                 </div>
 
                 {/* Hover actions */}
                 <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                  <button
-                    onClick={() => setEditIdx(i)}
-                    className="h-7 w-7 grid place-items-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
-                    style={{
-                      background: "oklch(0 0 0 / 0.3)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                    aria-label="Edit session"
-                  >
-                    <Pencil className="h-3 w-3 text-white/80" />
-                  </button>
+                  {isStudy && (
+                    <button
+                      onClick={() => setEditIdx(i)}
+                      className="h-7 w-7 grid place-items-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
+                      style={{ background: "oklch(0 0 0 / 0.3)", backdropFilter: "blur(8px)" }}
+                      aria-label="Edit session"
+                    >
+                      <Pencil className="h-3 w-3 text-white/80" />
+                    </button>
+                  )}
                   <button
                     onClick={() => setSessions((arr) => arr.filter((_, idx) => idx !== i))}
                     className="h-7 w-7 grid place-items-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
-                    style={{
-                      background: "oklch(0 0 0 / 0.3)",
-                      backdropFilter: "blur(8px)",
-                    }}
-                    aria-label="Remove session"
+                    style={{ background: "oklch(0 0 0 / 0.3)", backdropFilter: "blur(8px)" }}
+                    aria-label="Remove block"
                   >
                     <Trash2 className="h-3 w-3 text-rose-400" />
                   </button>
@@ -432,7 +449,8 @@ export function StudyPlanGenerator() {
         title="Edit study session"
         onClose={() => setEditIdx(null)}
         onSave={(updated: EditableSession) => {
-          setSessions((arr) => arr.map((s, idx) => (idx === editIdx ? updated : s)));
+          // Spread original first so category (and any other future fields) survive the edit
+          setSessions((arr) => arr.map((s, idx) => (idx === editIdx ? { ...s, ...updated } : s)));
           toast.success("Session updated");
         }}
         onDelete={() => {
