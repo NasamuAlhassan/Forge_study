@@ -8,12 +8,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
-    tanstackStart({ server: { entry: "server" } }),
+    tanstackStart({
+      server: {
+        preset: "vercel",
+      },
+    }),
     react(),
     tailwindcss(),
     tsconfigPaths(),
   ],
-  // Uncomment to deploy on Cloudflare Workers:
-  // import cloudflare from "@cloudflare/vite-plugin"
-  // plugins: [..., cloudflare()]
 });
