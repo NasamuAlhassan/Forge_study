@@ -29,21 +29,13 @@ const levelIcon: Record<NotifLevel, React.ReactNode> = {
   exam:     <Swords className="h-3.5 w-3.5" />,
 };
 
-const DROPDOWN_STYLE: React.CSSProperties = {
-  background: "oklch(0.19 0.04 275 / 0.94)",
-  backdropFilter: "blur(40px) saturate(200%)",
-  WebkitBackdropFilter: "blur(40px) saturate(200%)",
-  border: "1px solid oklch(1 0 0 / 0.1)",
-  boxShadow:
-    "0 1px 0 oklch(1 0 0 / 0.13) inset, 0 24px 64px -16px oklch(0.04 0.02 275 / 0.8)",
-  borderRadius: "16px",
-};
-
 export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
   const { user, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const { notifications, urgentCount } = useNotifications();
+
+  const isDark = theme === "dark";
 
   const initial = (
     user?.user_metadata?.full_name ??
@@ -55,11 +47,28 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     .charAt(0)
     .toUpperCase();
 
+  const dropdownStyle = {
+    background: isDark
+      ? "oklch(0.19 0.04 275 / 0.96)"
+      : "oklch(0.99 0.005 280 / 0.97)",
+    backdropFilter: "blur(40px) saturate(200%)",
+    WebkitBackdropFilter: "blur(40px) saturate(200%)",
+    border: isDark
+      ? "1px solid oklch(1 0 0 / 0.1)"
+      : "1px solid oklch(0 0 0 / 0.08)",
+    boxShadow: isDark
+      ? "0 1px 0 oklch(1 0 0 / 0.13) inset, 0 24px 64px -16px oklch(0.04 0.02 275 / 0.8)"
+      : "0 1px 0 oklch(1 1 0 / 0.7) inset, 0 24px 64px -16px oklch(0 0 0 / 0.14)",
+    borderRadius: "16px",
+  };
+
   const iconBtn = [
     "grid place-items-center rounded-xl",
     "h-9 w-9 shrink-0",
     "text-muted-foreground hover:text-foreground",
-    "hover:bg-white/[0.08] active:bg-white/[0.11]",
+    isDark
+      ? "hover:bg-white/[0.08] active:bg-white/[0.11]"
+      : "hover:bg-black/[0.05] active:bg-black/[0.08]",
     "active:scale-[0.93]",
     "transition-all duration-150",
   ].join(" ");
@@ -69,11 +78,17 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       className="sticky top-0 z-30 pl-12 lg:pl-6 pr-4 sm:pr-5 flex items-center justify-between gap-4"
       style={{
         height: "60px",
-        background: "oklch(0.14 0.03 275 / 0.84)",
-        backdropFilter: "blur(32px) saturate(180%) brightness(1.04)",
-        WebkitBackdropFilter: "blur(32px) saturate(180%) brightness(1.04)",
-        borderBottom: "1px solid oklch(1 0 0 / 0.07)",
-        boxShadow: "0 1px 0 oklch(1 0 0 / 0.09) inset",
+        background: isDark
+          ? "oklch(0.13 0.03 275 / 0.92)"
+          : "oklch(0.98 0.005 280 / 0.92)",
+        backdropFilter: "blur(32px) saturate(180%)",
+        WebkitBackdropFilter: "blur(32px) saturate(180%)",
+        borderBottom: isDark
+          ? "1px solid oklch(1 0 0 / 0.07)"
+          : "1px solid oklch(0 0 0 / 0.07)",
+        boxShadow: isDark
+          ? "0 1px 0 oklch(1 0 0 / 0.09) inset"
+          : "0 1px 0 oklch(1 1 0 / 0.8) inset, 0 2px 12px oklch(0 0 0 / 0.05)",
       }}
     >
       {/* Page title */}
@@ -101,11 +116,15 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
             "rounded-xl text-sm text-muted-foreground",
             "w-44 lg:w-60",
             "transition-all duration-200",
-            "focus-within:ring-1 focus-within:ring-primary/25",
+            isDark
+              ? "focus-within:ring-1 focus-within:ring-primary/25"
+              : "focus-within:ring-2 focus-within:ring-primary/20",
           ].join(" ")}
           style={{
-            background: "oklch(1 0 0 / 0.04)",
-            border: "1px solid oklch(1 0 0 / 0.07)",
+            background: isDark ? "oklch(1 0 0 / 0.04)" : "oklch(0 0 0 / 0.04)",
+            border: isDark
+              ? "1px solid oklch(1 0 0 / 0.07)"
+              : "1px solid oklch(0 0 0 / 0.09)",
           }}
         >
           <Search className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
@@ -119,10 +138,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
         {/* Theme toggle */}
         <button
           onClick={toggle}
-          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           className={iconBtn}
         >
-          {theme === "dark"
+          {isDark
             ? <Sun  className="h-[15px] w-[15px]" aria-hidden="true" />
             : <Moon className="h-[15px] w-[15px]" aria-hidden="true" />}
         </button>
@@ -143,10 +162,14 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 border-0 p-0 overflow-hidden" style={DROPDOWN_STYLE}>
+          <DropdownMenuContent align="end" className="w-80 border-0 p-0 overflow-hidden" style={dropdownStyle}>
             <div
               className="px-4 py-3"
-              style={{ borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}
+              style={{
+                borderBottom: isDark
+                  ? "1px solid oklch(1 0 0 / 0.06)"
+                  : "1px solid oklch(0 0 0 / 0.06)",
+              }}
             >
               <p className="text-[13px] font-semibold">Notifications</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -166,7 +189,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
                 {notifications.map((n) => (
                   <div
                     key={n.id}
-                    className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors duration-150"
+                    className={cn(
+                      "flex items-start gap-3 px-4 py-3 transition-colors duration-150",
+                      isDark ? "hover:bg-white/[0.04]" : "hover:bg-black/[0.03]"
+                    )}
                   >
                     <div className={cn("mt-0.5 shrink-0 opacity-75", levelStyle[n.level])}>
                       {levelIcon[n.level]}
@@ -182,7 +208,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Ask Forge — sm+ text, xs icon */}
+        {/* Ask Forge — pill on sm+, icon-only on xs */}
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("forge:open"))}
           aria-label="Ask Forge AI"
@@ -190,15 +216,18 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
             "hidden sm:flex items-center gap-1.5",
             "h-9 px-3.5 rounded-xl",
             "text-[13px] font-semibold text-white",
-            "bg-gradient-primary shadow-glow",
-            "hover:brightness-110 hover:shadow-[0_0_20px_-4px_oklch(0.62_0.21_285/0.55)]",
-            "active:scale-[0.96] active:brightness-95",
+            "hover:brightness-110 active:scale-[0.96] active:brightness-95",
             "transition-all duration-150 relative overflow-hidden",
           ].join(" ")}
+          style={{
+            background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
+            boxShadow: "0 4px 16px oklch(0.62 0.21 285 / 0.3), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+            letterSpacing: "-0.01em",
+          }}
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Ask Forge</span>
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/16 to-transparent pointer-events-none" />
         </button>
 
         <button
@@ -207,15 +236,19 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           className={[
             "sm:hidden grid place-items-center",
             "h-9 w-9 rounded-xl shrink-0",
-            "text-white bg-gradient-primary shadow-glow",
+            "text-white",
             "active:scale-[0.93] transition-all duration-150 relative overflow-hidden",
           ].join(" ")}
+          style={{
+            background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
+            boxShadow: "0 4px 16px oklch(0.62 0.21 285 / 0.3), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+          }}
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/16 to-transparent pointer-events-none" />
         </button>
 
-        {/* Avatar */}
+        {/* Avatar + user menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -233,11 +266,19 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
               <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 border-0" style={{ ...DROPDOWN_STYLE, borderRadius: "14px" }}>
+          <DropdownMenuContent
+            align="end"
+            className="w-56 border-0"
+            style={{ ...dropdownStyle, borderRadius: "14px" }}
+          >
             <DropdownMenuLabel className="truncate text-[11px] text-muted-foreground font-normal">
               {user?.email}
             </DropdownMenuLabel>
-            <DropdownMenuSeparator style={{ background: "oklch(1 0 0 / 0.07)" }} />
+            <DropdownMenuSeparator
+              style={{
+                background: isDark ? "oklch(1 0 0 / 0.07)" : "oklch(0 0 0 / 0.07)",
+              }}
+            />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive gap-2 text-[13px]"
               onClick={async () => {

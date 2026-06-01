@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { useMemo, useState } from "react";
 import { useSchedule } from "@/hooks/use-schedule";
 
@@ -205,14 +204,21 @@ export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
       {/* Mobile hamburger + drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="lg:hidden fixed top-3 left-3 z-40 rounded-xl glass h-10 w-10"
+          <button
+            type="button"
             aria-label="Open navigation"
+            className="lg:hidden fixed top-3 left-3 z-40 h-10 w-10 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:brightness-110 active:scale-[0.93] transition-all duration-150 relative overflow-hidden"
+            style={{
+              background: "oklch(0.16 0.04 275 / 0.88)",
+              backdropFilter: "blur(20px) saturate(160%)",
+              WebkitBackdropFilter: "blur(20px) saturate(160%)",
+              border: "1px solid oklch(1 0 0 / 0.09)",
+              boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 4px 16px oklch(0 0 0 / 0.25)",
+            }}
           >
-            <Menu className="h-4.5 w-4.5" />
-          </Button>
+            <Menu className="h-4 w-4 relative z-10" />
+            <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+          </button>
         </SheetTrigger>
         <SheetContent
           side="left"

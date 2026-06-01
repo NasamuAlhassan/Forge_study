@@ -1,8 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Upload, Loader2, FileImage, CheckCircle2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, Loader2, FileImage, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 import { extractTimetable } from "@/lib/ai.functions";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,6 +15,13 @@ type Entry = {
   day: string;
   start: string;
   end: string;
+};
+
+const DAY_ABBR: Record<string, string> = {
+  Monday: "Mo", Tuesday: "Tu", Wednesday: "We", Thursday: "Th",
+  Friday: "Fr", Saturday: "Sa", Sunday: "Su",
+  Mon: "Mo", Tue: "Tu", Wed: "We", Thu: "Th",
+  Fri: "Fr", Sat: "Sa", Sun: "Su",
 };
 
 export function TimetableUploader() {
@@ -66,16 +72,20 @@ export function TimetableUploader() {
       };
       reader.readAsDataURL(file);
     },
-    [extract]
+    [extract],
   );
+
+  const reset = () => {
+    setPreview(null);
+    setEntries([]);
+    setStatus("idle");
+    setError(null);
+  };
 
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => {
           e.preventDefault();
@@ -83,25 +93,53 @@ export function TimetableUploader() {
           const f = e.dataTransfer.files?.[0];
           if (f) handleFile(f);
         }}
-        className={`ring-gradient glass rounded-2xl p-8 text-center transition-all ${
-          dragOver ? "scale-[1.01] shadow-glow" : ""
-        }`}
+        className="ring-gradient glass hover-lift rounded-2xl p-8 text-center relative overflow-hidden transition-all duration-300"
+        style={dragOver ? {
+          boxShadow: "0 0 48px -8px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.14) inset",
+          transform: "scale(1.01)",
+        } : undefined}
       >
+        <div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)" }}
+        />
+
         {!preview ? (
-          <>
-            <div className="mx-auto h-16 w-16 rounded-2xl bg-gradient-primary grid place-items-center shadow-glow animate-float">
-              <Upload className="h-7 w-7 text-primary-foreground" />
+          <div className="flex flex-col items-center relative">
+            <div
+              className="mx-auto h-16 w-16 rounded-2xl grid place-items-center relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+                boxShadow: "0 0 32px -6px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.22) inset",
+                animation: "float 3s ease-in-out infinite",
+              }}
+            >
+              <Upload className="h-7 w-7 text-white relative z-10" />
+              <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
             </div>
-            <h3 className="mt-5 text-lg font-semibold">Drop your timetable</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              PNG, JPG, or screenshot. Forge will read every class in seconds.
+
+            <h3 className="mt-5 text-[17px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
+              Drop your timetable
+            </h3>
+            <p className="mt-1.5 text-[13px] text-muted-foreground max-w-[260px] leading-relaxed">
+              PNG, JPG, or screenshot. Forge reads every class in seconds.
             </p>
-            <Button
-              className="mt-6 bg-gradient-primary hover:opacity-90 shadow-glow"
+
+            <button
+              className="mt-6 h-10 px-5 rounded-xl flex items-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+                boxShadow: "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+              }}
               onClick={() => inputRef.current?.click()}
             >
-              <FileImage className="h-4 w-4 mr-1" /> Choose file
-            </Button>
+              <FileImage className="h-4 w-4" />
+              Choose file
+              <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+            </button>
+
+            <p className="mt-3 text-[11px] text-muted-foreground/40">or drag and drop here</p>
+
             <input
               ref={inputRef}
               type="file"
@@ -112,81 +150,143 @@ export function TimetableUploader() {
                 if (f) handleFile(f);
               }}
             />
-          </>
+          </div>
         ) : (
-          <div className="text-left">
-            <img src={preview} alt="Uploaded timetable" className="rounded-xl w-full max-h-80 object-contain bg-black/20" />
-            <div className="mt-4 flex items-center gap-2 text-sm">
+          <div className="text-left relative">
+            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 0.1)" }}>
+              <img
+                src={preview}
+                alt="Uploaded timetable"
+                className="w-full max-h-80 object-contain"
+                style={{ background: "oklch(0 0 0 / 0.2)" }}
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-[13px] px-1">
               {status === "extracting" && (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-primary-glow" />
-                  <span className="text-muted-foreground">AI is reading your timetable…</span>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: "oklch(0.74 0.19 295)" }} />
+                  <span className="text-muted-foreground">AI is reading your timetable...</span>
                 </>
               )}
               {status === "done" && (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Extracted {entries.length} entries</span>
+                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "oklch(0.72 0.17 160)" }} />
+                  <span>Extracted {entries.length} {entries.length === 1 ? "entry" : "entries"}</span>
                 </>
               )}
               {status === "error" && (
                 <>
-                  <AlertCircle className="h-4 w-4 text-rose-400" />
-                  <span className="text-rose-400">{error}</span>
+                  <AlertCircle className="h-4 w-4 shrink-0" style={{ color: "oklch(0.65 0.24 25)" }} />
+                  <span style={{ color: "oklch(0.65 0.24 25)" }}>{error}</span>
                 </>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-auto"
-                onClick={() => {
-                  setPreview(null);
-                  setEntries([]);
-                  setStatus("idle");
-                }}
+              <button
+                onClick={reset}
+                className="ml-auto flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
+                style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
               >
+                <RotateCcw className="h-3 w-3" />
                 Reset
-              </Button>
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      <div className="ring-gradient glass rounded-2xl p-5">
-        <h3 className="text-base font-semibold">Extracted classes</h3>
-        <p className="text-xs text-muted-foreground">Review and confirm before adding to your calendar.</p>
-        <div className="mt-4 space-y-2 max-h-[28rem] overflow-y-auto pr-1">
+      <div className="ring-gradient glass hover-lift rounded-2xl p-5 relative overflow-hidden">
+        <div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)" }}
+        />
+        <div className="relative">
+          <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>Extracted classes</h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Review and confirm before adding to your calendar.</p>
+        </div>
+
+        <div className="mt-4 space-y-2 max-h-[28rem] overflow-y-auto pr-1 relative">
           {entries.length === 0 && status !== "extracting" && (
-            <div className="text-sm text-muted-foreground py-12 text-center border border-dashed border-white/10 rounded-xl">
+            <div
+              className="text-[13px] text-muted-foreground/50 py-16 text-center rounded-2xl"
+              style={{ border: "1px dashed oklch(1 0 0 / 0.09)" }}
+            >
               Upload a timetable to see extracted entries here.
             </div>
           )}
           {status === "extracting" &&
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-14 rounded-xl bg-white/5 animate-pulse" />
+              <div
+                key={i}
+                className="h-[60px] rounded-xl animate-pulse"
+                style={{ background: "oklch(1 0 0 / 0.04)", animationDelay: `${i * 80}ms` }}
+              />
             ))}
           {entries.map((e, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.04]">
-              <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center text-xs font-semibold text-primary-foreground">
-                {e.day.slice(0, 2)}
+            <div
+              key={i}
+              className="flex items-center gap-3 p-3 rounded-xl relative overflow-hidden"
+              style={{
+                background: "oklch(1 0 0 / 0.04)",
+                border: "1px solid oklch(1 0 0 / 0.07)",
+                boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
+              }}
+            >
+              <div
+                className="h-9 w-9 rounded-xl grid place-items-center text-[12px] font-bold text-white relative overflow-hidden shrink-0"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                {DAY_ABBR[e.day] ?? e.day.slice(0, 2)}
+                <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">
-                  {e.course} {e.code && <span className="text-muted-foreground">· {e.code}</span>}
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-medium truncate" style={{ letterSpacing: "-0.01em" }}>
+                    {e.course}
+                  </span>
+                  {e.code && (
+                    <span
+                      className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0"
+                      style={{
+                        background: "oklch(0.55 0.22 250 / 0.15)",
+                        color: "oklch(0.74 0.19 295)",
+                        border: "1px solid oklch(0.55 0.22 250 / 0.2)",
+                      }}
+                    >
+                      {e.code}
+                    </span>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {e.start}–{e.end}
-                  {e.venue ? ` · ${e.venue}` : ""}
-                  {e.lecturer ? ` · ${e.lecturer}` : ""}
+                <div className="text-[11px] text-muted-foreground/70 mt-0.5 truncate">
+                  {e.start}
+                  {e.end ? ` - ${e.end}` : ""}
+                  {e.venue ? ` - ${e.venue}` : ""}
+                  {e.lecturer ? ` - ${e.lecturer}` : ""}
                 </div>
               </div>
             </div>
           ))}
         </div>
+
         {entries.length > 0 && (
-          <Button onClick={save} disabled={status === "saving"} className="mt-4 w-full bg-gradient-primary hover:opacity-90 shadow-glow">
-            {status === "saving" ? (<><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Saving…</>) : "Add to my calendar"}
-          </Button>
+          <button
+            onClick={save}
+            disabled={status === "saving"}
+            className="mt-4 w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+              boxShadow: status === "saving" ? "none" : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+            }}
+          >
+            {status === "saving" ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+            ) : (
+              `Add ${entries.length} ${entries.length === 1 ? "class" : "classes"} to calendar`
+            )}
+            <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+          </button>
         )}
       </div>
     </div>

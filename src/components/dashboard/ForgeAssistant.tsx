@@ -126,10 +126,16 @@ export function ForgeAssistant() {
   const [loading, setLoading] = useState(false);
   const [pendingAction, setPendingAction] = useState<ForgeAction | null>(null);
 
-  // Draggable position (null = not yet initialised)
+  // Draggable position for the panel (null = not yet initialised)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
   const dragOffset = useRef({ dx: 0, dy: 0 });
+
+  // Draggable position for the bubble button
+  const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
+  const bubbleDragging = useRef(false);
+  const bubbleOrigin = useRef({ px: 0, py: 0, bx: 0, by: 0 });
+  const bubbleDidDrag = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -266,6 +272,29 @@ export function ForgeAssistant() {
     };
   }, []);
 
+  // ── Drag (bubble button) ─────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const BUBBLE = 56;
+    const onMove = (e: PointerEvent) => {
+      if (!bubbleDragging.current) return;
+      const dx = e.clientX - bubbleOrigin.current.px;
+      const dy = e.clientY - bubbleOrigin.current.py;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) bubbleDidDrag.current = true;
+      setBubblePos({
+        x: Math.max(8, Math.min(window.innerWidth - BUBBLE - 8, bubbleOrigin.current.bx + dx)),
+        y: Math.max(8, Math.min(window.innerHeight - BUBBLE - 8, bubbleOrigin.current.by + dy)),
+      });
+    };
+    const onUp = () => { bubbleDragging.current = false; };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
   // ── Chat logic ───────────────────────────────────────────────────────────────
 
   const scheduleContext = useMemo(() => formatSchedule(events, subjects), [events, subjects]);
@@ -391,19 +420,34 @@ export function ForgeAssistant() {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-[18px] grid place-items-center overflow-hidden relative hover:brightness-110 active:scale-[0.92] transition-all duration-200"
+        onPointerDown={(e) => {
+          bubbleDidDrag.current = false;
+          const r = e.currentTarget.getBoundingClientRect();
+          bubbleOrigin.current = { px: e.clientX, py: e.clientY, bx: r.left, by: r.top };
+          bubbleDragging.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onClick={() => {
+          if (!bubbleDidDrag.current) setOpen(true);
+        }}
+        className="z-50 h-14 w-14 rounded-[18px] grid place-items-center overflow-hidden hover:brightness-110 active:scale-[0.92] transition-all duration-200"
         style={{
+          position: "fixed",
+          ...(bubblePos
+            ? { left: bubblePos.x, top: bubblePos.y }
+            : { bottom: 24, right: 24 }),
+          cursor: "grab",
           background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
           boxShadow:
             "0 0 48px -8px oklch(0.62 0.21 285 / 0.75), 0 8px 24px -4px oklch(0.06 0.02 275 / 0.45), 0 1px 0 oklch(1 0 0 / 0.22) inset",
           border: "1px solid oklch(1 0 0 / 0.15)",
           transition: "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, filter 150ms ease",
+          touchAction: "none",
+          userSelect: "none",
         }}
         aria-label="Open Forge AI assistant"
       >
         <Sparkles className="h-5 w-5 text-white relative z-10" aria-hidden="true" />
-        {/* Specular sheen */}
         <span className="absolute inset-0 bg-gradient-to-br from-white/22 to-transparent pointer-events-none" />
       </button>
     );
