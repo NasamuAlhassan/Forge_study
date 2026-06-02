@@ -1,12 +1,24 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { X, Play, Pause, RotateCcw, Coffee, Brain, ChevronRight } from "lucide-react";
+import { X, Play, Pause, RotateCcw, Coffee, Brain, ChevronRight, Settings2, Plus, Minus } from "lucide-react";
 import { useSchedule } from "@/hooks/use-schedule";
 import { cn } from "@/lib/utils";
 
-const WORK_MINS       = 25;
-const BREAK_MINS      = 5;
-const LONG_BREAK_MINS = 15;
-const LONG_BREAK_AFTER = 4;
+const DEFAULT_WORK_MINS        = 25;
+const DEFAULT_BREAK_MINS       = 5;
+const DEFAULT_LONG_BREAK_MINS  = 15;
+const LONG_BREAK_AFTER         = 4;
+
+const STORAGE_KEY = "forge-focus-settings";
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as { workMins: number; breakMins: number; longBreakMins: number };
+    if (s.workMins && s.breakMins && s.longBreakMins) return s;
+  } catch { /* ignore */ }
+  return null;
+}
 
 type Phase = "work" | "break" | "long-break";
 
@@ -56,25 +68,94 @@ const PHASE_CONFIG = {
   },
 } as const;
 
+/** +/- stepper for one duration field */
+function DurationStepper({
+  label,
+  value,
+  min = 1,
+  max = 90,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min?: number;
+  max?: number;
+  onChange: (v: number) => void;
+}) {
+  const btnCls = [
+    "h-7 w-7 rounded-lg grid place-items-center shrink-0",
+    "text-muted-foreground hover:text-foreground",
+    "hover:bg-white/[0.1] active:scale-[0.9]",
+    "transition-all duration-100 disabled:opacity-30 disabled:pointer-events-none",
+  ].join(" ");
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[10px] uppercase tracking-widest text-muted-foreground" style={{ letterSpacing: "0.1em" }}>
+        {label}
+      </span>
+      <div
+        className="flex items-center gap-1"
+        style={{
+          background: "oklch(1 0 0 / 0.05)",
+          border: "1px solid oklch(1 0 0 / 0.1)",
+          borderRadius: "12px",
+          padding: "3px",
+        }}
+      >
+        <button className={btnCls} onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label={`Decrease ${label}`}>
+          <Minus className="h-3 w-3" />
+        </button>
+        <span className="w-8 text-center text-sm font-semibold tabular-nums" style={{ letterSpacing: "-0.01em" }}>
+          {value}
+        </span>
+        <button className={btnCls} onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={`Increase ${label}`}>
+          <Plus className="h-3 w-3" />
+        </button>
+      </div>
+      <span className="text-[9px] text-muted-foreground/40">min</span>
+    </div>
+  );
+}
+
 interface FocusModeProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function FocusMode({ open, onClose }: FocusModeProps) {
-  const [phase, setPhase]               = useState<Phase>("work");
-  const [secondsLeft, setSecondsLeft]   = useState(WORK_MINS * 60);
-  const [running, setRunning]           = useState(false);
-  const [pomodoroCount, setPomodoroCount] = useState(0);
+  // --- settings ---
+  const saved = loadSettings();
+  const [workMins,      setWorkMins]      = useState(saved?.workMins      ?? DEFAULT_WORK_MINS);
+  const [breakMins,     setBreakMins]     = useState(saved?.breakMins     ?? DEFAULT_BREAK_MINS);
+  const [longBreakMins, setLongBreakMins] = useState(saved?.longBreakMins ?? DEFAULT_LONG_BREAK_MINS);
+  const [showSettings,  setShowSettings]  = useState(false);
+
+  // --- timer state ---
+  const [phase,          setPhase]          = useState<Phase>("work");
+  const [secondsLeft,    setSecondsLeft]    = useState(workMins * 60);
+  const [running,        setRunning]        = useState(false);
+  const [pomodoroCount,  setPomodoroCount]  = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { events, subjects } = useSchedule();
 
+  // Persist settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ workMins, breakMins, longBreakMins }));
+  }, [workMins, breakMins, longBreakMins]);
+
   const phaseDuration = useCallback((p: Phase) => {
-    if (p === "work") return WORK_MINS * 60;
-    if (p === "long-break") return LONG_BREAK_MINS * 60;
-    return BREAK_MINS * 60;
-  }, []);
+    if (p === "work")       return workMins * 60;
+    if (p === "long-break") return longBreakMins * 60;
+    return breakMins * 60;
+  }, [workMins, breakMins, longBreakMins]);
+
+  // When a setting changes while the timer is idle on "work", sync secondsLeft
+  const isWorkPhaseIdle = phase === "work" && !running;
+  useEffect(() => {
+    if (isWorkPhaseIdle) setSecondsLeft(workMins * 60);
+  }, [workMins, isWorkPhaseIdle]);
 
   const nextEvent = (() => {
     const now      = new Date();
@@ -116,7 +197,7 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
   const reset = () => {
     setRunning(false);
     setPhase("work");
-    setSecondsLeft(WORK_MINS * 60);
+    setSecondsLeft(workMins * 60);
     setPomodoroCount(0);
   };
 
@@ -132,6 +213,20 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
       setPhase("work");
       setSecondsLeft(phaseDuration("work"));
     }
+  };
+
+  // Apply a settings change: pause + reset timer to new duration
+  const applyWorkMins = (v: number) => {
+    setWorkMins(v);
+    if (phase === "work") { setRunning(false); setSecondsLeft(v * 60); }
+  };
+  const applyBreakMins = (v: number) => {
+    setBreakMins(v);
+    if (phase === "break") { setRunning(false); setSecondsLeft(v * 60); }
+  };
+  const applyLongBreakMins = (v: number) => {
+    setLongBreakMins(v);
+    if (phase === "long-break") { setRunning(false); setSecondsLeft(v * 60); }
   };
 
   const cfg     = PHASE_CONFIG[phase];
@@ -192,6 +287,51 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         <X className="h-4 w-4" />
       </button>
 
+      {/* Settings button */}
+      <button
+        onClick={() => setShowSettings((s) => !s)}
+        className={[
+          "absolute top-5 left-5 z-10",
+          "h-10 w-10 rounded-2xl grid place-items-center",
+          "hover:bg-white/[0.09] active:scale-[0.93]",
+          "transition-all duration-150",
+          showSettings ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+        ].join(" ")}
+        style={{
+          background: showSettings ? "oklch(1 0 0 / 0.1)" : "oklch(1 0 0 / 0.05)",
+          border: `1px solid ${showSettings ? "oklch(1 0 0 / 0.15)" : "oklch(1 0 0 / 0.08)"}`,
+          boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+        }}
+        aria-label="Timer settings"
+        aria-expanded={showSettings}
+      >
+        <Settings2 className="h-4 w-4" />
+      </button>
+
+      {/* ── Settings panel ── */}
+      {showSettings && (
+        <div
+          className="absolute top-[72px] left-5 z-20 flex flex-col gap-4 p-5 rounded-2xl"
+          style={{
+            background: "oklch(0.13 0.03 275 / 0.92)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid oklch(1 0 0 / 0.1)",
+            boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 16px 40px -8px oklch(0.06 0.02 275 / 0.6)",
+          }}
+        >
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground text-center" style={{ letterSpacing: "0.12em" }}>
+            Timer settings
+          </p>
+          <div className="flex items-start gap-5">
+            <DurationStepper label="Focus"      value={workMins}      min={1} max={90} onChange={applyWorkMins} />
+            <DurationStepper label="Short break" value={breakMins}     min={1} max={30} onChange={applyBreakMins} />
+            <DurationStepper label="Long break"  value={longBreakMins} min={1} max={60} onChange={applyLongBreakMins} />
+          </div>
+          <p className="text-[9px] text-muted-foreground/40 text-center">Changes take effect immediately</p>
+        </div>
+      )}
+
       {/* Pomodoro progress dots */}
       <div className="flex items-center gap-2 mb-9 relative z-10">
         {Array.from({ length: LONG_BREAK_AFTER }).map((_, i) => (
@@ -231,7 +371,6 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
               <stop offset="0%"   stopColor="oklch(0.74 0.19 295)" />
               <stop offset="100%" stopColor="oklch(0.55 0.23 250)" />
             </linearGradient>
-            {/* Glow filter for arc */}
             <filter id="arcGlow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="4" result="blur" />
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
@@ -385,7 +524,7 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
         <div className="text-center">
           <p className="text-3xl font-semibold font-display" style={{ letterSpacing: "-0.03em" }}>
-            {pomodoroCount * WORK_MINS}
+            {pomodoroCount * workMins}
           </p>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5" style={{ letterSpacing: "0.1em" }}>
             min focused
