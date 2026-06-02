@@ -36,13 +36,14 @@ export function dayToIndex(day: string): number {
 
 export function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
-  return (h || 0) * 60 + (m || 0);
+  const raw = (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+  // Normalize to 0-1439: "24:00" → 0 (midnight), negative → wrap
+  return ((raw % 1440) + 1440) % 1440;
 }
 
 export function minutesToTime(m: number): string {
-  return `${Math.floor(m / 60)
-    .toString()
-    .padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}`;
+  const norm = ((Math.round(m) % 1440) + 1440) % 1440;
+  return `${Math.floor(norm / 60).toString().padStart(2, "0")}:${(norm % 60).toString().padStart(2, "0")}`;
 }
 
 export function indexToDay(i: number): string {

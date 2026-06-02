@@ -98,6 +98,8 @@ function parseTimeString(value: unknown, field: "startTime" | "endTime"): string
     if (hours < 1 || hours > 12) throw new Error(`${field} has invalid hours.`);
     if (meridiem === "pm" && hours !== 12) hours += 12;
     if (meridiem === "am" && hours === 12) hours = 0;
+  } else if (hours === 24 && minutes === 0) {
+    hours = 0; // normalize "24:00" → "00:00" (midnight)
   } else if (hours < 0 || hours > 23) {
     throw new Error(`${field} has invalid hours.`);
   }
@@ -131,7 +133,14 @@ export function displayTime(time: string): string {
 }
 
 export function displayTimeFromMinutes(minutes: number): string {
-  return displayTime(`${pad2(Math.floor(minutes / 60))}:${pad2(minutes % 60)}`);
+  // Normalize to 0-1439 to guard against AI-generated out-of-range values
+  // already stored in DB (e.g. "24:00" → 1440 → wraps to 0 = midnight)
+  const norm = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  const h = Math.floor(norm / 60);
+  const m = norm % 60;
+  const suffix = h >= 12 ? "PM" : "AM";
+  const displayHour = h % 12 || 12;
+  return `${displayHour}:${pad2(m)} ${suffix}`;
 }
 
 export function describeEventTime(event: NormalizedForgeEvent): string {
