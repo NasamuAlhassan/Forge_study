@@ -9,7 +9,7 @@ import {
 } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 
-const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7..20
+const HOURS = Array.from({ length: 17 }, (_, i) => i + 7); // 7..23
 const HOUR_PX = 56;
 const DAY_START = 7 * 60;
 
