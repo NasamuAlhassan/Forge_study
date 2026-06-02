@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Upload, Loader2, FileImage, CheckCircle2, AlertCircle, RotateCcw } from "lucide-react";
 import { extractTimetable } from "@/lib/ai.functions";
 import { toast } from "sonner";
@@ -31,7 +30,7 @@ export function TimetableUploader() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const extract = useServerFn(extractTimetable);
+  const extract = extractTimetable;
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -59,7 +58,7 @@ export function TimetableUploader() {
         setPreview(dataUrl);
         setStatus("extracting");
         try {
-          const res = await extract({ data: { imageDataUrl: dataUrl } });
+          const res = await extract(dataUrl);
           setEntries(res.entries);
           setStatus("done");
           toast.success(`Extracted ${res.entries.length} class${res.entries.length === 1 ? "" : "es"}`);

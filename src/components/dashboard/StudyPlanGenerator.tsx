@@ -1,5 +1,4 @@
 import { useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Brain, CalendarPlus, Loader2, Mic, MicOff, Pencil, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { generateStudyPlan } from "@/lib/ai.functions";
 import { toast } from "sonner";
@@ -47,7 +46,7 @@ export function StudyPlanGenerator() {
   const [options, setOptions] = useState<StudyPlanOption[]>([]);
   const [selectedOption, setSelectedOption] = useState(0);
   const [editIdx, setEditIdx] = useState<number | null>(null);
-  const generate = useServerFn(generateStudyPlan);
+  const generate = generateStudyPlan;
   const { user } = useAuth();
   const { subjects, events, refetch } = useSchedule();
 
@@ -135,7 +134,7 @@ export function StudyPlanGenerator() {
       const fullContext = scheduleContext
         ? `${scheduleContext}STUDENT'S ADDITIONAL NOTES:\n${context || "(none provided)"}`
         : context;
-      const res = await generate({ data: { context: fullContext } });
+      const res = await generate(fullContext);
       const opts = res.options ?? [];
       setOptions(opts);
       // Default to Balanced if available

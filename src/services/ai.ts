@@ -49,7 +49,9 @@ export type StudyPlanOptions = {
 };
 
 function getGenAI(): GoogleGenerativeAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    process.env.GEMINI_API_KEY ??
+    (typeof import.meta !== "undefined" ? (import.meta as { env?: Record<string, string> }).env?.VITE_GEMINI_API_KEY : undefined);
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set. Add it to your .env file.");
   return new GoogleGenerativeAI(apiKey);
 }
