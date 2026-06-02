@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forge — AI Academic Planner</title>
+    <meta name="description" content="Your AI-powered academic operating system." />
+    <meta property="og:title" content="Forge" />
+    <meta property="og:description" content="Your AI-powered academic operating system." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <script>
+      try {
+        var t = localStorage.getItem('forge-theme');
+        document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
+      } catch(e) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
