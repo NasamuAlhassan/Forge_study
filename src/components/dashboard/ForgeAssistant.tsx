@@ -491,12 +491,12 @@ export function ForgeAssistant() {
           ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
           width: PANEL_W,
           height: PANEL_H,
-          background: "oklch(0.16 0.04 275 / 0.93)",
-          backdropFilter: "blur(40px) saturate(200%) brightness(1.05)",
-          WebkitBackdropFilter: "blur(40px) saturate(200%) brightness(1.05)",
-          border: "1px solid oklch(1 0 0 / 0.1)",
+          background: "color-mix(in oklch, var(--card) 96%, transparent)",
+          backdropFilter: "blur(40px) saturate(180%)",
+          WebkitBackdropFilter: "blur(40px) saturate(180%)",
+          border: "1px solid var(--border)",
           boxShadow:
-            "0 1px 0 oklch(1 0 0 / 0.14) inset, 0 -1px 0 oklch(0 0 0 / 0.1) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.88), 0 0 0 1px oklch(0 0 0 / 0.25)",
+            "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 -1px 0 oklch(0 0 0 / 0.06) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.08)",
           borderRadius: "24px",
         }}
         className="fixed z-50 flex flex-col overflow-hidden"
@@ -516,9 +516,8 @@ export function ForgeAssistant() {
           onTouchStart={onHeaderTouchStart}
           className="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing select-none shrink-0 relative"
           style={{
-            borderBottom: "1px solid oklch(1 0 0 / 0.07)",
-            background: "oklch(1 0 0 / 0.03)",
-            boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
+            borderBottom: "1px solid var(--border)",
+            background: "color-mix(in oklch, var(--muted) 50%, transparent)",
           }}
         >
           <div className="flex items-center gap-2.5">
@@ -551,7 +550,7 @@ export function ForgeAssistant() {
               onClick={() => setOpen(false)}
               className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
               style={{
-                border: "1px solid oklch(1 0 0 / 0.08)",
+                border: "1px solid var(--border)",
               }}
               aria-label="Close assistant"
             >
@@ -594,9 +593,8 @@ export function ForgeAssistant() {
                         color: "white",
                       }
                     : {
-                        background: "oklch(1 0 0 / 0.05)",
-                        border: "1px solid oklch(1 0 0 / 0.08)",
-                        boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
+                        background: "var(--muted)",
+                        border: "1px solid var(--border)",
                       }
                 }
               >
@@ -622,9 +620,8 @@ export function ForgeAssistant() {
               <div
                 className="rounded-2xl rounded-tl-sm px-3 py-2.5"
                 style={{
-                  background: "oklch(1 0 0 / 0.05)",
-                  border: "1px solid oklch(1 0 0 / 0.08)",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
+                  background: "var(--muted)",
+                  border: "1px solid var(--border)",
                 }}
               >
                 <TypingDots />
@@ -640,9 +637,8 @@ export function ForgeAssistant() {
           <div
             className="mx-3 mb-2 p-3 rounded-2xl shrink-0 relative overflow-hidden"
             style={{
-              background: "oklch(0.62 0.21 285 / 0.08)",
-              border: "1px solid oklch(0.62 0.21 285 / 0.22)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+              background: "color-mix(in oklch, var(--primary) 10%, var(--card))",
+              border: "1px solid color-mix(in oklch, var(--primary) 30%, transparent)",
             }}
           >
             {/* Subtle gradient overlay */}
@@ -691,9 +687,8 @@ export function ForgeAssistant() {
                 onClick={rejectAction}
                 className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl text-[12px] font-semibold hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
                 style={{
-                  background: "oklch(1 0 0 / 0.04)",
-                  border: "1px solid oklch(1 0 0 / 0.09)",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+                  background: "var(--muted)",
+                  border: "1px solid var(--border)",
                 }}
               >
                 <XCircle className="h-3.5 w-3.5 opacity-60" />
@@ -707,8 +702,8 @@ export function ForgeAssistant() {
         <div
           className="p-3 shrink-0 relative"
           style={{
-            borderTop: "1px solid oklch(1 0 0 / 0.07)",
-            background: "oklch(1 0 0 / 0.02)",
+            borderTop: "1px solid var(--border)",
+            background: "transparent",
           }}
         >
           <div className="flex gap-2 items-end">
@@ -734,11 +729,10 @@ export function ForgeAssistant() {
                 rows={1}
                 className="w-full resize-none rounded-xl px-3 py-2 text-[13px] placeholder:text-muted-foreground/45 focus:outline-none min-h-[36px] max-h-24 transition-all duration-200"
                 style={{
-                  background: "oklch(1 0 0 / 0.05)",
+                  background: "var(--input)",
                   border: listening
                     ? "1px solid oklch(0.65 0.24 25 / 0.6)"
-                    : "1px solid oklch(1 0 0 / 0.09)",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
+                    : "1px solid var(--border)",
                   color: "inherit",
                   transition: "border-color 200ms ease",
                 }}
@@ -770,15 +764,14 @@ export function ForgeAssistant() {
                     }
                   : transcribing
                     ? {
-                        background: "oklch(1 0 0 / 0.04)",
-                        border: "1px solid oklch(1 0 0 / 0.08)",
+                        background: "var(--muted)",
+                        border: "1px solid var(--border)",
                         opacity: 0.5,
                         cursor: "not-allowed",
                       }
                     : {
-                        background: "oklch(1 0 0 / 0.05)",
-                        border: "1px solid oklch(1 0 0 / 0.09)",
-                        boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+                        background: "var(--muted)",
+                        border: "1px solid var(--border)",
                       }
               }
               aria-label={listening ? "Stop recording" : "Start voice input"}

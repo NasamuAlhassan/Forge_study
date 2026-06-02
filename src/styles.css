@@ -209,6 +209,12 @@
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(1 0 0 / 0.2);
   }
+  html.light ::-webkit-scrollbar-thumb {
+    background: oklch(0 0 0 / 0.12);
+  }
+  html.light ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0 0 0 / 0.2);
+  }
 
   /* Selection color */
   ::selection {
@@ -333,6 +339,41 @@ html.light {
     border-right: 1px solid oklch(1 0 0 / 0.07);
     box-shadow:
       1px 0 0 0 oklch(1 0 0 / 0.04) inset;
+  }
+
+  /* ── Light-mode glass overrides ── */
+  html.light .glass {
+    background: oklch(0.99 0.004 275 / 0.84);
+    border: 1px solid oklch(0 0 0 / 0.07);
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 0.9) inset,
+      0 -1px 0 0 oklch(0 0 0 / 0.04) inset,
+      0 8px 32px -8px oklch(0.5 0.05 275 / 0.08);
+  }
+
+  html.light .glass-strong {
+    background: oklch(1 0 0 / 0.9);
+    border: 1px solid oklch(0 0 0 / 0.08);
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 0.95) inset,
+      0 -1px 0 0 oklch(0 0 0 / 0.05) inset,
+      0 12px 40px -10px oklch(0.5 0.05 275 / 0.1);
+  }
+
+  html.light .glass-elevated {
+    background: oklch(1 0 0 / 0.9);
+    border: 1px solid oklch(0 0 0 / 0.08);
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 0.95) inset,
+      0 -1px 0 0 oklch(0 0 0 / 0.04) inset,
+      0 24px 64px -16px oklch(0.5 0.05 275 / 0.12),
+      0 4px 16px -4px oklch(0.5 0.05 275 / 0.06);
+  }
+
+  html.light .glass-sidebar {
+    background: oklch(0.95 0.008 275 / 0.92);
+    border-right: 1px solid oklch(0 0 0 / 0.06);
+    box-shadow: 1px 0 0 0 oklch(1 0 0 / 0.6) inset;
   }
 
   /* ── Gradient border ring ── */

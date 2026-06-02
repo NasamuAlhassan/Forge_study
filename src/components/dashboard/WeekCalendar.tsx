@@ -76,7 +76,7 @@ export function WeekCalendar({
         {/* Header */}
         <div
           className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]"
-          style={{ borderBottom: "1px solid oklch(1 0 0 / 0.07)", background: "oklch(1 0 0 / 0.02)" }}
+          style={{ borderBottom: "1px solid var(--border)", background: "color-mix(in oklch, var(--muted) 40%, transparent)" }}
         >
           <div />
           {DAYS.map((d, i) => {
@@ -130,7 +130,7 @@ export function WeekCalendar({
         {/* Body */}
         <div className="relative grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]">
           {/* Hours column */}
-          <div style={{ borderRight: "1px solid oklch(1 0 0 / 0.06)" }}>
+          <div style={{ borderRight: "1px solid var(--border)" }}>
             {HOURS.map((h) => (
               <div
                 key={h}
@@ -147,12 +147,12 @@ export function WeekCalendar({
             <div
               key={dayIdx}
               className="relative last:border-r-0"
-              style={{ borderRight: "1px solid oklch(1 0 0 / 0.06)" }}
+              style={{ borderRight: "1px solid var(--border)" }}
             >
               {HOURS.map((h) => (
                 <div
                   key={h}
-                  style={{ height: HOUR_PX, borderBottom: "1px solid oklch(1 0 0 / 0.04)" }}
+                  style={{ height: HOUR_PX, borderBottom: "1px solid var(--border)" }}
                   onClick={() => onSlotClick?.(dayIdx, h * 60)}
                   className={`transition-colors duration-150 ${onSlotClick ? "cursor-pointer hover:bg-white/[0.05]" : "hover:bg-white/[0.02]"}`}
                 />
@@ -176,8 +176,8 @@ export function WeekCalendar({
                         height,
                         ...(isBreak
                           ? {
-                              background: "oklch(1 0 0 / 0.05)",
-                              border: "1px solid oklch(1 0 0 / 0.08)",
+                              background: "var(--muted)",
+                              border: "1px solid var(--border)",
                             }
                           : {}),
                       }}
