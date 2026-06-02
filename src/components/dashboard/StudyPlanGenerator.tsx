@@ -1,17 +1,15 @@
 import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Brain, Loader2, Mic, MicOff, Sparkles, Wand2, CalendarPlus, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Brain, CalendarPlus, Loader2, Mic, MicOff, Pencil, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { generateStudyPlan } from "@/lib/ai.functions";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { useSchedule, persistStudySessions, minutesToTime } from "@/hooks/use-schedule";
 import { supabase } from "@/integrations/supabase/client";
 import { SessionEditDialog, type EditableSession } from "@/components/dashboard/SessionEditDialog";
 import { transcribeAudio } from "@/lib/forge-ai";
 
-import type { LifeCategory } from "@/services/ai";
+import type { LifeCategory, StudyPlanOption } from "@/services/ai";
 
 type Session = {
   day: string;
@@ -46,12 +44,16 @@ export function StudyPlanGenerator() {
   const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [rationale, setRationale] = useState<string>("");
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [options, setOptions] = useState<StudyPlanOption[]>([]);
+  const [selectedOption, setSelectedOption] = useState(0);
   const [editIdx, setEditIdx] = useState<number | null>(null);
   const generate = useServerFn(generateStudyPlan);
   const { user } = useAuth();
   const { subjects, events, refetch } = useSchedule();
+
+  // Derived: the currently viewed plan
+  const activePlan = options[selectedOption] ?? null;
+  const sessions: Session[] = (activePlan?.sessions ?? []).map((s) => ({ ...s, venue: "" }));
 
   // ── Voice input ──────────────────────────────────────────────────────────────
   const [listening, setListening] = useState(false);
@@ -97,7 +99,7 @@ export function StudyPlanGenerator() {
   const buildScheduleContext = () => {
     const lines: string[] = [];
     if (subjects.length > 0) {
-      lines.push("STUDENT SUBJECTS (use ONLY these):");
+      lines.push("STUDENT SUBJECTS (use ONLY these for study blocks):");
       subjects.forEach((s) => {
         const diff = s.difficulty ? ` — difficulty: ${s.difficulty.replace("_", " ")}` : "";
         const code = s.code ? ` [${s.code}]` : "";
@@ -106,16 +108,16 @@ export function StudyPlanGenerator() {
       lines.push("");
     }
     const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const classEvents = events.filter((e) => e.type === "class");
-    if (classEvents.length > 0) {
-      lines.push("CLASS SCHEDULE (do not schedule study during these):");
+    // Pass ALL existing events — never overlap any of them
+    if (events.length > 0) {
+      lines.push("EXISTING CALENDAR (never place any block — study or life — over these time slots):");
       for (let d = 0; d < 7; d++) {
-        const dayEvents = classEvents
+        const dayEvents = events
           .filter((e) => e.day === d)
           .sort((a, b) => a.start - b.start);
         if (dayEvents.length === 0) continue;
         const slots = dayEvents
-          .map((e) => `${e.title} ${minutesToTime(e.start)}–${minutesToTime(e.end)}`)
+          .map((e) => `${e.title} [${e.type}] ${minutesToTime(e.start)}–${minutesToTime(e.end)}`)
           .join(", ");
         lines.push(`${DAY_NAMES[d]}: ${slots}`);
       }
@@ -126,15 +128,20 @@ export function StudyPlanGenerator() {
 
   const run = async () => {
     setLoading(true);
+    setOptions([]);
+    setSelectedOption(0);
     try {
       const scheduleContext = buildScheduleContext();
       const fullContext = scheduleContext
         ? `${scheduleContext}STUDENT'S ADDITIONAL NOTES:\n${context || "(none provided)"}`
         : context;
       const res = await generate({ data: { context: fullContext } });
-      setRationale(res.rationale);
-      setSessions(res.sessions.map((s) => ({ ...s, venue: "", category: s.category ?? "study" })));
-      toast.success("Your study plan is ready");
+      const opts = res.options ?? [];
+      setOptions(opts);
+      // Default to Balanced if available
+      const balancedIdx = opts.findIndex((o) => o.name === "Balanced");
+      setSelectedOption(balancedIdx >= 0 ? balancedIdx : 0);
+      toast.success("Three plan options are ready");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Generation failed");
     } finally {
@@ -144,18 +151,18 @@ export function StudyPlanGenerator() {
 
   const saveToCalendar = async () => {
     if (!user) return toast.error("Please sign in first");
-    if (sessions.length === 0) return;
+    if (!activePlan || sessions.length === 0) return;
     setSaving(true);
     try {
       await supabase.from("study_plans").insert({
         user_id: user.id,
         context,
-        rationale,
+        rationale: activePlan.rationale,
         plan: { sessions } as never,
       });
       await persistStudySessions(user.id, sessions, subjects);
       await refetch();
-      toast.success(`Added ${sessions.length} study sessions to your calendar`);
+      toast.success(`Added ${sessions.length} blocks from the ${activePlan.name} plan`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
@@ -286,27 +293,6 @@ export function StudyPlanGenerator() {
           <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
         </button>
 
-        {rationale && (
-          <div
-            className="mt-4 p-3.5 rounded-xl relative overflow-hidden"
-            style={{
-              background: "oklch(0.62 0.21 285 / 0.07)",
-              border: "1px solid oklch(0.62 0.21 285 / 0.18)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
-            }}
-          >
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <Sparkles className="h-3 w-3" style={{ color: "oklch(0.74 0.19 295)" }} />
-              <span
-                className="text-[12px] font-semibold"
-                style={{ color: "oklch(0.74 0.19 295)" }}
-              >
-                Why this plan
-              </span>
-            </div>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">{rationale}</p>
-          </div>
-        )}
       </div>
 
       {/* Right: generated sessions */}
@@ -317,6 +303,7 @@ export function StudyPlanGenerator() {
           style={{ background: "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)" }}
         />
 
+        {/* Header row */}
         <div className="flex items-center justify-between gap-2 relative">
           <h3
             className="text-[15px] font-semibold"
@@ -324,18 +311,19 @@ export function StudyPlanGenerator() {
           >
             Generated sessions
           </h3>
-          {sessions.length > 0 && (
+          {options.length > 0 && (
             <div className="flex items-center gap-2">
               <button
                 onClick={run}
-                className="h-8 px-3 rounded-xl text-[12px] text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
+                disabled={loading}
+                className="h-8 px-3 rounded-xl text-[12px] text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] disabled:opacity-50 transition-all duration-150"
                 style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
               >
                 Regenerate
               </button>
               <button
                 onClick={saveToCalendar}
-                disabled={saving}
+                disabled={saving || sessions.length === 0}
                 className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] disabled:opacity-60 transition-all duration-150"
                 style={{
                   background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
@@ -353,13 +341,74 @@ export function StudyPlanGenerator() {
           )}
         </div>
 
-        <div className="mt-4 space-y-2 max-h-[28rem] overflow-y-auto pr-1 relative">
-          {sessions.length === 0 && !loading && (
+        {/* Plan option selector tabs */}
+        {options.length > 1 && (
+          <div
+            className="mt-3 flex gap-1.5 relative p-1 rounded-xl"
+            style={{ background: "oklch(1 0 0 / 0.04)", border: "1px solid oklch(1 0 0 / 0.07)" }}
+          >
+            {options.map((opt, idx) => {
+              const isActive = idx === selectedOption;
+              const labelColor =
+                opt.name === "Intensive" ? "oklch(0.70 0.19 25)"
+                : opt.name === "Balanced"  ? "oklch(0.74 0.19 295)"
+                :                            "oklch(0.72 0.15 160)";
+              return (
+                <button
+                  key={opt.name}
+                  onClick={() => setSelectedOption(idx)}
+                  className="flex-1 h-8 rounded-lg text-[12px] font-semibold transition-all duration-200 relative overflow-hidden"
+                  style={
+                    isActive
+                      ? {
+                          background: "oklch(0.62 0.21 285 / 0.18)",
+                          border: "1px solid oklch(0.62 0.21 285 / 0.28)",
+                          color: labelColor,
+                          boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset",
+                        }
+                      : {
+                          background: "transparent",
+                          border: "1px solid transparent",
+                          color: "oklch(1 0 0 / 0.4)",
+                        }
+                  }
+                >
+                  {opt.name}
+                  {isActive && (
+                    <span className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Active plan rationale */}
+        {activePlan?.rationale && (
+          <div
+            className="mt-3 p-3 rounded-xl relative overflow-hidden"
+            style={{
+              background: "oklch(0.62 0.21 285 / 0.06)",
+              border: "1px solid oklch(0.62 0.21 285 / 0.15)",
+            }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="h-3 w-3 shrink-0" style={{ color: "oklch(0.74 0.19 295)" }} />
+              <span className="text-[11px] font-semibold" style={{ color: "oklch(0.74 0.19 295)" }}>
+                Why this plan
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{activePlan.rationale}</p>
+          </div>
+        )}
+
+        <div className="mt-3 space-y-2 max-h-[22rem] overflow-y-auto pr-1 relative">
+          {options.length === 0 && !loading && (
             <div
               className="text-[13px] text-muted-foreground/50 py-16 text-center rounded-2xl"
               style={{ border: "1px dashed oklch(1 0 0 / 0.09)" }}
             >
-              Your AI study plan will appear here.
+              Your AI study plans will appear here.
             </div>
           )}
 
@@ -382,7 +431,7 @@ export function StudyPlanGenerator() {
 
             return (
               <div
-                key={i}
+                key={`${selectedOption}-${i}`}
                 className="group relative p-3 rounded-xl overflow-hidden"
                 style={{
                   background: `linear-gradient(135deg, ${fromColor}, ${toColor})`,
@@ -390,7 +439,6 @@ export function StudyPlanGenerator() {
                   boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
                 }}
               >
-                {/* Specular */}
                 <span className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
                 <div className="flex items-center justify-between text-[11px] relative">
@@ -429,7 +477,15 @@ export function StudyPlanGenerator() {
                     </button>
                   )}
                   <button
-                    onClick={() => setSessions((arr) => arr.filter((_, idx) => idx !== i))}
+                    onClick={() => {
+                      setOptions((prev) =>
+                        prev.map((opt, oi) =>
+                          oi === selectedOption
+                            ? { ...opt, sessions: opt.sessions.filter((_, si) => si !== i) }
+                            : opt
+                        )
+                      );
+                    }}
                     className="h-7 w-7 grid place-items-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
                     style={{ background: "oklch(0 0 0 / 0.3)", backdropFilter: "blur(8px)" }}
                     aria-label="Remove block"
@@ -449,12 +505,28 @@ export function StudyPlanGenerator() {
         title="Edit study session"
         onClose={() => setEditIdx(null)}
         onSave={(updated: EditableSession) => {
-          // Spread original first so category (and any other future fields) survive the edit
-          setSessions((arr) => arr.map((s, idx) => (idx === editIdx ? { ...s, ...updated } : s)));
+          setOptions((prev) =>
+            prev.map((opt, oi) =>
+              oi === selectedOption
+                ? {
+                    ...opt,
+                    sessions: opt.sessions.map((s, si) =>
+                      si === editIdx ? { ...s, ...updated } : s
+                    ),
+                  }
+                : opt
+            )
+          );
           toast.success("Session updated");
         }}
         onDelete={() => {
-          setSessions((arr) => arr.filter((_, idx) => idx !== editIdx));
+          setOptions((prev) =>
+            prev.map((opt, oi) =>
+              oi === selectedOption
+                ? { ...opt, sessions: opt.sessions.filter((_, si) => si !== editIdx) }
+                : opt
+            )
+          );
           toast.success("Session removed");
         }}
       />

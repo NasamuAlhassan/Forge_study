@@ -33,7 +33,8 @@ SCHEDULE CHANGE RULES:
 - For new life events without a time, use a sensible default (lunch → 12:00–13:00, gym → 60 min, nap → 20 min) and mention it in your reply rather than asking.
 - For new events without a title, use the type as the title (e.g. "Lunch", "Gym", "Nap") — don't ask.
 - Use normal human-readable time strings in every reply and action. Never describe a clock time as a minute count.
-- Append ONE action block at the very end of your message when making a change:
+- When making a calendar change, append one [FORGE_ACTION] block per event at the very end of your message.
+  Adding events on Tue, Thu, AND Sat? Append THREE blocks in sequence — one per day. Never combine multiple days into one block.
 
 Add:    [FORGE_ACTION:{"action":"add_event","event":{"title":"...","type":"class|study|break|exam","date":"YYYY-MM-DD","startTime":"7:00 PM","endTime":"8:00 PM","subjectId":"ID_FROM_SCHEDULE"}}]
 Edit:   [FORGE_ACTION:{"action":"edit_event","eventId":"ID_FROM_SCHEDULE","patch":{"date":"YYYY-MM-DD","startTime":"5:00 PM","endTime":"6:00 PM"}}]
@@ -80,7 +81,7 @@ export async function sendForgeMessage(
         })),
       ],
       temperature: 0.5,
-      max_tokens: 400,
+      max_tokens: 700,
     }),
   });
 
@@ -100,6 +101,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   form.append("file", audioBlob, "recording.webm");
   form.append("model", "whisper-large-v3");
   form.append("response_format", "text");
+  form.append("language", "en");
 
   const res = await fetch(`${GROQ_BASE}/audio/transcriptions`, {
     method: "POST",

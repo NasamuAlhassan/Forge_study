@@ -124,7 +124,8 @@ export function ForgeAssistant() {
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [pendingAction, setPendingAction] = useState<ForgeAction | null>(null);
+  const [pendingActions, setPendingActions] = useState<ForgeAction[]>([]);
+  const [pendingActionsTotal, setPendingActionsTotal] = useState(0);
 
   // Draggable position for the panel (null = not yet initialised)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
@@ -323,24 +324,25 @@ export function ForgeAssistant() {
         buildAssistantDateContext(new Date()),
       );
 
-      // Strip ALL variants of the action block before displaying
+      // Strip ALL action blocks before displaying; collect them all
       const ACTION_RE = /\[FORGE_ACTION:\s*(\{[\s\S]*?\})\s*\]/g;
-      const firstMatch = ACTION_RE.exec(raw);
+      const allMatches = Array.from(raw.matchAll(ACTION_RE));
       const clean = raw.replace(/\[FORGE_ACTION:\s*\{[\s\S]*?\}\s*\]/g, "").trim();
 
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: clean }]);
 
-      if (firstMatch) {
-        try {
-          setPendingAction(normalizeForgeAction(JSON.parse(firstMatch[1]), new Date()));
-        } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "I couldn't understand that schedule change.";
-          setMessages((prev) => [
-            ...prev,
-            { id: Date.now() + 1, role: "assistant", content: message },
-          ]);
-          // malformed JSON — action block still stripped from display
+      if (allMatches.length > 0) {
+        const parsed: ForgeAction[] = [];
+        for (const match of allMatches) {
+          try {
+            parsed.push(normalizeForgeAction(JSON.parse(match[1]), new Date()));
+          } catch {
+            // skip malformed individual blocks
+          }
+        }
+        if (parsed.length > 0) {
+          setPendingActions(parsed);
+          setPendingActionsTotal(parsed.length);
         }
       }
     } catch (err) {
@@ -367,15 +369,17 @@ export function ForgeAssistant() {
   };
 
   const applyAction = async () => {
-    if (!pendingAction || !user) return;
+    if (pendingActions.length === 0 || !user) return;
+    const action = pendingActions[0];
+    const remaining = pendingActions.length - 1;
     try {
-      if (pendingAction.action === "add_event") {
+      if (action.action === "add_event") {
         const { error } = await supabase
           .from("events")
-          .insert(buildEventInsert(pendingAction.event, user.id));
+          .insert(buildEventInsert(action.event, user.id));
         if (error) throw error;
-      } else if (pendingAction.action === "edit_event") {
-        const p = pendingAction.patch;
+      } else if (action.action === "edit_event") {
+        const p = action.patch;
         const patch = {
           ...(p.day !== undefined && { day_of_week: p.day }),
           ...(p.date !== undefined && { event_date: p.date }),
@@ -388,31 +392,48 @@ export function ForgeAssistant() {
           .from("events")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .update(patch as any)
-          .eq("id", pendingAction.eventId)
+          .eq("id", action.eventId)
           .eq("user_id", user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("events")
           .delete()
-          .eq("id", pendingAction.eventId)
+          .eq("id", action.eventId)
           .eq("user_id", user.id);
         if (error) throw error;
       }
       await refetch();
-      toast.success("Schedule updated");
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now(), role: "assistant", content: "Done! Your schedule has been updated." },
-      ]);
+      setPendingActions((prev) => prev.slice(1));
+      if (remaining === 0) {
+        toast.success("Schedule updated");
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: "assistant", content: "Done! Your schedule has been updated." },
+        ]);
+      } else {
+        toast.success(`Added (${pendingActionsTotal - remaining} of ${pendingActionsTotal})`);
+      }
     } catch (err) {
       console.error("Forge schedule update failed:", err);
       const message = "Sorry, I couldn't add that to your schedule. Try again?";
       toast.error(message);
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: message }]);
-    } finally {
-      setPendingAction(null);
+      setPendingActions((prev) => prev.slice(1));
     }
+  };
+
+  const rejectAction = () => {
+    setPendingActions((prev) => {
+      const next = prev.slice(1);
+      if (next.length === 0) {
+        setMessages((m) => [
+          ...m,
+          { id: Date.now(), role: "assistant", content: "No problem, I've discarded that change." },
+        ]);
+      }
+      return next;
+    });
   };
 
   // ── Render: bubble (closed) ───────────────────────────────────────────────
@@ -615,7 +636,7 @@ export function ForgeAssistant() {
         </div>
 
         {/* Pending action confirmation */}
-        {pendingAction && (
+        {pendingActions.length > 0 && (
           <div
             className="mx-3 mb-2 p-3 rounded-2xl shrink-0 relative overflow-hidden"
             style={{
@@ -631,14 +652,27 @@ export function ForgeAssistant() {
                 background: "radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.74 0.19 295 / 0.06) 0%, transparent 70%)",
               }}
             />
-            <p
-              className="text-[11px] font-semibold mb-1 relative"
-              style={{ color: "oklch(0.74 0.19 295)" }}
-            >
-              Proposed change
-            </p>
+            <div className="flex items-center justify-between mb-1 relative">
+              <p
+                className="text-[11px] font-semibold"
+                style={{ color: "oklch(0.74 0.19 295)" }}
+              >
+                Proposed change
+              </p>
+              {pendingActionsTotal > 1 && (
+                <span
+                  className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                  style={{
+                    background: "oklch(0.62 0.21 285 / 0.15)",
+                    color: "oklch(0.74 0.19 295)",
+                  }}
+                >
+                  {pendingActionsTotal - pendingActions.length + 1} of {pendingActionsTotal}
+                </span>
+              )}
+            </div>
             <p className="text-[12px] text-muted-foreground mb-3 leading-snug relative">
-              {describeAction(pendingAction, subjects, events)}
+              {describeAction(pendingActions[0], subjects, events)}
             </p>
             <div className="flex gap-2 relative">
               <button
@@ -654,7 +688,7 @@ export function ForgeAssistant() {
                 <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
               </button>
               <button
-                onClick={() => setPendingAction(null)}
+                onClick={rejectAction}
                 className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl text-[12px] font-semibold hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
                 style={{
                   background: "oklch(1 0 0 / 0.04)",
@@ -663,7 +697,7 @@ export function ForgeAssistant() {
                 }}
               >
                 <XCircle className="h-3.5 w-3.5 opacity-60" />
-                <span>Reject</span>
+                <span>Skip</span>
               </button>
             </div>
           </div>
