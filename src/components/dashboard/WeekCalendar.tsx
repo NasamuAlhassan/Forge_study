@@ -146,7 +146,7 @@ export function WeekCalendar({
           {DAYS.map((_, dayIdx) => (
             <div
               key={dayIdx}
-              className="relative last:border-r-0"
+              className="relative last:border-r-0 overflow-hidden"
               style={{ borderRight: "1px solid var(--border)" }}
             >
               {HOURS.map((h) => (
@@ -158,7 +158,14 @@ export function WeekCalendar({
                 />
               ))}
               {events
-                .filter((e) => eventOccursOn(e, weekDates[dayIdx]))
+                .filter((e) => {
+                  if (!eventOccursOn(e, weekDates[dayIdx])) return false;
+                  const top = ((e.start - DAY_START) / 60) * HOUR_PX;
+                  const height = ((e.end - e.start) / 60) * HOUR_PX - 4;
+                  // Skip events before the grid (e.g. overnight sleep blocks),
+                  // after the grid, or with invalid/cross-midnight times
+                  return top >= 0 && height > 4;
+                })
                 .map((e) => {
                   const top = ((e.start - DAY_START) / 60) * HOUR_PX;
                   const height = ((e.end - e.start) / 60) * HOUR_PX - 4;
