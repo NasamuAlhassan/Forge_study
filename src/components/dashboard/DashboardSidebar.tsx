@@ -209,11 +209,11 @@ export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
             aria-label="Open navigation"
             className="lg:hidden fixed top-3 left-3 z-40 h-10 w-10 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:brightness-110 active:scale-[0.93] transition-all duration-150 relative overflow-hidden"
             style={{
-              background: "oklch(0.16 0.04 275 / 0.88)",
+              background: "color-mix(in oklch, var(--card) 92%, transparent)",
               backdropFilter: "blur(20px) saturate(160%)",
               WebkitBackdropFilter: "blur(20px) saturate(160%)",
-              border: "1px solid oklch(1 0 0 / 0.09)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 4px 16px oklch(0 0 0 / 0.25)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 4px 16px oklch(0 0 0 / 0.12)",
             }}
           >
             <Menu className="h-4 w-4 relative z-10" />

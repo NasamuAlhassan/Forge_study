@@ -141,6 +141,9 @@ export function ForgeAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Mobile detection — bottom-sheet vs floating panel
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
   // Voice input via MediaRecorder + Gemini transcription
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -294,6 +297,13 @@ export function ForgeAssistant() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
     };
+  }, []);
+
+  // Keep isMobile in sync with viewport resizes
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, []);
 
   // ── Chat logic ───────────────────────────────────────────────────────────────
@@ -486,8 +496,30 @@ export function ForgeAssistant() {
         }
       `}</style>
 
+      {/* Mobile backdrop */}
+      {isMobile && (
+        <div
+          className="fixed inset-0 z-40"
+          style={{ background: "oklch(0 0 0 / 0.5)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <div
-        style={{
+        style={isMobile ? {
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "min(85svh, 580px)",
+          background: "color-mix(in oklch, var(--card) 96%, transparent)",
+          backdropFilter: "blur(40px) saturate(180%)",
+          WebkitBackdropFilter: "blur(40px) saturate(180%)",
+          border: "1px solid var(--border)",
+          borderBottom: "none",
+          boxShadow: "0 -8px 40px -8px oklch(0.04 0.02 275 / 0.4), 0 1px 0 oklch(1 0 0 / 0.1) inset",
+          borderRadius: "24px 24px 0 0",
+        } : {
           ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
           width: PANEL_W,
           height: PANEL_H,
@@ -503,18 +535,29 @@ export function ForgeAssistant() {
       >
         {/* Specular highlight — top-left light hit */}
         <div
-          className="absolute inset-0 rounded-[24px] pointer-events-none"
+          className="absolute inset-0 pointer-events-none"
           style={{
+            borderRadius: isMobile ? "24px 24px 0 0" : "24px",
             background:
               "radial-gradient(ellipse 80% 40% at 20% 0%, oklch(1 0 0 / 0.07) 0%, transparent 60%)",
           }}
         />
 
+        {/* Mobile drag pill */}
+        {isMobile && (
+          <div className="flex justify-center pt-3 pb-0 shrink-0">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/20" />
+          </div>
+        )}
+
         {/* Header / drag handle */}
         <div
-          onMouseDown={onHeaderMouseDown}
-          onTouchStart={onHeaderTouchStart}
-          className="flex items-center justify-between px-4 py-3 cursor-grab active:cursor-grabbing select-none shrink-0 relative"
+          onMouseDown={!isMobile ? onHeaderMouseDown : undefined}
+          onTouchStart={!isMobile ? onHeaderTouchStart : undefined}
+          className={cn(
+            "flex items-center justify-between px-4 py-3 select-none shrink-0 relative",
+            !isMobile && "cursor-grab active:cursor-grabbing"
+          )}
           style={{
             borderBottom: "1px solid var(--border)",
             background: "color-mix(in oklch, var(--muted) 50%, transparent)",
@@ -545,7 +588,7 @@ export function ForgeAssistant() {
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />
+            {!isMobile && <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />}
             <button
               onClick={() => setOpen(false)}
               className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"

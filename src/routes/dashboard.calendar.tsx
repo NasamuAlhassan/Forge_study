@@ -243,9 +243,9 @@ function CalendarPage() {
           <div
             className="flex items-center rounded-xl p-1 gap-0.5"
             style={{
-              background: "oklch(1 0 0 / 0.04)",
-              border: "1px solid oklch(1 0 0 / 0.08)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
+              background: "color-mix(in oklch, var(--muted) 60%, transparent)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 1px 0 oklch(1 0 0 / 0.06) inset",
             }}
           >
             {(["day", "week", "month"] as View[]).map((v) => (
@@ -274,21 +274,21 @@ function CalendarPage() {
             <button
               onClick={() => shift(-1)}
               className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.93] transition-all duration-150"
-              style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+              style={{ border: "1px solid var(--border)" }}
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={goToday}
               className="px-3 py-1.5 text-[12px] font-medium rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-              style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+              style={{ border: "1px solid var(--border)" }}
             >
               Today
             </button>
             <button
               onClick={() => shift(1)}
               className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.93] transition-all duration-150"
-              style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+              style={{ border: "1px solid var(--border)" }}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -321,7 +321,7 @@ function CalendarPage() {
               <DropdownMenuTrigger asChild>
                 <button
                   className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-                  style={{ border: "1px solid oklch(1 0 0 / 0.09)", background: "oklch(1 0 0 / 0.04)" }}
+                  style={{ border: "1px solid var(--border)", background: "color-mix(in oklch, var(--muted) 60%, transparent)" }}
                 >
                   <Copy className="h-3.5 w-3.5" /> Duplicate
                 </button>
