@@ -1,12 +1,26 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { X, Play, Pause, RotateCcw, Coffee, Brain, ChevronRight, Settings2, Plus, Minus } from "lucide-react";
+import {
+  X,
+  Play,
+  Pause,
+  RotateCcw,
+  Coffee,
+  Brain,
+  ChevronRight,
+  Settings2,
+  Plus,
+  Minus,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { useSchedule } from "@/hooks/use-schedule";
+import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_WORK_MINS        = 25;
-const DEFAULT_BREAK_MINS       = 5;
-const DEFAULT_LONG_BREAK_MINS  = 15;
-const LONG_BREAK_AFTER         = 4;
+const DEFAULT_WORK_MINS = 25;
+const DEFAULT_BREAK_MINS = 5;
+const DEFAULT_LONG_BREAK_MINS = 15;
+const LONG_BREAK_AFTER = 4;
 
 const STORAGE_KEY = "forge-focus-settings";
 
@@ -16,7 +30,9 @@ function loadSettings() {
     if (!raw) return null;
     const s = JSON.parse(raw) as { workMins: number; breakMins: number; longBreakMins: number };
     if (s.workMins && s.breakMins && s.longBreakMins) return s;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return null;
 }
 
@@ -75,45 +91,72 @@ function DurationStepper({
   min = 1,
   max = 90,
   onChange,
+  isDark,
 }: {
   label: string;
   value: number;
   min?: number;
   max?: number;
   onChange: (v: number) => void;
+  isDark: boolean;
 }) {
   const btnCls = [
     "h-7 w-7 rounded-lg grid place-items-center shrink-0",
-    "text-muted-foreground hover:text-foreground",
-    "hover:bg-white/[0.1] active:scale-[0.9]",
-    "transition-all duration-100 disabled:opacity-30 disabled:pointer-events-none",
+    isDark
+      ? "text-white/60 hover:text-white hover:bg-white/[0.1]"
+      : "text-foreground/50 hover:text-foreground hover:bg-black/[0.08]",
+    "active:scale-[0.9] transition-all duration-100 disabled:opacity-30 disabled:pointer-events-none",
   ].join(" ");
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground" style={{ letterSpacing: "0.1em" }}>
+      <span
+        className="text-[10px] uppercase tracking-widest"
+        style={{
+          letterSpacing: "0.1em",
+          color: isDark ? "oklch(0.65 0.03 280)" : "oklch(0.45 0.03 280)",
+        }}
+      >
         {label}
       </span>
       <div
         className="flex items-center gap-1"
         style={{
-          background: "oklch(1 0 0 / 0.05)",
-          border: "1px solid oklch(1 0 0 / 0.1)",
+          background: isDark ? "oklch(1 0 0 / 0.05)" : "oklch(0 0 0 / 0.05)",
+          border: `1px solid ${isDark ? "oklch(1 0 0 / 0.1)" : "oklch(0 0 0 / 0.1)"}`,
           borderRadius: "12px",
           padding: "3px",
         }}
       >
-        <button className={btnCls} onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label={`Decrease ${label}`}>
+        <button
+          className={btnCls}
+          onClick={() => onChange(Math.max(min, value - 1))}
+          disabled={value <= min}
+          aria-label={`Decrease ${label}`}
+        >
           <Minus className="h-3 w-3" />
         </button>
-        <span className="w-8 text-center text-sm font-semibold tabular-nums" style={{ letterSpacing: "-0.01em" }}>
+        <span
+          className="w-8 text-center text-sm font-semibold tabular-nums"
+          style={{ letterSpacing: "-0.01em" }}
+        >
           {value}
         </span>
-        <button className={btnCls} onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={`Increase ${label}`}>
+        <button
+          className={btnCls}
+          onClick={() => onChange(Math.min(max, value + 1))}
+          disabled={value >= max}
+          aria-label={`Increase ${label}`}
+        >
           <Plus className="h-3 w-3" />
         </button>
       </div>
-      <span className="text-[9px] text-muted-foreground/40">min</span>
+      <span
+        className="text-[9px]"
+        style={{ color: isDark ? "oklch(0.55 0.02 280)" : "oklch(0.55 0.03 280)" }}
+      >
+        min
+      </span>
     </div>
   );
 }
@@ -124,18 +167,38 @@ interface FocusModeProps {
 }
 
 export function FocusMode({ open, onClose }: FocusModeProps) {
+  // App-level theme + toggle
+  const { theme, toggle: toggleAppTheme } = useTheme();
+  // Focus mode tracks the app theme by default but allows an in-session override
+  const [localDark, setLocalDark] = useState<boolean | null>(null);
+  const isDark = localDark !== null ? localDark : theme === "dark";
+
+  // Sync local override when the overlay first opens
+  useEffect(() => {
+    if (open) setLocalDark(null); // reset to follow app theme each time it opens
+  }, [open]);
+
+  const toggleTheme = () => {
+    // If overriding locally, toggle local state
+    setLocalDark((prev) => (prev === null ? theme !== "dark" : !prev));
+    // Also toggle the app-level theme so the rest of the app follows
+    toggleAppTheme();
+  };
+
   // --- settings ---
   const saved = loadSettings();
-  const [workMins,      setWorkMins]      = useState(saved?.workMins      ?? DEFAULT_WORK_MINS);
-  const [breakMins,     setBreakMins]     = useState(saved?.breakMins     ?? DEFAULT_BREAK_MINS);
-  const [longBreakMins, setLongBreakMins] = useState(saved?.longBreakMins ?? DEFAULT_LONG_BREAK_MINS);
-  const [showSettings,  setShowSettings]  = useState(false);
+  const [workMins, setWorkMins] = useState(saved?.workMins ?? DEFAULT_WORK_MINS);
+  const [breakMins, setBreakMins] = useState(saved?.breakMins ?? DEFAULT_BREAK_MINS);
+  const [longBreakMins, setLongBreakMins] = useState(
+    saved?.longBreakMins ?? DEFAULT_LONG_BREAK_MINS,
+  );
+  const [showSettings, setShowSettings] = useState(false);
 
   // --- timer state ---
-  const [phase,          setPhase]          = useState<Phase>("work");
-  const [secondsLeft,    setSecondsLeft]    = useState(workMins * 60);
-  const [running,        setRunning]        = useState(false);
-  const [pomodoroCount,  setPomodoroCount]  = useState(0);
+  const [phase, setPhase] = useState<Phase>("work");
+  const [secondsLeft, setSecondsLeft] = useState(workMins * 60);
+  const [running, setRunning] = useState(false);
+  const [pomodoroCount, setPomodoroCount] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { events, subjects } = useSchedule();
@@ -145,11 +208,14 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ workMins, breakMins, longBreakMins }));
   }, [workMins, breakMins, longBreakMins]);
 
-  const phaseDuration = useCallback((p: Phase) => {
-    if (p === "work")       return workMins * 60;
-    if (p === "long-break") return longBreakMins * 60;
-    return breakMins * 60;
-  }, [workMins, breakMins, longBreakMins]);
+  const phaseDuration = useCallback(
+    (p: Phase) => {
+      if (p === "work") return workMins * 60;
+      if (p === "long-break") return longBreakMins * 60;
+      return breakMins * 60;
+    },
+    [workMins, breakMins, longBreakMins],
+  );
 
   // When a setting changes while the timer is idle on "work", sync secondsLeft
   const isWorkPhaseIdle = phase === "work" && !running;
@@ -158,12 +224,14 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
   }, [workMins, isWorkPhaseIdle]);
 
   const nextEvent = (() => {
-    const now      = new Date();
+    const now = new Date();
     const todayApp = jsDayToApp(now.getDay());
-    const nowMins  = now.getHours() * 60 + now.getMinutes();
-    return events
-      .filter((e) => e.day === todayApp && e.end > nowMins)
-      .sort((a, b) => a.start - b.start)[0] ?? null;
+    const nowMins = now.getHours() * 60 + now.getMinutes();
+    return (
+      events
+        .filter((e) => e.day === todayApp && e.end > nowMins)
+        .sort((a, b) => a.start - b.start)[0] ?? null
+    );
   })();
 
   const nextSubjectName = nextEvent
@@ -191,7 +259,9 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         });
       }, 1000);
     }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [running, phase, pomodoroCount, phaseDuration]);
 
   const reset = () => {
@@ -218,33 +288,70 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
   // Apply a settings change: pause + reset timer to new duration
   const applyWorkMins = (v: number) => {
     setWorkMins(v);
-    if (phase === "work") { setRunning(false); setSecondsLeft(v * 60); }
+    if (phase === "work") {
+      setRunning(false);
+      setSecondsLeft(v * 60);
+    }
   };
   const applyBreakMins = (v: number) => {
     setBreakMins(v);
-    if (phase === "break") { setRunning(false); setSecondsLeft(v * 60); }
+    if (phase === "break") {
+      setRunning(false);
+      setSecondsLeft(v * 60);
+    }
   };
   const applyLongBreakMins = (v: number) => {
     setLongBreakMins(v);
-    if (phase === "long-break") { setRunning(false); setSecondsLeft(v * 60); }
+    if (phase === "long-break") {
+      setRunning(false);
+      setSecondsLeft(v * 60);
+    }
   };
 
-  const cfg     = PHASE_CONFIG[phase];
-  const total   = phaseDuration(phase);
+  const cfg = PHASE_CONFIG[phase];
+  const total = phaseDuration(phase);
   const progress = (total - secondsLeft) / total;
-  const radius  = 108;
-  const circ    = 2 * Math.PI * radius;
-  const offset  = circ * (1 - progress);
+  const radius = 108;
+  const circ = 2 * Math.PI * radius;
+  const offset = circ * (1 - progress);
 
   // Escape key closes
   useEffect(() => {
     if (!open) return;
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
   if (!open) return null;
+
+  // ── Theme-derived colors ────────────────────────────────────────────────────
+  const overlayBg = isDark ? "oklch(0.10 0.03 275 / 0.97)" : "oklch(0.97 0.01 280 / 0.98)";
+
+  const iconBtnStyle: React.CSSProperties = {
+    background: isDark ? "oklch(1 0 0 / 0.05)" : "oklch(0 0 0 / 0.05)",
+    border: `1px solid ${isDark ? "oklch(1 0 0 / 0.08)" : "oklch(0 0 0 / 0.08)"}`,
+    boxShadow: isDark ? "0 1px 0 oklch(1 0 0 / 0.1) inset" : "0 1px 0 oklch(1 0 0 / 0.6) inset",
+  };
+
+  const iconBtnCls = [
+    "h-10 w-10 rounded-2xl grid place-items-center",
+    isDark
+      ? "text-white/50 hover:text-white hover:bg-white/[0.09]"
+      : "text-foreground/50 hover:text-foreground hover:bg-black/[0.06]",
+    "active:scale-[0.93] transition-all duration-150",
+  ].join(" ");
+
+  const statCardStyle: React.CSSProperties = {
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    border: `1px solid ${isDark ? "oklch(1 0 0 / 0.08)" : "oklch(0 0 0 / 0.08)"}`,
+    boxShadow: isDark
+      ? "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.45)"
+      : "0 1px 0 oklch(1 0 0 / 0.6) inset, 0 8px 24px -8px oklch(0.5 0.05 275 / 0.12)",
+  };
 
   return (
     <div
@@ -253,9 +360,10 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
       aria-modal="true"
       aria-label="Focus mode"
       style={{
-        background: "oklch(0.10 0.03 275 / 0.97)",
+        background: overlayBg,
         backdropFilter: "blur(48px) saturate(160%)",
         WebkitBackdropFilter: "blur(48px) saturate(160%)",
+        transition: "background 400ms ease",
       }}
     >
       {/* Ambient glow behind ring */}
@@ -264,43 +372,25 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         style={{
           background: `radial-gradient(40% 50% at 50% 50%, ${cfg.glow} 0%, transparent 70%)`,
           transition: "background 600ms ease",
+          opacity: isDark ? 1 : 0.6,
         }}
       />
 
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        className={[
-          "absolute top-5 right-5 z-10",
-          "h-10 w-10 rounded-2xl grid place-items-center",
-          "text-muted-foreground hover:text-foreground",
-          "hover:bg-white/[0.09] active:scale-[0.93]",
-          "transition-all duration-150",
-        ].join(" ")}
-        style={{
-          background: "oklch(1 0 0 / 0.05)",
-          border: "1px solid oklch(1 0 0 / 0.08)",
-          boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
-        }}
-        aria-label="Exit focus mode"
-      >
-        <X className="h-4 w-4" />
-      </button>
-
-      {/* Settings button */}
+      {/* Top-left: Settings */}
       <button
         onClick={() => setShowSettings((s) => !s)}
-        className={[
-          "absolute top-5 left-5 z-10",
-          "h-10 w-10 rounded-2xl grid place-items-center",
-          "hover:bg-white/[0.09] active:scale-[0.93]",
-          "transition-all duration-150",
-          showSettings ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-        ].join(" ")}
+        className={cn(iconBtnCls, "absolute top-5 left-5 z-10")}
         style={{
-          background: showSettings ? "oklch(1 0 0 / 0.1)" : "oklch(1 0 0 / 0.05)",
-          border: `1px solid ${showSettings ? "oklch(1 0 0 / 0.15)" : "oklch(1 0 0 / 0.08)"}`,
-          boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+          ...iconBtnStyle,
+          background: showSettings
+            ? isDark
+              ? "oklch(1 0 0 / 0.1)"
+              : "oklch(0 0 0 / 0.08)"
+            : iconBtnStyle.background,
+          border: showSettings
+            ? `1px solid ${isDark ? "oklch(1 0 0 / 0.15)" : "oklch(0 0 0 / 0.12)"}`
+            : iconBtnStyle.border,
+          color: showSettings ? "var(--foreground)" : undefined,
         }}
         aria-label="Timer settings"
         aria-expanded={showSettings}
@@ -308,27 +398,81 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         <Settings2 className="h-4 w-4" />
       </button>
 
+      {/* Top-center: Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        className={cn(iconBtnCls, "absolute top-5 z-10")}
+        style={iconBtnStyle}
+        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      </button>
+
+      {/* Top-right: Close */}
+      <button
+        onClick={onClose}
+        className={cn(iconBtnCls, "absolute top-5 right-5 z-10")}
+        style={iconBtnStyle}
+        aria-label="Exit focus mode"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
       {/* ── Settings panel ── */}
       {showSettings && (
         <div
           className="absolute top-[72px] left-5 z-20 flex flex-col gap-4 p-5 rounded-2xl"
           style={{
-            background: "oklch(0.13 0.03 275 / 0.92)",
+            background: isDark ? "oklch(0.13 0.03 275 / 0.92)" : "oklch(0.97 0.01 280 / 0.94)",
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            border: "1px solid oklch(1 0 0 / 0.1)",
-            boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 16px 40px -8px oklch(0.06 0.02 275 / 0.6)",
+            border: `1px solid ${isDark ? "oklch(1 0 0 / 0.1)" : "oklch(0 0 0 / 0.08)"}`,
+            boxShadow: isDark
+              ? "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 16px 40px -8px oklch(0.06 0.02 275 / 0.6)"
+              : "0 1px 0 oklch(1 0 0 / 0.7) inset, 0 16px 40px -8px oklch(0.5 0.05 275 / 0.12)",
           }}
         >
-          <p className="text-[11px] uppercase tracking-widest text-muted-foreground text-center" style={{ letterSpacing: "0.12em" }}>
+          <p
+            className="text-[11px] uppercase tracking-widest text-center"
+            style={{
+              letterSpacing: "0.12em",
+              color: isDark ? "oklch(0.55 0.03 280)" : "oklch(0.45 0.03 280)",
+            }}
+          >
             Timer settings
           </p>
           <div className="flex items-start gap-5">
-            <DurationStepper label="Focus"      value={workMins}      min={1} max={90} onChange={applyWorkMins} />
-            <DurationStepper label="Short break" value={breakMins}     min={1} max={30} onChange={applyBreakMins} />
-            <DurationStepper label="Long break"  value={longBreakMins} min={1} max={60} onChange={applyLongBreakMins} />
+            <DurationStepper
+              label="Focus"
+              value={workMins}
+              min={1}
+              max={90}
+              onChange={applyWorkMins}
+              isDark={isDark}
+            />
+            <DurationStepper
+              label="Short break"
+              value={breakMins}
+              min={1}
+              max={30}
+              onChange={applyBreakMins}
+              isDark={isDark}
+            />
+            <DurationStepper
+              label="Long break"
+              value={longBreakMins}
+              min={1}
+              max={60}
+              onChange={applyLongBreakMins}
+              isDark={isDark}
+            />
           </div>
-          <p className="text-[9px] text-muted-foreground/40 text-center">Changes take effect immediately</p>
+          <p
+            className="text-[9px] text-center"
+            style={{ color: isDark ? "oklch(0.45 0.02 280)" : "oklch(0.55 0.03 280)" }}
+          >
+            Changes take effect immediately
+          </p>
         </div>
       )}
 
@@ -341,7 +485,9 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
               "h-1.5 w-1.5 rounded-full transition-all duration-500",
               i < pomodoroCount % LONG_BREAK_AFTER
                 ? `${cfg.dot} scale-125`
-                : "bg-white/15"
+                : isDark
+                  ? "bg-white/15"
+                  : "bg-black/15",
             )}
           />
         ))}
@@ -349,10 +495,16 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
       {/* Phase label */}
       <div className="flex items-center gap-2 mb-5 relative z-10">
-        <cfg.icon className="h-4 w-4 text-muted-foreground" />
+        <cfg.icon
+          className="h-4 w-4"
+          style={{ color: isDark ? "oklch(0.60 0.03 280)" : "oklch(0.45 0.03 280)" }}
+        />
         <span
-          className="text-xs font-semibold text-muted-foreground tracking-widest uppercase"
-          style={{ letterSpacing: "0.12em" }}
+          className="text-xs font-semibold tracking-widest uppercase"
+          style={{
+            letterSpacing: "0.12em",
+            color: isDark ? "oklch(0.60 0.03 280)" : "oklch(0.45 0.03 280)",
+          }}
         >
           {cfg.label}
         </span>
@@ -360,15 +512,10 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
       {/* Timer ring */}
       <div className="relative flex items-center justify-center mb-8 z-10">
-        <svg
-          width="280"
-          height="280"
-          className="-rotate-90"
-          aria-hidden="true"
-        >
+        <svg width="280" height="280" className="-rotate-90" aria-hidden="true">
           <defs>
             <linearGradient id="arcWork" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stopColor="oklch(0.74 0.19 295)" />
+              <stop offset="0%" stopColor="oklch(0.74 0.19 295)" />
               <stop offset="100%" stopColor="oklch(0.55 0.23 250)" />
             </linearGradient>
             <filter id="arcGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -379,7 +526,9 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
           {/* Track */}
           <circle
-            cx="140" cy="140" r={radius}
+            cx="140"
+            cy="140"
+            r={radius}
             fill="none"
             stroke={cfg.trackColor}
             strokeWidth="10"
@@ -388,9 +537,15 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
           {/* Shadow arc (glow effect) */}
           {progress > 0 && (
             <circle
-              cx="140" cy="140" r={radius}
+              cx="140"
+              cy="140"
+              r={radius}
               fill="none"
-              stroke={typeof cfg.arcGradient === "string" && cfg.arcGradient.startsWith("#") ? cfg.arcGradient : "oklch(0.65 0.22 285)"}
+              stroke={
+                typeof cfg.arcGradient === "string" && cfg.arcGradient.startsWith("#")
+                  ? cfg.arcGradient
+                  : "oklch(0.65 0.22 285)"
+              }
               strokeWidth="14"
               strokeLinecap="round"
               strokeDasharray={circ}
@@ -403,7 +558,9 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
           {/* Main arc */}
           <circle
-            cx="140" cy="140" r={radius}
+            cx="140"
+            cy="140"
+            r={radius}
             fill="none"
             stroke={cfg.arcGradient}
             strokeWidth="10"
@@ -418,12 +575,19 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
           <span
             className="font-mono text-6xl font-semibold tabular-nums"
-            style={{ letterSpacing: "-0.03em", lineHeight: 1 }}
+            style={{
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+              color: "var(--foreground)",
+            }}
           >
             {formatSeconds(secondsLeft)}
           </span>
           {nextSubjectName && (
-            <span className="text-[11px] text-muted-foreground/70 max-w-[130px] text-center truncate mt-1">
+            <span
+              className="text-[11px] max-w-[130px] text-center truncate mt-1"
+              style={{ color: isDark ? "oklch(0.60 0.03 280)" : "oklch(0.45 0.03 280)" }}
+            >
               {nextSubjectName}
               {nextEvent && ` · ${minutesToTime(nextEvent.start)}`}
             </span>
@@ -437,17 +601,8 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         <button
           onClick={reset}
           aria-label="Reset timer"
-          className={[
-            "h-12 w-12 rounded-2xl grid place-items-center",
-            "text-muted-foreground hover:text-foreground",
-            "hover:bg-white/[0.08] active:scale-[0.93]",
-            "transition-all duration-150",
-          ].join(" ")}
-          style={{
-            background: "oklch(1 0 0 / 0.05)",
-            border: "1px solid oklch(1 0 0 / 0.09)",
-            boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset",
-          }}
+          className={cn(iconBtnCls, "h-12 w-12")}
+          style={iconBtnStyle}
         >
           <RotateCcw className="h-4.5 w-4.5" />
         </button>
@@ -458,25 +613,28 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
           aria-label={running ? "Pause timer" : "Start timer"}
           className={[
             "h-[68px] w-[68px] rounded-[22px] grid place-items-center relative overflow-hidden",
-            "active:scale-[0.94]",
-            "transition-all duration-200",
-            running
-              ? "hover:brightness-110"
-              : "hover:brightness-110 hover:shadow-[0_0_28px_-4px_oklch(0.62_0.21_285/0.55)]",
+            "active:scale-[0.94] transition-all duration-200",
+            running ? "hover:brightness-110" : "hover:brightness-110",
           ].join(" ")}
           style={{
             background: running
-              ? "oklch(1 0 0 / 0.1)"
+              ? isDark
+                ? "oklch(1 0 0 / 0.1)"
+                : "oklch(0 0 0 / 0.08)"
               : "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
             boxShadow: running
-              ? "0 1px 0 oklch(1 0 0 / 0.15) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.5)"
+              ? isDark
+                ? "0 1px 0 oklch(1 0 0 / 0.15) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.5)"
+                : "0 1px 0 oklch(1 0 0 / 0.6) inset, 0 4px 12px -4px oklch(0.5 0.05 275 / 0.15)"
               : "0 0 40px -8px oklch(0.62 0.21 285 / 0.55), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-            border: "1px solid oklch(1 0 0 / 0.12)",
+            border: `1px solid ${isDark ? "oklch(1 0 0 / 0.12)" : "oklch(0 0 0 / 0.08)"}`,
           }}
         >
-          {running
-            ? <Pause className="h-6 w-6 text-foreground" />
-            : <Play  className="h-6 w-6 text-white ml-0.5" />}
+          {running ? (
+            <Pause className="h-6 w-6" style={{ color: "var(--foreground)" }} />
+          ) : (
+            <Play className="h-6 w-6 text-white ml-0.5" />
+          )}
           <span className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
         </button>
 
@@ -484,17 +642,8 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         <button
           onClick={skip}
           aria-label={phase === "work" ? "Skip to break" : "Skip to work session"}
-          className={[
-            "h-12 w-12 rounded-2xl grid place-items-center",
-            "text-muted-foreground hover:text-foreground",
-            "hover:bg-white/[0.08] active:scale-[0.93]",
-            "transition-all duration-150",
-          ].join(" ")}
-          style={{
-            background: "oklch(1 0 0 / 0.05)",
-            border: "1px solid oklch(1 0 0 / 0.09)",
-            boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset",
-          }}
+          className={cn(iconBtnCls, "h-12 w-12")}
+          style={iconBtnStyle}
         >
           <ChevronRight className="h-4.5 w-4.5" />
         </button>
@@ -502,41 +651,67 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
 
       {/* Stats card */}
       <div
-        className={cn("flex items-center gap-5 px-7 py-4 rounded-2xl relative z-10 bg-gradient-to-br", cfg.bg)}
-        style={{
-          background: undefined,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid oklch(1 0 0 / 0.08)",
-          boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.45)",
-        }}
+        className={cn(
+          "flex items-center gap-5 px-7 py-4 rounded-2xl relative z-10 bg-gradient-to-br",
+          cfg.bg,
+        )}
+        style={statCardStyle}
       >
         <div className="text-center">
-          <p className="text-3xl font-semibold font-display" style={{ letterSpacing: "-0.03em" }}>
+          <p
+            className="text-3xl font-semibold font-display"
+            style={{ letterSpacing: "-0.03em", color: "var(--foreground)" }}
+          >
             {pomodoroCount}
           </p>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5" style={{ letterSpacing: "0.1em" }}>
+          <p
+            className="text-[10px] uppercase tracking-widest mt-0.5"
+            style={{
+              letterSpacing: "0.1em",
+              color: isDark ? "oklch(0.55 0.03 280)" : "oklch(0.45 0.03 280)",
+            }}
+          >
             sessions
           </p>
         </div>
 
-        <div className="w-px h-8" style={{ background: "oklch(1 0 0 / 0.1)" }} />
+        <div
+          className="w-px h-8"
+          style={{ background: isDark ? "oklch(1 0 0 / 0.1)" : "oklch(0 0 0 / 0.1)" }}
+        />
 
         <div className="text-center">
-          <p className="text-3xl font-semibold font-display" style={{ letterSpacing: "-0.03em" }}>
+          <p
+            className="text-3xl font-semibold font-display"
+            style={{ letterSpacing: "-0.03em", color: "var(--foreground)" }}
+          >
             {pomodoroCount * workMins}
           </p>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5" style={{ letterSpacing: "0.1em" }}>
+          <p
+            className="text-[10px] uppercase tracking-widest mt-0.5"
+            style={{
+              letterSpacing: "0.1em",
+              color: isDark ? "oklch(0.55 0.03 280)" : "oklch(0.45 0.03 280)",
+            }}
+          >
             min focused
           </p>
         </div>
 
         {nextEvent && (
           <>
-            <div className="w-px h-8" style={{ background: "oklch(1 0 0 / 0.1)" }} />
+            <div
+              className="w-px h-8"
+              style={{ background: isDark ? "oklch(1 0 0 / 0.1)" : "oklch(0 0 0 / 0.1)" }}
+            />
             <div className="min-w-0 max-w-[120px]">
-              <p className="text-sm font-medium truncate">{nextSubjectName}</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+              <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                {nextSubjectName}
+              </p>
+              <p
+                className="text-[11px] truncate mt-0.5"
+                style={{ color: isDark ? "oklch(0.55 0.03 280)" : "oklch(0.45 0.03 280)" }}
+              >
                 {minutesToTime(nextEvent.start)}–{minutesToTime(nextEvent.end)}
               </p>
             </div>
@@ -544,7 +719,10 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         )}
       </div>
 
-      <p className="mt-6 text-[11px] text-muted-foreground/40 relative z-10 tracking-wide">
+      <p
+        className="mt-6 text-[11px] relative z-10 tracking-wide"
+        style={{ color: isDark ? "oklch(0.45 0.02 280)" : "oklch(0.55 0.03 280)" }}
+      >
         {running ? "Stay locked in." : "Press play to start."}
       </p>
     </div>

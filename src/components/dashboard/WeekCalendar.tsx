@@ -16,9 +16,25 @@ const DAY_START = 7 * 60;
 const typeStyle: Record<EventBlock["type"], string> = {
   class: "bg-gradient-to-br shadow-glow",
   study: "bg-gradient-to-br opacity-90",
-  break: "",
+  break: "bg-gradient-to-br",
   exam: "bg-gradient-to-br from-rose-500 to-orange-500 shadow-glow",
 };
+
+/** Maps a break event title to a readable, semantically appropriate gradient. */
+function breakGradient(title: string): string {
+  const t = title.toLowerCase();
+  if (/sleep|night|bed/.test(t)) return "from-slate-600/90 to-slate-800/85";
+  if (/siesta|nap/.test(t)) return "from-violet-500/85 to-purple-700/80";
+  if (/meal|lunch|dinner|breakfast|cook|eat|food|snack/.test(t))
+    return "from-amber-500/90 to-orange-600/85";
+  if (/gym|exercise|walk|run|jog|workout|sport/.test(t))
+    return "from-emerald-500/90 to-teal-600/85";
+  if (/social|friend|chill|hang|party|call/.test(t)) return "from-pink-500/85 to-rose-600/80";
+  if (/free|leisure|scroll|relax|tv|game|movie/.test(t)) return "from-sky-500/80 to-cyan-600/75";
+  if (/morning|routine|prep|prayer|meditat/.test(t)) return "from-amber-400/85 to-yellow-500/80";
+  if (/wind.?down|evening|rest/.test(t)) return "from-indigo-500/80 to-blue-700/75";
+  return "from-slate-500/85 to-slate-600/80";
+}
 
 function getMonday(d: Date): Date {
   const day = d.getDay(); // 0=Sun
@@ -72,11 +88,17 @@ export function WeekCalendar({
 
   return (
     <div className="ring-gradient glass rounded-2xl overflow-hidden">
-      <div className="overflow-x-auto relative">
-        {/* Header */}
+      {/* Single scroll container — scrolls both X and Y, header sticks at top */}
+      <div className="overflow-auto relative" style={{ maxHeight: "min(65vh, 600px)" }}>
+        {/* Sticky header */}
         <div
-          className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]"
-          style={{ borderBottom: "1px solid var(--border)", background: "color-mix(in oklch, var(--muted) 40%, transparent)" }}
+          className="sticky top-0 z-10 grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]"
+          style={{
+            borderBottom: "1px solid var(--border)",
+            background: "color-mix(in oklch, var(--card) 95%, transparent)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
         >
           <div />
           {DAYS.map((d, i) => {
@@ -122,7 +144,9 @@ export function WeekCalendar({
             </div>
             <div className="text-center">
               <p className="text-[13px] font-medium text-foreground/60">No schedule yet</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Import a timetable to see your week</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Import a timetable to see your week
+              </p>
             </div>
           </div>
         )}
@@ -162,8 +186,7 @@ export function WeekCalendar({
                   if (!eventOccursOn(e, weekDates[dayIdx])) return false;
                   const top = ((e.start - DAY_START) / 60) * HOUR_PX;
                   const height = ((e.end - e.start) / 60) * HOUR_PX - 4;
-                  // Skip events before the grid (e.g. overnight sleep blocks),
-                  // after the grid, or with invalid/cross-midnight times
+                  // Skip events before/after the grid or with invalid times
                   return top >= 0 && height > 4;
                 })
                 .map((e) => {
@@ -171,6 +194,15 @@ export function WeekCalendar({
                   const height = ((e.end - e.start) / 60) * HOUR_PX - 4;
                   const subj = subjectById(e.subjectId);
                   const isBreak = e.type === "break";
+                  const isExam = e.type === "exam";
+
+                  // Determine gradient classes
+                  const gradientClasses = isBreak
+                    ? cn("bg-gradient-to-br", breakGradient(e.title))
+                    : isExam
+                      ? typeStyle.exam
+                      : cn(typeStyle[e.type], subj.color);
+
                   return (
                     <div
                       key={e.id}
@@ -178,31 +210,25 @@ export function WeekCalendar({
                         evt.stopPropagation();
                         onEventClick?.(e);
                       }}
-                      style={{
-                        top,
-                        height,
-                        ...(isBreak
-                          ? {
-                              background: "var(--muted)",
-                              border: "1px solid var(--border)",
-                            }
-                          : {}),
-                      }}
+                      style={{ top, height }}
                       className={cn(
                         "absolute left-1 right-1 rounded-lg p-1.5 text-xs text-white overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group",
-                        !isBreak && typeStyle[e.type],
-                        e.type !== "break" && e.type !== "exam" && subj.color,
+                        gradientClasses,
                       )}
                     >
-                      {/* Specular overlay on event blocks */}
-                      {!isBreak && (
-                        <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/18 to-transparent pointer-events-none" />
-                      )}
-                      <div className="font-semibold truncate text-[11px] relative" style={{ letterSpacing: "-0.01em" }}>
+                      {/* Specular overlay on all event blocks */}
+                      <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/18 to-transparent pointer-events-none" />
+                      <div
+                        className="font-semibold truncate text-[11px] relative"
+                        style={{ letterSpacing: "-0.01em" }}
+                      >
                         {e.title}
                       </div>
                       <div className="opacity-80 truncate text-[10px] relative">
-                        {Math.floor(e.start / 60).toString().padStart(2, "0")}:{(e.start % 60).toString().padStart(2, "0")}
+                        {Math.floor(e.start / 60)
+                          .toString()
+                          .padStart(2, "0")}
+                        :{(e.start % 60).toString().padStart(2, "0")}
                         {e.venue ? ` · ${e.venue}` : ""}
                       </div>
                     </div>

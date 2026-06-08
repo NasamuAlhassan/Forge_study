@@ -14,9 +14,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from localStorage after mount (avoids SSR mismatch)
   useEffect(() => {
-    const stored = typeof window !== "undefined"
-      ? (localStorage.getItem("forge-theme") as Theme | null)
-      : null;
+    const stored =
+      typeof window !== "undefined" ? (localStorage.getItem("forge-theme") as Theme | null) : null;
     const resolved = stored ?? "dark";
     setTheme(resolved);
     applyTheme(resolved);

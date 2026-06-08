@@ -26,13 +26,15 @@ export type NewEventDraft = {
   type: "class" | "study" | "break" | "exam";
   day: number;
   start: string; // "HH:MM"
-  end: string;   // "HH:MM"
+  end: string; // "HH:MM"
   subjectId: string;
   venue: string;
 };
 
 function minsToTime(m: number) {
-  return `${Math.floor(m / 60).toString().padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}`;
+  return `${Math.floor(m / 60)
+    .toString()
+    .padStart(2, "0")}:${(m % 60).toString().padStart(2, "0")}`;
 }
 
 const EMPTY: NewEventDraft = {
@@ -96,18 +98,17 @@ export function EventCreateDialog({
   };
 
   const DIALOG_STYLE: CSSProperties = {
-    background: "oklch(0.19 0.04 275 / 0.96)",
+    background: "color-mix(in oklch, var(--popover) 96%, transparent)",
     backdropFilter: "blur(40px) saturate(200%)",
     WebkitBackdropFilter: "blur(40px) saturate(200%)",
-    border: "1px solid oklch(1 0 0 / 0.1)",
-    boxShadow:
-      "0 1px 0 oklch(1 0 0 / 0.14) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.85)",
+    border: "1px solid var(--border)",
+    boxShadow: "0 1px 0 oklch(1 0 0 / 0.14) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.85)",
     borderRadius: "20px",
   };
 
   const inputStyle: CSSProperties = {
-    background: "oklch(1 0 0 / 0.05)",
-    border: "1px solid oklch(1 0 0 / 0.1)",
+    background: "var(--input)",
+    border: "1px solid var(--border)",
     boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
   };
 
@@ -115,10 +116,7 @@ export function EventCreateDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="border-0 p-6 max-w-sm" style={DIALOG_STYLE}>
         <DialogHeader className="mb-1">
-          <DialogTitle
-            className="text-[17px] font-semibold"
-            style={{ letterSpacing: "-0.02em" }}
-          >
+          <DialogTitle className="text-[17px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
             Add calendar block
           </DialogTitle>
         </DialogHeader>
@@ -139,7 +137,10 @@ export function EventCreateDialog({
 
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Type</Label>
-            <Select value={draft.type} onValueChange={(v) => set("type", v as NewEventDraft["type"])}>
+            <Select
+              value={draft.type}
+              onValueChange={(v) => set("type", v as NewEventDraft["type"])}
+            >
               <SelectTrigger className="border-0 text-[13px]" style={inputStyle}>
                 <SelectValue />
               </SelectTrigger>
@@ -166,7 +167,8 @@ export function EventCreateDialog({
                   <SelectItem value="__none__">None</SelectItem>
                   {subjects.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.name}{s.code ? ` (${s.code})` : ""}
+                      {s.name}
+                      {s.code ? ` (${s.code})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -183,18 +185,32 @@ export function EventCreateDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {DAYS.map((d, i) => (
-                    <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                    <SelectItem key={i} value={String(i)}>
+                      {d}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">Start</Label>
-              <Input type="time" value={draft.start} onChange={(e) => set("start", e.target.value)} className="border-0 text-[13px]" style={inputStyle} />
+              <Input
+                type="time"
+                value={draft.start}
+                onChange={(e) => set("start", e.target.value)}
+                className="border-0 text-[13px]"
+                style={inputStyle}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">End</Label>
-              <Input type="time" value={draft.end} onChange={(e) => set("end", e.target.value)} className="border-0 text-[13px]" style={inputStyle} />
+              <Input
+                type="time"
+                value={draft.end}
+                onChange={(e) => set("end", e.target.value)}
+                className="border-0 text-[13px]"
+                style={inputStyle}
+              />
             </div>
           </div>
 
@@ -215,7 +231,7 @@ export function EventCreateDialog({
             onClick={onClose}
             disabled={busy}
             className="h-9 px-4 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-            style={{ border: "1px solid oklch(1 0 0 / 0.09)" }}
+            style={{ border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)" }}
           >
             Cancel
           </button>

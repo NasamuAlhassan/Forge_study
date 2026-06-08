@@ -1,5 +1,15 @@
 import { useRef, useState } from "react";
-import { Brain, CalendarPlus, Loader2, Mic, MicOff, Pencil, Sparkles, Trash2, Wand2 } from "lucide-react";
+import {
+  Brain,
+  CalendarPlus,
+  Loader2,
+  Mic,
+  MicOff,
+  Pencil,
+  Sparkles,
+  Trash2,
+  Wand2,
+} from "lucide-react";
 import { generateStudyPlan } from "@/lib/ai.functions";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,20 +33,70 @@ type Session = {
 
 // Study sessions: coloured by intensity
 const intensityConfig: Record<Session["intensity"], { from: string; to: string; label: string }> = {
-  light:    { from: "oklch(0.60 0.18 160 / 0.22)", to: "oklch(0.65 0.17 175 / 0.1)",  label: "oklch(0.72 0.15 160)" },
-  moderate: { from: "oklch(0.55 0.22 250 / 0.22)", to: "oklch(0.62 0.21 285 / 0.1)",  label: "oklch(0.74 0.19 295)" },
-  deep:     { from: "oklch(0.62 0.21 285 / 0.25)", to: "oklch(0.55 0.23 250 / 0.1)",  label: "oklch(0.74 0.19 295)" },
+  light: {
+    from: "oklch(0.60 0.18 160 / 0.22)",
+    to: "oklch(0.65 0.17 175 / 0.1)",
+    label: "oklch(0.72 0.15 160)",
+  },
+  moderate: {
+    from: "oklch(0.55 0.22 250 / 0.22)",
+    to: "oklch(0.62 0.21 285 / 0.1)",
+    label: "oklch(0.74 0.19 295)",
+  },
+  deep: {
+    from: "oklch(0.62 0.21 285 / 0.25)",
+    to: "oklch(0.55 0.23 250 / 0.1)",
+    label: "oklch(0.74 0.19 295)",
+  },
 };
 
 // Life blocks: coloured by category
-const categoryConfig: Record<Exclude<LifeCategory, "study">, { from: string; to: string; accent: string; tag: string }> = {
-  sleep:    { from: "oklch(0.20 0.05 265 / 0.5)",  to: "oklch(0.16 0.03 275 / 0.18)", accent: "oklch(0.62 0.10 265)", tag: "Sleep" },
-  meal:     { from: "oklch(0.60 0.19 55 / 0.24)",  to: "oklch(0.64 0.16 44 / 0.09)",  accent: "oklch(0.72 0.18 55)",  tag: "Meal" },
-  nap:      { from: "oklch(0.48 0.13 280 / 0.24)", to: "oklch(0.44 0.10 270 / 0.09)", accent: "oklch(0.68 0.12 280)", tag: "Rest" },
-  exercise: { from: "oklch(0.56 0.21 142 / 0.24)", to: "oklch(0.60 0.18 158 / 0.09)", accent: "oklch(0.70 0.19 144)", tag: "Exercise" },
-  social:   { from: "oklch(0.60 0.20 20 / 0.24)",  to: "oklch(0.64 0.17 32 / 0.09)",  accent: "oklch(0.72 0.19 22)",  tag: "Social" },
-  leisure:  { from: "oklch(0.56 0.16 196 / 0.24)", to: "oklch(0.60 0.13 208 / 0.09)", accent: "oklch(0.70 0.15 198)", tag: "Leisure" },
-  personal: { from: "oklch(0.50 0.09 242 / 0.24)", to: "oklch(0.46 0.07 252 / 0.09)", accent: "oklch(0.65 0.09 244)", tag: "Personal" },
+const categoryConfig: Record<
+  Exclude<LifeCategory, "study">,
+  { from: string; to: string; accent: string; tag: string }
+> = {
+  sleep: {
+    from: "oklch(0.20 0.05 265 / 0.5)",
+    to: "oklch(0.16 0.03 275 / 0.18)",
+    accent: "oklch(0.62 0.10 265)",
+    tag: "Sleep",
+  },
+  meal: {
+    from: "oklch(0.60 0.19 55 / 0.24)",
+    to: "oklch(0.64 0.16 44 / 0.09)",
+    accent: "oklch(0.72 0.18 55)",
+    tag: "Meal",
+  },
+  nap: {
+    from: "oklch(0.48 0.13 280 / 0.24)",
+    to: "oklch(0.44 0.10 270 / 0.09)",
+    accent: "oklch(0.68 0.12 280)",
+    tag: "Rest",
+  },
+  exercise: {
+    from: "oklch(0.56 0.21 142 / 0.24)",
+    to: "oklch(0.60 0.18 158 / 0.09)",
+    accent: "oklch(0.70 0.19 144)",
+    tag: "Exercise",
+  },
+  social: {
+    from: "oklch(0.60 0.20 20 / 0.24)",
+    to: "oklch(0.64 0.17 32 / 0.09)",
+    accent: "oklch(0.72 0.19 22)",
+    tag: "Social",
+  },
+  leisure: {
+    from: "oklch(0.56 0.16 196 / 0.24)",
+    to: "oklch(0.60 0.13 208 / 0.09)",
+    accent: "oklch(0.70 0.15 198)",
+    tag: "Leisure",
+  },
+  personal: {
+    from: "oklch(0.50 0.09 242 / 0.24)",
+    to: "oklch(0.46 0.07 252 / 0.09)",
+    accent: "oklch(0.65 0.09 244)",
+    tag: "Personal",
+  },
 };
 
 export function StudyPlanGenerator() {
@@ -80,7 +140,7 @@ export function StudyPlanGenerator() {
         setTranscribing(true);
         try {
           const text = await transcribeAudio(blob);
-          if (text) setContext((prev) => prev ? `${prev}\n${text}` : text);
+          if (text) setContext((prev) => (prev ? `${prev}\n${text}` : text));
         } catch (err) {
           toast.error(err instanceof Error ? err.message : "Couldn't transcribe audio");
         } finally {
@@ -109,11 +169,11 @@ export function StudyPlanGenerator() {
     const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     // Pass ALL existing events — never overlap any of them
     if (events.length > 0) {
-      lines.push("EXISTING CALENDAR (never place any block — study or life — over these time slots):");
+      lines.push(
+        "EXISTING CALENDAR (never place any block — study or life — over these time slots):",
+      );
       for (let d = 0; d < 7; d++) {
-        const dayEvents = events
-          .filter((e) => e.day === d)
-          .sort((a, b) => a.start - b.start);
+        const dayEvents = events.filter((e) => e.day === d).sort((a, b) => a.start - b.start);
         if (dayEvents.length === 0) continue;
         const slots = dayEvents
           .map((e) => `${e.title} [${e.type}] ${minutesToTime(e.start)}–${minutesToTime(e.end)}`)
@@ -176,7 +236,10 @@ export function StudyPlanGenerator() {
         {/* Specular */}
         <div
           className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)",
+          }}
         />
 
         <div className="flex items-center gap-3 relative">
@@ -213,19 +276,20 @@ export function StudyPlanGenerator() {
               listening
                 ? {
                     background: "linear-gradient(135deg, oklch(0.65 0.24 25), oklch(0.58 0.26 15))",
-                    boxShadow: "0 0 16px -4px oklch(0.65 0.24 25 / 0.6), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                    boxShadow:
+                      "0 0 16px -4px oklch(0.65 0.24 25 / 0.6), 0 1px 0 oklch(1 0 0 / 0.2) inset",
                     border: "1px solid oklch(1 0 0 / 0.12)",
                   }
                 : transcribing
                   ? {
-                      background: "oklch(1 0 0 / 0.04)",
-                      border: "1px solid oklch(1 0 0 / 0.08)",
+                      background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+                      border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
                       opacity: 0.5,
                       cursor: "wait",
                     }
                   : {
-                      background: "oklch(1 0 0 / 0.05)",
-                      border: "1px solid oklch(1 0 0 / 0.09)",
+                      background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
+                      border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
                       boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
                     }
             }
@@ -244,10 +308,16 @@ export function StudyPlanGenerator() {
         </div>
 
         {listening && (
-          <p className="mt-2 text-[11px] flex items-center gap-1.5 relative" style={{ color: "oklch(0.65 0.24 25)" }}>
+          <p
+            className="mt-2 text-[11px] flex items-center gap-1.5 relative"
+            style={{ color: "oklch(0.65 0.24 25)" }}
+          >
             <span
               className="h-1.5 w-1.5 rounded-full inline-block"
-              style={{ background: "oklch(0.65 0.24 25)", animation: "pulse 1.5s ease-in-out infinite" }}
+              style={{
+                background: "oklch(0.65 0.24 25)",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
             />
             Recording — tap the mic to stop
           </p>
@@ -257,20 +327,24 @@ export function StudyPlanGenerator() {
           value={context}
           onChange={(e) => setContext(e.target.value)}
           rows={12}
-          placeholder={"Describe your week — e.g.\n\nCourses: Calculus II (hard), Data Structures (medium).\nSleep: 11pm–7am. Wake up: 6:30am. Best focus: mornings.\nGoal: 20h study/week. Exam in 3 weeks: Calculus II.\nLife: gym Mon/Wed/Fri at 6pm, lunch with friends on Wed,\n  usually cook dinner, like to scroll in the evening.\n  Need downtime — don't pack every hour."}
+          placeholder={
+            "Describe your week — e.g.\n\nCourses: Calculus II (hard), Data Structures (medium).\nSleep: 11pm–7am. Wake up: 6:30am. Best focus: mornings.\nGoal: 20h study/week. Exam in 3 weeks: Calculus II.\nLife: gym Mon/Wed/Fri at 6pm, lunch with friends on Wed,\n  usually cook dinner, like to scroll in the evening.\n  Need downtime — don't pack every hour."
+          }
           className="mt-4 w-full rounded-xl p-3 text-[13px] outline-none resize-none placeholder:text-muted-foreground/40 transition-all duration-200 relative"
           style={{
-            background: "oklch(1 0 0 / 0.04)",
-            border: "1px solid oklch(1 0 0 / 0.09)",
+            background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+            border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
             boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
             color: "inherit",
           }}
           onFocus={(e) => {
             e.currentTarget.style.border = "1px solid oklch(0.62 0.21 285 / 0.5)";
-            e.currentTarget.style.boxShadow = "0 0 0 3px oklch(0.62 0.21 285 / 0.12), 0 1px 0 oklch(1 0 0 / 0.07) inset";
+            e.currentTarget.style.boxShadow =
+              "0 0 0 3px oklch(0.62 0.21 285 / 0.12), 0 1px 0 oklch(1 0 0 / 0.07) inset";
           }}
           onBlur={(e) => {
-            e.currentTarget.style.border = "1px solid oklch(1 0 0 / 0.09)";
+            e.currentTarget.style.border =
+              "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)";
             e.currentTarget.style.boxShadow = "0 1px 0 oklch(1 0 0 / 0.07) inset";
           }}
         />
@@ -281,17 +355,22 @@ export function StudyPlanGenerator() {
           className="mt-4 w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
           style={{
             background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-            boxShadow: loading ? "none" : "0 0 24px -6px oklch(0.62 0.21 285 / 0.55), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+            boxShadow: loading
+              ? "none"
+              : "0 0 24px -6px oklch(0.62 0.21 285 / 0.55), 0 1px 0 oklch(1 0 0 / 0.2) inset",
           }}
         >
           {loading ? (
-            <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" /> Generating…
+            </>
           ) : (
-            <><Wand2 className="h-4 w-4" /> Generate study plan</>
+            <>
+              <Wand2 className="h-4 w-4" /> Generate study plan
+            </>
           )}
           <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
         </button>
-
       </div>
 
       {/* Right: generated sessions */}
@@ -299,15 +378,15 @@ export function StudyPlanGenerator() {
         {/* Specular */}
         <div
           className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)",
+          }}
         />
 
         {/* Header row */}
         <div className="flex items-center justify-between gap-2 relative">
-          <h3
-            className="text-[15px] font-semibold"
-            style={{ letterSpacing: "-0.02em" }}
-          >
+          <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
             Generated sessions
           </h3>
           {options.length > 0 && (
@@ -316,7 +395,9 @@ export function StudyPlanGenerator() {
                 onClick={run}
                 disabled={loading}
                 className="h-8 px-3 rounded-xl text-[12px] text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] disabled:opacity-50 transition-all duration-150"
-                style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+                style={{
+                  border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
+                }}
               >
                 Regenerate
               </button>
@@ -332,7 +413,9 @@ export function StudyPlanGenerator() {
                 {saving ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <><CalendarPlus className="h-3.5 w-3.5" /> Save to calendar</>
+                  <>
+                    <CalendarPlus className="h-3.5 w-3.5" /> Save to calendar
+                  </>
                 )}
                 <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
               </button>
@@ -344,14 +427,19 @@ export function StudyPlanGenerator() {
         {options.length > 1 && (
           <div
             className="mt-3 flex gap-1.5 relative p-1 rounded-xl"
-            style={{ background: "oklch(1 0 0 / 0.04)", border: "1px solid oklch(1 0 0 / 0.07)" }}
+            style={{
+              background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+              border: "1px solid color-mix(in oklch, var(--foreground) 7%, transparent)",
+            }}
           >
             {options.map((opt, idx) => {
               const isActive = idx === selectedOption;
               const labelColor =
-                opt.name === "Intensive" ? "oklch(0.70 0.19 25)"
-                : opt.name === "Balanced"  ? "oklch(0.74 0.19 295)"
-                :                            "oklch(0.72 0.15 160)";
+                opt.name === "Intensive"
+                  ? "oklch(0.70 0.19 25)"
+                  : opt.name === "Balanced"
+                    ? "oklch(0.74 0.19 295)"
+                    : "oklch(0.72 0.15 160)";
               return (
                 <button
                   key={opt.name}
@@ -368,7 +456,7 @@ export function StudyPlanGenerator() {
                       : {
                           background: "transparent",
                           border: "1px solid transparent",
-                          color: "oklch(1 0 0 / 0.4)",
+                          color: "color-mix(in oklch, var(--foreground) 40%, transparent)",
                         }
                   }
                 >
@@ -397,7 +485,9 @@ export function StudyPlanGenerator() {
                 Why this plan
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">{activePlan.rationale}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {activePlan.rationale}
+            </p>
           </div>
         )}
 
@@ -405,7 +495,9 @@ export function StudyPlanGenerator() {
           {options.length === 0 && !loading && (
             <div
               className="text-[13px] text-muted-foreground/50 py-16 text-center rounded-2xl"
-              style={{ border: "1px dashed oklch(1 0 0 / 0.09)" }}
+              style={{
+                border: "1px dashed color-mix(in oklch, var(--foreground) 9%, transparent)",
+              }}
             >
               Your AI study plans will appear here.
             </div>
@@ -416,17 +508,23 @@ export function StudyPlanGenerator() {
               <div
                 key={i}
                 className="h-[72px] rounded-xl animate-pulse"
-                style={{ background: "oklch(1 0 0 / 0.04)", animationDelay: `${i * 60}ms` }}
+                style={{
+                  background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+                  animationDelay: `${i * 60}ms`,
+                }}
               />
             ))}
 
           {sessions.map((s, i) => {
             const isStudy = !s.category || s.category === "study";
             const studyCfg = isStudy ? intensityConfig[s.intensity] : null;
-            const lifeCfg = !isStudy ? categoryConfig[s.category as Exclude<LifeCategory, "study">] : null;
+            const lifeCfg = !isStudy
+              ? categoryConfig[s.category as Exclude<LifeCategory, "study">]
+              : null;
             const fromColor = studyCfg?.from ?? lifeCfg?.from ?? intensityConfig.moderate.from;
-            const toColor   = studyCfg?.to   ?? lifeCfg?.to   ?? intensityConfig.moderate.to;
-            const accentColor = studyCfg?.label ?? lifeCfg?.accent ?? intensityConfig.moderate.label;
+            const toColor = studyCfg?.to ?? lifeCfg?.to ?? intensityConfig.moderate.to;
+            const accentColor =
+              studyCfg?.label ?? lifeCfg?.accent ?? intensityConfig.moderate.label;
 
             return (
               <div
@@ -447,7 +545,9 @@ export function StudyPlanGenerator() {
                   >
                     {s.day}
                   </span>
-                  <span className="text-muted-foreground">{s.start}–{s.end}</span>
+                  <span className="text-muted-foreground">
+                    {s.start}–{s.end}
+                  </span>
                 </div>
                 <div
                   className="mt-1 text-[13px] font-semibold relative"
@@ -481,8 +581,8 @@ export function StudyPlanGenerator() {
                         prev.map((opt, oi) =>
                           oi === selectedOption
                             ? { ...opt, sessions: opt.sessions.filter((_, si) => si !== i) }
-                            : opt
-                        )
+                            : opt,
+                        ),
                       );
                     }}
                     className="h-7 w-7 grid place-items-center rounded-lg transition-all duration-150 hover:scale-105 active:scale-95"
@@ -510,11 +610,11 @@ export function StudyPlanGenerator() {
                 ? {
                     ...opt,
                     sessions: opt.sessions.map((s, si) =>
-                      si === editIdx ? { ...s, ...updated } : s
+                      si === editIdx ? { ...s, ...updated } : s,
                     ),
                   }
-                : opt
-            )
+                : opt,
+            ),
           );
           toast.success("Session updated");
         }}
@@ -523,8 +623,8 @@ export function StudyPlanGenerator() {
             prev.map((opt, oi) =>
               oi === selectedOption
                 ? { ...opt, sessions: opt.sessions.filter((_, si) => si !== editIdx) }
-                : opt
-            )
+                : opt,
+            ),
           );
           toast.success("Session removed");
         }}

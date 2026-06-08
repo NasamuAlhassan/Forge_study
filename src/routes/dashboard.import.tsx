@@ -9,7 +9,10 @@ export const Route = createFileRoute("/dashboard/import")({
 function ImportPage() {
   return (
     <>
-      <Topbar title="Import timetable" subtitle="Upload a screenshot or PDF — Forge does the rest." />
+      <Topbar
+        title="Import timetable"
+        subtitle="Upload a screenshot or PDF — Forge does the rest."
+      />
       <main className="p-4 sm:p-6">
         <TimetableUploader />
       </main>

@@ -18,12 +18,12 @@ import { useMemo, useState } from "react";
 import { useSchedule } from "@/hooks/use-schedule";
 
 const items = [
-  { to: "/dashboard",          label: "Overview",         icon: LayoutDashboard },
-  { to: "/dashboard/calendar", label: "Calendar",         icon: CalendarRange },
-  { to: "/dashboard/study-plan", label: "Study plan",    icon: Brain },
-  { to: "/dashboard/import",   label: "Import timetable", icon: Upload },
-  { to: "/dashboard/voice",    label: "Voice scheduling", icon: Mic },
-  { to: "/dashboard/analytics", label: "Analytics",      icon: BarChart3 },
+  { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { to: "/dashboard/calendar", label: "Calendar", icon: CalendarRange },
+  { to: "/dashboard/study-plan", label: "Study plan", icon: Brain },
+  { to: "/dashboard/import", label: "Import timetable", icon: Upload },
+  { to: "/dashboard/voice", label: "Voice scheduling", icon: Mic },
+  { to: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?: () => void }) {
@@ -48,7 +48,7 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
         to="/"
         onClick={onNavigate}
         className="flex items-center gap-3 px-5 h-[60px] shrink-0 group"
-        style={{ borderBottom: "1px solid oklch(1 0 0 / 0.06)" }}
+        style={{ borderBottom: "1px solid color-mix(in oklch, var(--foreground) 6%, transparent)" }}
       >
         <div className="relative h-8 w-8 rounded-xl bg-gradient-primary grid place-items-center shadow-glow shrink-0 transition-transform duration-300 group-hover:scale-105 group-active:scale-95">
           <Sparkles className="h-4 w-4 text-white" />
@@ -66,9 +66,7 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
       {/* Nav items */}
       <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
         {items.map((item, i) => {
-          const active =
-            path === item.to ||
-            (item.to !== "/dashboard" && path.startsWith(item.to));
+          const active = path === item.to || (item.to !== "/dashboard" && path.startsWith(item.to));
           return (
             <Link
               key={item.to}
@@ -90,18 +88,16 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
                       "text-muted-foreground",
                       "hover:text-foreground hover:bg-white/[0.06]",
                       "active:scale-[0.98] active:bg-white/[0.09]",
-                    ].join(" ")
+                    ].join(" "),
               )}
             >
               <item.icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors duration-200",
-                  active ? "text-primary-glow" : ""
+                  active ? "text-primary-glow" : "",
                 )}
               />
-              <span className={active ? "text-gradient font-semibold" : ""}>
-                {item.label}
-              </span>
+              <span className={active ? "text-gradient font-semibold" : ""}>{item.label}</span>
               {active && (
                 <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/[0.08] to-transparent pointer-events-none" />
               )}
@@ -111,7 +107,10 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
       </nav>
 
       {/* Bottom section */}
-      <div className="px-2.5 pb-3 space-y-1.5 shrink-0" style={{ borderTop: "1px solid oklch(1 0 0 / 0.06)" }}>
+      <div
+        className="px-2.5 pb-3 space-y-1.5 shrink-0"
+        style={{ borderTop: "1px solid color-mix(in oklch, var(--foreground) 6%, transparent)" }}
+      >
         {/* Streak card */}
         <div className="ring-gradient glass rounded-xl p-3.5 mt-3">
           <div className="flex items-center gap-2">
@@ -120,7 +119,7 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
                 "h-4 w-4 shrink-0",
                 streak > 0
                   ? "text-amber-400 drop-shadow-[0_0_6px_oklch(0.82_0.18_70/0.8)]"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground",
               )}
             />
             <span className="text-sm font-semibold">
@@ -131,8 +130,8 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
             {streak >= 5
               ? "You're on fire. Keep going."
               : streak > 0
-              ? "Good start. Show up tomorrow."
-              : "Add events to start your streak."}
+                ? "Good start. Show up tomorrow."
+                : "Add events to start your streak."}
           </p>
           {/* Streak progress dots */}
           {streak > 0 && (
@@ -154,7 +153,10 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
         {/* Focus mode button */}
         <button
           type="button"
-          onClick={() => { onNavigate?.(); onFocus?.(); }}
+          onClick={() => {
+            onNavigate?.();
+            onFocus?.();
+          }}
           className={[
             "w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px]",
             "rounded-xl text-sm font-semibold text-primary-foreground",

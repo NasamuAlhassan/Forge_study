@@ -52,9 +52,7 @@ export function useNotifications() {
 
       // Today: happening now, starting soon (≤30 min), or later today
       if (e.day === todayApp) {
-        const level: NotifLevel =
-          minsUntil! <= 0 ? "now" :
-          minsUntil! <= 30 ? "soon" : "today";
+        const level: NotifLevel = minsUntil! <= 0 ? "now" : minsUntil! <= 30 ? "soon" : "today";
 
         notifs.push({
           id: e.id,
@@ -136,8 +134,7 @@ export function useEventAlerts() {
         if (e.day !== todayApp) continue;
 
         const minsUntil = e.start - nowMins;
-        const subjectName =
-          subjects.find((s) => s.id === e.subjectId)?.name ?? e.title;
+        const subjectName = subjects.find((s) => s.id === e.subjectId)?.name ?? e.title;
 
         // 5-minute warning
         if (minsUntil >= 4 && minsUntil <= 5) {

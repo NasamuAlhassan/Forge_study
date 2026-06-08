@@ -1,9 +1,21 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 
 export type EditableSession = {
@@ -65,18 +77,17 @@ export function SessionEditDialog({
   };
 
   const DIALOG_STYLE: CSSProperties = {
-    background: "oklch(0.19 0.04 275 / 0.96)",
+    background: "color-mix(in oklch, var(--popover) 96%, transparent)",
     backdropFilter: "blur(40px) saturate(200%)",
     WebkitBackdropFilter: "blur(40px) saturate(200%)",
-    border: "1px solid oklch(1 0 0 / 0.1)",
-    boxShadow:
-      "0 1px 0 oklch(1 0 0 / 0.14) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.85)",
+    border: "1px solid var(--border)",
+    boxShadow: "0 1px 0 oklch(1 0 0 / 0.14) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.85)",
     borderRadius: "20px",
   };
 
   const inputStyle: CSSProperties = {
-    background: "oklch(1 0 0 / 0.05)",
-    border: "1px solid oklch(1 0 0 / 0.1)",
+    background: "var(--input)",
+    border: "1px solid var(--border)",
     boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
   };
 
@@ -84,10 +95,7 @@ export function SessionEditDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="border-0 p-6" style={DIALOG_STYLE}>
         <DialogHeader className="mb-1">
-          <DialogTitle
-            className="text-[17px] font-semibold"
-            style={{ letterSpacing: "-0.02em" }}
-          >
+          <DialogTitle className="text-[17px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
             {title}
           </DialogTitle>
         </DialogHeader>
@@ -95,30 +103,59 @@ export function SessionEditDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Subject</Label>
-            <Input value={draft.subject} onChange={(e) => set("subject", e.target.value)} className="border-0 text-[13px]" style={inputStyle} />
+            <Input
+              value={draft.subject}
+              onChange={(e) => set("subject", e.target.value)}
+              className="border-0 text-[13px]"
+              style={inputStyle}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Focus</Label>
-            <Input value={draft.focus} onChange={(e) => set("focus", e.target.value)} placeholder="What to work on" className="border-0 text-[13px]" style={inputStyle} />
+            <Input
+              value={draft.focus}
+              onChange={(e) => set("focus", e.target.value)}
+              placeholder="What to work on"
+              className="border-0 text-[13px]"
+              style={inputStyle}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">Day</Label>
               <Select value={draft.day} onValueChange={(v) => set("day", v)}>
-                <SelectTrigger className="border-0 text-[13px]" style={inputStyle}><SelectValue /></SelectTrigger>
+                <SelectTrigger className="border-0 text-[13px]" style={inputStyle}>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {DAYS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  {DAYS.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">Start</Label>
-              <Input type="time" value={draft.start} onChange={(e) => set("start", e.target.value)} className="border-0 text-[13px]" style={inputStyle} />
+              <Input
+                type="time"
+                value={draft.start}
+                onChange={(e) => set("start", e.target.value)}
+                className="border-0 text-[13px]"
+                style={inputStyle}
+              />
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-muted-foreground">End</Label>
-              <Input type="time" value={draft.end} onChange={(e) => set("end", e.target.value)} className="border-0 text-[13px]" style={inputStyle} />
+              <Input
+                type="time"
+                value={draft.end}
+                onChange={(e) => set("end", e.target.value)}
+                className="border-0 text-[13px]"
+                style={inputStyle}
+              />
             </div>
           </div>
 
@@ -135,8 +172,13 @@ export function SessionEditDialog({
 
           <div className="space-y-1.5">
             <Label className="text-[11px] text-muted-foreground">Intensity</Label>
-            <Select value={draft.intensity} onValueChange={(v) => set("intensity", v as EditableSession["intensity"])}>
-              <SelectTrigger className="border-0 text-[13px]" style={inputStyle}><SelectValue /></SelectTrigger>
+            <Select
+              value={draft.intensity}
+              onValueChange={(v) => set("intensity", v as EditableSession["intensity"])}
+            >
+              <SelectTrigger className="border-0 text-[13px]" style={inputStyle}>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="light">Light</SelectItem>
                 <SelectItem value="moderate">Moderate</SelectItem>
@@ -161,7 +203,7 @@ export function SessionEditDialog({
             onClick={onClose}
             disabled={busy}
             className="h-9 px-4 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-            style={{ border: "1px solid oklch(1 0 0 / 0.09)" }}
+            style={{ border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)" }}
           >
             Cancel
           </button>

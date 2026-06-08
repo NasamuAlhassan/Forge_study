@@ -290,7 +290,9 @@ export function ForgeAssistant() {
         y: Math.max(8, Math.min(window.innerHeight - BUBBLE - 8, bubbleOrigin.current.by + dy)),
       });
     };
-    const onUp = () => { bubbleDragging.current = false; };
+    const onUp = () => {
+      bubbleDragging.current = false;
+    };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     return () => {
@@ -350,9 +352,45 @@ export function ForgeAssistant() {
             // skip malformed individual blocks
           }
         }
+
         if (parsed.length > 0) {
-          setPendingActions(parsed);
-          setPendingActionsTotal(parsed.length);
+          // Client-side conflict guard: if an add_event overlaps an existing
+          // event on the same day, surface it conversationally instead of
+          // silently queuing it. The system prompt already asks the AI to
+          // check, but this is a reliable safety net.
+          const confirmed: ForgeAction[] = [];
+          const conflictNotes: string[] = [];
+
+          for (const action of parsed) {
+            if (action.action === "add_event") {
+              const e = action.event;
+              const newStart = timeStringToMinutes(e.startTime);
+              const newEnd = timeStringToMinutes(e.endTime);
+              const conflict = events.find(
+                (ex) => ex.day === e.day && ex.start < newEnd && ex.end > newStart,
+              );
+              if (conflict) {
+                conflictNotes.push(
+                  `Heads up — there's already "${conflict.title}" (${fmt(conflict.start)}–${fmt(conflict.end)}) in that slot on ${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][e.day]}. Want me to move it, pick a different time, or replace it?`,
+                );
+              } else {
+                confirmed.push(action);
+              }
+            } else {
+              confirmed.push(action);
+            }
+          }
+
+          if (conflictNotes.length > 0) {
+            setMessages((prev) => [
+              ...prev,
+              { id: Date.now() + 1, role: "assistant", content: conflictNotes[0] },
+            ]);
+          }
+          if (confirmed.length > 0) {
+            setPendingActions(confirmed);
+            setPendingActionsTotal(confirmed.length);
+          }
         }
       }
     } catch (err) {
@@ -464,15 +502,14 @@ export function ForgeAssistant() {
         className="z-50 h-14 w-14 rounded-[18px] grid place-items-center overflow-hidden hover:brightness-110 active:scale-[0.92] transition-all duration-200"
         style={{
           position: "fixed",
-          ...(bubblePos
-            ? { left: bubblePos.x, top: bubblePos.y }
-            : { bottom: 24, right: 24 }),
+          ...(bubblePos ? { left: bubblePos.x, top: bubblePos.y } : { bottom: 24, right: 24 }),
           cursor: "grab",
           background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
           boxShadow:
             "0 0 48px -8px oklch(0.62 0.21 285 / 0.75), 0 8px 24px -4px oklch(0.06 0.02 275 / 0.45), 0 1px 0 oklch(1 0 0 / 0.22) inset",
           border: "1px solid oklch(1 0 0 / 0.15)",
-          transition: "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, filter 150ms ease",
+          transition:
+            "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, filter 150ms ease",
           touchAction: "none",
           userSelect: "none",
         }}
@@ -500,37 +537,46 @@ export function ForgeAssistant() {
       {isMobile && (
         <div
           className="fixed inset-0 z-40"
-          style={{ background: "oklch(0 0 0 / 0.5)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}
+          style={{
+            background: "oklch(0 0 0 / 0.5)",
+            backdropFilter: "blur(2px)",
+            WebkitBackdropFilter: "blur(2px)",
+          }}
           onClick={() => setOpen(false)}
           aria-hidden="true"
         />
       )}
 
       <div
-        style={isMobile ? {
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "min(85svh, 580px)",
-          background: "color-mix(in oklch, var(--card) 96%, transparent)",
-          backdropFilter: "blur(40px) saturate(180%)",
-          WebkitBackdropFilter: "blur(40px) saturate(180%)",
-          border: "1px solid var(--border)",
-          borderBottom: "none",
-          boxShadow: "0 -8px 40px -8px oklch(0.04 0.02 275 / 0.4), 0 1px 0 oklch(1 0 0 / 0.1) inset",
-          borderRadius: "24px 24px 0 0",
-        } : {
-          ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
-          width: PANEL_W,
-          height: PANEL_H,
-          background: "color-mix(in oklch, var(--card) 96%, transparent)",
-          backdropFilter: "blur(40px) saturate(180%)",
-          WebkitBackdropFilter: "blur(40px) saturate(180%)",
-          border: "1px solid var(--border)",
-          boxShadow:
-            "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 -1px 0 oklch(0 0 0 / 0.06) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.08)",
-          borderRadius: "24px",
-        }}
+        style={
+          isMobile
+            ? {
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: "min(85svh, 580px)",
+                background: "color-mix(in oklch, var(--card) 96%, transparent)",
+                backdropFilter: "blur(40px) saturate(180%)",
+                WebkitBackdropFilter: "blur(40px) saturate(180%)",
+                border: "1px solid var(--border)",
+                borderBottom: "none",
+                boxShadow:
+                  "0 -8px 40px -8px oklch(0.04 0.02 275 / 0.4), 0 1px 0 oklch(1 0 0 / 0.1) inset",
+                borderRadius: "24px 24px 0 0",
+              }
+            : {
+                ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
+                width: PANEL_W,
+                height: PANEL_H,
+                background: "color-mix(in oklch, var(--card) 96%, transparent)",
+                backdropFilter: "blur(40px) saturate(180%)",
+                WebkitBackdropFilter: "blur(40px) saturate(180%)",
+                border: "1px solid var(--border)",
+                boxShadow:
+                  "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 -1px 0 oklch(0 0 0 / 0.06) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.08)",
+                borderRadius: "24px",
+              }
+        }
         className="fixed z-50 flex flex-col overflow-hidden"
       >
         {/* Specular highlight — top-left light hit */}
@@ -556,7 +602,7 @@ export function ForgeAssistant() {
           onTouchStart={!isMobile ? onHeaderTouchStart : undefined}
           className={cn(
             "flex items-center justify-between px-4 py-3 select-none shrink-0 relative",
-            !isMobile && "cursor-grab active:cursor-grabbing"
+            !isMobile && "cursor-grab active:cursor-grabbing",
           )}
           style={{
             borderBottom: "1px solid var(--border)",
@@ -582,13 +628,13 @@ export function ForgeAssistant() {
               >
                 Forge AI
               </p>
-              <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-                Your study assistant
-              </p>
+              <p className="text-[10px] text-muted-foreground/70 mt-0.5">Your study assistant</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            {!isMobile && <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />}
+            {!isMobile && (
+              <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />
+            )}
             <button
               onClick={() => setOpen(false)}
               className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
@@ -613,8 +659,9 @@ export function ForgeAssistant() {
                 <div
                   className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mr-2 mt-1 relative overflow-hidden"
                   style={{
-                    background: "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
-                    border: "1px solid oklch(1 0 0 / 0.1)",
+                    background:
+                      "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
+                    border: "1px solid var(--border)",
                   }}
                 >
                   <Sparkles className="h-[9px] w-[9px] text-primary-glow" aria-hidden="true" />
@@ -623,14 +670,13 @@ export function ForgeAssistant() {
               <div
                 className={cn(
                   "max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap",
-                  m.role === "user"
-                    ? "rounded-tr-sm relative overflow-hidden"
-                    : "rounded-tl-sm",
+                  m.role === "user" ? "rounded-tr-sm relative overflow-hidden" : "rounded-tl-sm",
                 )}
                 style={
                   m.role === "user"
                     ? {
-                        background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+                        background:
+                          "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
                         boxShadow:
                           "0 1px 0 oklch(1 0 0 / 0.18) inset, 0 4px 12px -4px oklch(0.62 0.21 285 / 0.35)",
                         color: "white",
@@ -654,8 +700,9 @@ export function ForgeAssistant() {
               <div
                 className="h-5 w-5 rounded-lg grid place-items-center shrink-0 relative overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
-                  border: "1px solid oklch(1 0 0 / 0.1)",
+                  background:
+                    "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
+                  border: "1px solid var(--border)",
                 }}
               >
                 <Sparkles className="h-[9px] w-[9px] text-primary-glow" aria-hidden="true" />
@@ -688,14 +735,12 @@ export function ForgeAssistant() {
             <div
               className="absolute inset-0 rounded-2xl pointer-events-none"
               style={{
-                background: "radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.74 0.19 295 / 0.06) 0%, transparent 70%)",
+                background:
+                  "radial-gradient(ellipse 60% 40% at 50% 0%, oklch(0.74 0.19 295 / 0.06) 0%, transparent 70%)",
               }}
             />
             <div className="flex items-center justify-between mb-1 relative">
-              <p
-                className="text-[11px] font-semibold"
-                style={{ color: "oklch(0.74 0.19 295)" }}
-              >
+              <p className="text-[11px] font-semibold" style={{ color: "oklch(0.74 0.19 295)" }}>
                 Proposed change
               </p>
               {pendingActionsTotal > 1 && (
@@ -719,7 +764,8 @@ export function ForgeAssistant() {
                 className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl text-white text-[12px] font-semibold relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
                 style={{
                   background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset, 0 4px 12px -4px oklch(0.62 0.21 285 / 0.4)",
+                  boxShadow:
+                    "0 1px 0 oklch(1 0 0 / 0.2) inset, 0 4px 12px -4px oklch(0.62 0.21 285 / 0.4)",
                 }}
               >
                 <Check className="h-3.5 w-3.5" />
@@ -770,7 +816,7 @@ export function ForgeAssistant() {
                   listening ? "Listening…" : transcribing ? "Transcribing…" : "Ask Forge anything…"
                 }
                 rows={1}
-                className="w-full resize-none rounded-xl px-3 py-2 text-[13px] placeholder:text-muted-foreground/45 focus:outline-none min-h-[36px] max-h-24 transition-all duration-200"
+                className="w-full resize-none rounded-xl px-3 py-2 text-[13px] placeholder:text-muted-foreground/45 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 min-h-[36px] max-h-24 transition-all duration-200"
                 style={{
                   background: "var(--input)",
                   border: listening
@@ -800,7 +846,8 @@ export function ForgeAssistant() {
               style={
                 listening
                   ? {
-                      background: "linear-gradient(135deg, oklch(0.65 0.24 25), oklch(0.58 0.26 15))",
+                      background:
+                        "linear-gradient(135deg, oklch(0.65 0.24 25), oklch(0.58 0.26 15))",
                       border: "1px solid oklch(1 0 0 / 0.15)",
                       boxShadow:
                         "0 0 20px -4px oklch(0.65 0.24 25 / 0.65), 0 1px 0 oklch(1 0 0 / 0.2) inset",
@@ -842,7 +889,8 @@ export function ForgeAssistant() {
                   !input.trim() || loading
                     ? "none"
                     : "0 0 16px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                transition: "transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease, box-shadow 150ms ease",
+                transition:
+                  "transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease, box-shadow 150ms ease",
               }}
               aria-label="Send message"
             >

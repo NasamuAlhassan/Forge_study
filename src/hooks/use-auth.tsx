@@ -9,7 +9,11 @@ type AuthCtx = {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName?: string,
+  ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -49,9 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: typeof window !== "undefined"
-          ? `${window.location.origin}/dashboard`
-          : "/dashboard",
+        emailRedirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/dashboard` : "/dashboard",
         data: { display_name: displayName ?? email.split("@")[0] },
       },
     });
@@ -63,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ session, user: session?.user ?? null, loading, signIn, signUp, signOut }}>
+    <Ctx.Provider
+      value={{ session, user: session?.user ?? null, loading, signIn, signUp, signOut }}
+    >
       {children}
     </Ctx.Provider>
   );

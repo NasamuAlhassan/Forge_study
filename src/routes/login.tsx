@@ -59,9 +59,8 @@ function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: typeof window !== "undefined"
-          ? `${window.location.origin}/dashboard`
-          : "/dashboard",
+        redirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/dashboard` : "/dashboard",
       },
     });
     if (error) {
@@ -100,7 +99,8 @@ function LoginPage() {
           </Button>
 
           <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className="h-px flex-1 bg-white/10" /> or <div className="h-px flex-1 bg-white/10" />
+            <div className="h-px flex-1 bg-white/10" /> or{" "}
+            <div className="h-px flex-1 bg-white/10" />
           </div>
 
           <Tabs defaultValue="signin">

@@ -3,4 +3,7 @@
 
 import { extractTimetableFromImage, generateStudyPlanFromContext } from "@/services/ai";
 
-export { extractTimetableFromImage as extractTimetable, generateStudyPlanFromContext as generateStudyPlan };
+export {
+  extractTimetableFromImage as extractTimetable,
+  generateStudyPlanFromContext as generateStudyPlan,
+};

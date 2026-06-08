@@ -52,7 +52,10 @@ export function DayView({
       {/* Header */}
       <div
         className="px-6 py-4 flex items-center gap-4"
-        style={{ borderBottom: "1px solid oklch(1 0 0 / 0.07)", background: "oklch(1 0 0 / 0.02)" }}
+        style={{
+          borderBottom: "1px solid color-mix(in oklch, var(--foreground) 7%, transparent)",
+          background: "color-mix(in oklch, var(--foreground) 2%, transparent)",
+        }}
       >
         <div
           className="h-12 w-12 rounded-2xl grid place-items-center shrink-0"
@@ -60,12 +63,13 @@ export function DayView({
             isToday
               ? {
                   background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 0 20px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                  boxShadow:
+                    "0 0 20px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
                   color: "white",
                 }
               : {
-                  background: "oklch(1 0 0 / 0.05)",
-                  border: "1px solid oklch(1 0 0 / 0.09)",
+                  background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
+                  border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
                   boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
                 }
           }
@@ -91,9 +95,9 @@ export function DayView({
         <div
           className="ml-auto text-[12px] px-2.5 py-1 rounded-lg"
           style={{
-            background: "oklch(1 0 0 / 0.05)",
+            background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
             color: "oklch(0.68 0.03 280)",
-            border: "1px solid oklch(1 0 0 / 0.08)",
+            border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
           }}
         >
           {dayEvents.length} event{dayEvents.length !== 1 ? "s" : ""}
@@ -106,7 +110,9 @@ export function DayView({
           {/* Hour labels */}
           <div
             className="w-16 shrink-0 relative"
-            style={{ borderRight: "1px solid oklch(1 0 0 / 0.06)" }}
+            style={{
+              borderRight: "1px solid color-mix(in oklch, var(--foreground) 6%, transparent)",
+            }}
           >
             {HOURS.map((h) => (
               <div
@@ -125,7 +131,11 @@ export function DayView({
             {HOURS.map((h) => (
               <div
                 key={h}
-                style={{ top: (h - 6) * HOUR_PX, height: HOUR_PX, borderBottom: "1px solid oklch(1 0 0 / 0.05)" }}
+                style={{
+                  top: (h - 6) * HOUR_PX,
+                  height: HOUR_PX,
+                  borderBottom: "1px solid color-mix(in oklch, var(--foreground) 5%, transparent)",
+                }}
                 onClick={() => onSlotClick?.(dayIdx, h * 60)}
                 className={`absolute inset-x-0 transition-colors ${onSlotClick ? "cursor-pointer hover:bg-white/[0.05]" : "hover:bg-white/[0.02]"}`}
               />
@@ -144,10 +154,7 @@ export function DayView({
                     boxShadow: "0 0 8px oklch(0.65 0.22 285 / 0.7)",
                   }}
                 />
-                <div
-                  className="flex-1 h-px"
-                  style={{ background: "oklch(0.65 0.22 285 / 0.6)" }}
-                />
+                <div className="flex-1 h-px" style={{ background: "oklch(0.65 0.22 285 / 0.6)" }} />
               </div>
             )}
 
@@ -169,8 +176,9 @@ export function DayView({
                     height,
                     ...(isBreak
                       ? {
-                          background: "oklch(1 0 0 / 0.05)",
-                          border: "1px solid oklch(1 0 0 / 0.08)",
+                          background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
+                          border:
+                            "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
                         }
                       : {}),
                   }}
@@ -191,10 +199,14 @@ export function DayView({
                     {e.title}
                   </div>
                   <div className="opacity-80 mt-0.5 text-[11px] relative">
-                    {Math.floor(e.start / 60).toString().padStart(2, "0")}
+                    {Math.floor(e.start / 60)
+                      .toString()
+                      .padStart(2, "0")}
                     :{(e.start % 60).toString().padStart(2, "0")}
                     {" – "}
-                    {Math.floor(e.end / 60).toString().padStart(2, "0")}
+                    {Math.floor(e.end / 60)
+                      .toString()
+                      .padStart(2, "0")}
                     :{(e.end % 60).toString().padStart(2, "0")}
                     {e.venue ? ` · ${e.venue}` : ""}
                   </div>
@@ -204,7 +216,9 @@ export function DayView({
 
             {dayEvents.length === 0 && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-[13px] text-muted-foreground/50">No events scheduled for this day</p>
+                <p className="text-[13px] text-muted-foreground/50">
+                  No events scheduled for this day
+                </p>
               </div>
             )}
           </div>

@@ -71,7 +71,10 @@ const saveTimetableFn: FunctionDeclaration = {
             code: { type: SchemaType.STRING },
             lecturer: { type: SchemaType.STRING },
             venue: { type: SchemaType.STRING },
-            day: { type: SchemaType.STRING, description: "Mon | Tue | Wed | Thu | Fri | Sat | Sun" },
+            day: {
+              type: SchemaType.STRING,
+              description: "Mon | Tue | Wed | Thu | Fri | Sat | Sun",
+            },
             start: { type: SchemaType.STRING, description: "HH:MM 24-hour format" },
             end: { type: SchemaType.STRING, description: "HH:MM 24-hour format" },
           },
@@ -92,15 +95,18 @@ const sessionItemSchema = {
     end: { type: SchemaType.STRING, description: "HH:MM 24-hour format" },
     subject: {
       type: SchemaType.STRING,
-      description: "For study blocks: the academic subject name. For life blocks: a short human title — Sleep, Breakfast, Lunch, Dinner, Cooking, Siesta, Gym, Walk, Social time, Free time, Scrolling, Morning routine, Evening wind-down, etc.",
+      description:
+        "For study blocks: the academic subject name. For life blocks: a short human title — Sleep, Breakfast, Lunch, Dinner, Cooking, Siesta, Gym, Walk, Social time, Free time, Scrolling, Morning routine, Evening wind-down, etc.",
     },
     focus: {
       type: SchemaType.STRING,
-      description: "For study: what to focus on. For life blocks: a very brief description (e.g. 'Rest and recharge', 'Cook and eat dinner', 'Hang out with friends').",
+      description:
+        "For study: what to focus on. For life blocks: a very brief description (e.g. 'Rest and recharge', 'Cook and eat dinner', 'Hang out with friends').",
     },
     intensity: {
       type: SchemaType.STRING,
-      description: "deep | moderate | light. Use deep/moderate/light for study based on subject difficulty. Use 'light' for ALL non-study life blocks.",
+      description:
+        "deep | moderate | light. Use deep/moderate/light for study based on subject difficulty. Use 'light' for ALL non-study life blocks.",
     },
     category: {
       type: SchemaType.STRING,
@@ -112,7 +118,8 @@ const sessionItemSchema = {
 
 const saveStudyPlanFn: FunctionDeclaration = {
   name: "save_study_plan",
-  description: "Save three weekly schedule options (Intensive, Balanced, Relaxed) each containing full life + study blocks.",
+  description:
+    "Save three weekly schedule options (Intensive, Balanced, Relaxed) each containing full life + study blocks.",
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
@@ -128,7 +135,8 @@ const saveStudyPlanFn: FunctionDeclaration = {
             },
             rationale: {
               type: SchemaType.STRING,
-              description: "Warm, personal explanation of why THIS specific option was built this way (2-3 sentences, written like a thoughtful friend, specific to the student's goals).",
+              description:
+                "Warm, personal explanation of why THIS specific option was built this way (2-3 sentences, written like a thoughtful friend, specific to the student's goals).",
             },
             sessions: {
               type: SchemaType.ARRAY,
@@ -144,14 +152,20 @@ const saveStudyPlanFn: FunctionDeclaration = {
 };
 
 export async function extractTimetableFromImage(
-  imageDataUrl: string
+  imageDataUrl: string,
 ): Promise<{ entries: TimetableEntry[] }> {
   const genAI = getGenAI();
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     tools: [{ functionDeclarations: [saveTimetableFn] }],
-    toolConfig: { functionCallingConfig: { mode: FunctionCallingMode.ANY, allowedFunctionNames: ["save_timetable"] } },
-    systemInstruction: "You are an expert academic timetable parser. Extract every class entry from the image. Always call the save_timetable tool — never reply in plain text.",
+    toolConfig: {
+      functionCallingConfig: {
+        mode: FunctionCallingMode.ANY,
+        allowedFunctionNames: ["save_timetable"],
+      },
+    },
+    systemInstruction:
+      "You are an expert academic timetable parser. Extract every class entry from the image. Always call the save_timetable tool — never reply in plain text.",
   });
 
   // Split data URL: "data:<mime>;base64,<b64>" → inlineData
@@ -178,7 +192,14 @@ export async function extractTimetableFromImage(
 }
 
 const VALID_CATEGORIES = new Set<LifeCategory>([
-  "study", "sleep", "meal", "nap", "exercise", "social", "leisure", "personal",
+  "study",
+  "sleep",
+  "meal",
+  "nap",
+  "exercise",
+  "social",
+  "leisure",
+  "personal",
 ]);
 
 function parseSessions(raw: Array<Record<string, unknown>>): StudySession[] {
@@ -194,7 +215,9 @@ function parseSessions(raw: Array<Record<string, unknown>>): StudySession[] {
       focus: String(s.focus ?? ""),
       intensity: (["light", "moderate", "deep"].includes(s.intensity as string)
         ? s.intensity
-        : category === "study" ? "moderate" : "light") as StudySession["intensity"],
+        : category === "study"
+          ? "moderate"
+          : "light") as StudySession["intensity"],
       category,
     };
   });
@@ -205,7 +228,12 @@ export async function generateStudyPlanFromContext(context: string): Promise<Stu
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     tools: [{ functionDeclarations: [saveStudyPlanFn] }],
-    toolConfig: { functionCallingConfig: { mode: FunctionCallingMode.ANY, allowedFunctionNames: ["save_study_plan"] } },
+    toolConfig: {
+      functionCallingConfig: {
+        mode: FunctionCallingMode.ANY,
+        allowedFunctionNames: ["save_study_plan"],
+      },
+    },
     systemInstruction: `You are Forge, a thoughtful personal advisor helping a student build a realistic, human weekly schedule — not just a study timetable.
 
 You will produce EXACTLY THREE plan options named "Intensive", "Balanced", and "Relaxed" — in that order. Each option is a full, complete weekly schedule.
@@ -227,11 +255,18 @@ WHAT TO INCLUDE IN EACH OPTION (every waking hour, every day):
 9. DOWNTIME — Scrolling, TV, reading, gaming. category: "leisure"
 10. EVENING WIND-DOWN — 20–30 min before sleep. category: "personal"
 
+SUBJECT DIFFICULTY RULES — apply automatically when placing study blocks:
+- easy:      30–60 min blocks, flexible timing (including evenings), lowest priority in slot allocation
+- medium:    60–90 min blocks, morning or afternoon preferred
+- hard:      90–120 min blocks, place in morning peak hours (08:00–12:00) when focus is sharpest, high priority
+- very_hard: 120–180 min blocks, multiple sessions per week, ALWAYS scheduled first and in the best morning/early-afternoon slots, highest priority
+Apply these rules automatically — more demanding subjects get more time and better time slots.
+
 CRITICAL RULES (apply to ALL three options):
 - Honour stated preferences. Missing info → defaults: wake 07:00, sleep 23:00, 3 meals/day.
 - NEVER place any block — study or life — over a time already in EXISTING CALENDAR.
 - Study blocks: use ONLY subjects from STUDENT SUBJECTS. Never invent subject names.
-- intensity: "deep" = hard subject / exam soon, "moderate" = medium, "light" = easy review. Life blocks always "light".
+- intensity: "deep" = hard/very_hard subject or exam soon, "moderate" = medium, "light" = easy review. Life blocks always "light".
 - Life block titles: short and human — "Sleep", "Breakfast", "Lunch", "Dinner", "Siesta", "Gym", "Walk", "Social time", "Free time", "Scrolling", "Morning routine", "Evening wind-down", "Cooking".
 - category must be exactly one of: study | sleep | meal | nap | exercise | social | leisure | personal
 - Each option's rationale is 2-3 sentences, warm, personal, specific to this student — never generic.
@@ -249,14 +284,18 @@ CRITICAL RULES (apply to ALL three options):
 
   // Fallback: if Gemini returns the old single-plan shape, wrap it
   if (rawOptions.length === 0) {
-    const legacy = calls?.[0]?.args as { rationale?: string; sessions?: Array<Record<string, unknown>> } | undefined;
+    const legacy = calls?.[0]?.args as
+      | { rationale?: string; sessions?: Array<Record<string, unknown>> }
+      | undefined;
     if (legacy?.sessions) {
       return {
-        options: [{
-          name: "Balanced",
-          rationale: typeof legacy.rationale === "string" ? legacy.rationale : "",
-          sessions: parseSessions(legacy.sessions),
-        }],
+        options: [
+          {
+            name: "Balanced",
+            rationale: typeof legacy.rationale === "string" ? legacy.rationale : "",
+            sessions: parseSessions(legacy.sessions),
+          },
+        ],
       };
     }
     return { options: [] };
@@ -268,7 +307,9 @@ CRITICAL RULES (apply to ALL three options):
     options: rawOptions.map((o) => ({
       name: (VALID_NAMES.has(String(o.name)) ? o.name : "Balanced") as StudyPlanOption["name"],
       rationale: typeof o.rationale === "string" ? o.rationale : "",
-      sessions: parseSessions(Array.isArray(o.sessions) ? o.sessions as Array<Record<string, unknown>> : []),
+      sessions: parseSessions(
+        Array.isArray(o.sessions) ? (o.sessions as Array<Record<string, unknown>>) : [],
+      ),
     })),
   };
 }

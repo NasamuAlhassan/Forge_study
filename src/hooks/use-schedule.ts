@@ -43,7 +43,9 @@ export function timeToMinutes(t: string): number {
 
 export function minutesToTime(m: number): string {
   const norm = ((Math.round(m) % 1440) + 1440) % 1440;
-  return `${Math.floor(norm / 60).toString().padStart(2, "0")}:${(norm % 60).toString().padStart(2, "0")}`;
+  return `${Math.floor(norm / 60)
+    .toString()
+    .padStart(2, "0")}:${(norm % 60).toString().padStart(2, "0")}`;
 }
 
 export function indexToDay(i: number): string {

@@ -62,7 +62,7 @@ function SettingsPage() {
 
   // ── Profile ─────────────────────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState(
-    () => (user?.user_metadata?.full_name as string | undefined) ?? ""
+    () => (user?.user_metadata?.full_name as string | undefined) ?? "",
   );
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -110,16 +110,14 @@ function SettingsPage() {
             instructor: s.instructor ?? "",
             difficulty: ((s as Record<string, unknown>).difficulty as Difficulty) ?? "medium",
             color: s.color,
-          }))
+          })),
         );
         setLoadingSubjects(false);
       });
   }, [user]);
 
   const updateSubject = (id: string, field: keyof SubjectRow, value: string) => {
-    setSubjects((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-    );
+    setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
   };
 
   const addSubject = () => {
@@ -139,7 +137,7 @@ function SettingsPage() {
   };
 
   const errMsg = (e: unknown) =>
-    (e as { message?: string })?.message ?? String(e) ?? "Unknown error";
+    (e as { message?: string })?.message ?? (e == null ? "Unknown error" : String(e));
 
   const removeSubject = async (id: string, isNew?: boolean) => {
     if (isNew) {
@@ -183,10 +181,7 @@ function SettingsPage() {
           if (error) throw error;
           savedId = data.id;
         } else {
-          const { error } = await supabase
-            .from("subjects")
-            .update(core)
-            .eq("id", s.id);
+          const { error } = await supabase.from("subjects").update(core).eq("id", s.id);
           if (error) throw error;
         }
 
@@ -197,15 +192,14 @@ function SettingsPage() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .update({ difficulty: s.difficulty } as any)
             .eq("id", savedId)
-            .then(() => {/* silently ignore if column doesn't exist yet */});
+            .then(() => {
+              /* silently ignore if column doesn't exist yet */
+            });
         }
       }
 
       // Refresh local state with real IDs
-      const { data } = await supabase
-        .from("subjects")
-        .select("*")
-        .eq("user_id", user.id);
+      const { data } = await supabase.from("subjects").select("*").eq("user_id", user.id);
       setSubjects(
         (data ?? []).map((s) => ({
           id: s.id,
@@ -214,7 +208,7 @@ function SettingsPage() {
           instructor: s.instructor ?? "",
           difficulty: ((s as Record<string, unknown>).difficulty as Difficulty) ?? "medium",
           color: s.color,
-        }))
+        })),
       );
       broadcastScheduleUpdate();
       toast.success("Subjects saved");
@@ -226,8 +220,8 @@ function SettingsPage() {
   };
 
   const inputStyle = {
-    background: "oklch(1 0 0 / 0.05)",
-    border: "1px solid oklch(1 0 0 / 0.1)",
+    background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
+    border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
     boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
   };
 
@@ -235,28 +229,28 @@ function SettingsPage() {
     <>
       <Topbar title="Settings" subtitle="Manage your profile and subjects." />
       <main className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
-
         {/* ── Profile ─────────────────────────────────────────────────────── */}
         <section className="ring-gradient glass rounded-2xl p-6 space-y-4 relative overflow-hidden">
           <div
             className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)" }}
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)",
+            }}
           />
           <div className="flex items-center gap-3 relative">
             <div
               className="h-8 w-8 rounded-xl grid place-items-center relative overflow-hidden shrink-0"
               style={{
-                background: "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.35), oklch(0.55 0.23 250 / 0.2))",
-                border: "1px solid oklch(1 0 0 / 0.1)",
+                background:
+                  "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.35), oklch(0.55 0.23 250 / 0.2))",
+                border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
               }}
             >
               <User className="h-[14px] w-[14px] text-primary relative z-10" />
               <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent" />
             </div>
-            <h3
-              className="text-[14px] font-semibold"
-              style={{ letterSpacing: "-0.02em" }}
-            >
+            <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Profile
             </h3>
           </div>
@@ -303,19 +297,22 @@ function SettingsPage() {
         <section className="ring-gradient glass rounded-2xl p-6 space-y-4 relative overflow-hidden">
           <div
             className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)" }}
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)",
+            }}
           />
           <div className="flex items-center justify-between relative">
-            <h3
-              className="text-[14px] font-semibold"
-              style={{ letterSpacing: "-0.02em" }}
-            >
+            <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Subjects
             </h3>
             <button
               onClick={addSubject}
               className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-              style={{ border: "1px solid oklch(1 0 0 / 0.09)", background: "oklch(1 0 0 / 0.04)" }}
+              style={{
+                border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
+                background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+              }}
             >
               <Plus className="h-3.5 w-3.5" />
               Add subject
@@ -328,14 +325,16 @@ function SettingsPage() {
                 <div
                   key={i}
                   className="h-20 rounded-xl animate-pulse"
-                  style={{ background: "oklch(1 0 0 / 0.04)" }}
+                  style={{ background: "color-mix(in oklch, var(--foreground) 4%, transparent)" }}
                 />
               ))}
             </div>
           ) : subjects.length === 0 ? (
             <div
               className="text-[13px] text-muted-foreground/60 py-10 text-center rounded-xl relative"
-              style={{ border: "1px dashed oklch(1 0 0 / 0.09)" }}
+              style={{
+                border: "1px dashed color-mix(in oklch, var(--foreground) 9%, transparent)",
+              }}
             >
               No subjects yet. Import a timetable or add one manually.
             </div>
@@ -346,15 +345,18 @@ function SettingsPage() {
                   key={s.id}
                   className="rounded-xl p-4 space-y-3"
                   style={{
-                    background: "oklch(1 0 0 / 0.03)",
-                    border: "1px solid oklch(1 0 0 / 0.07)",
+                    background: "color-mix(in oklch, var(--foreground) 3%, transparent)",
+                    border: "1px solid color-mix(in oklch, var(--foreground) 7%, transparent)",
                     boxShadow: "0 1px 0 oklch(1 0 0 / 0.06) inset",
                   }}
                 >
                   {/* Color swatch indicator */}
                   <div className="flex items-center gap-2">
                     <div className={`h-3 w-3 rounded-full bg-gradient-to-br ${s.color} shrink-0`} />
-                    <span className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider" style={{ letterSpacing: "0.06em" }}>
+                    <span
+                      className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider"
+                      style={{ letterSpacing: "0.06em" }}
+                    >
                       {s.isNew ? "New subject" : "Subject"}
                     </span>
                   </div>
@@ -441,7 +443,9 @@ function SettingsPage() {
               className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
               style={{
                 background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow: savingSubjects ? "none" : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                boxShadow: savingSubjects
+                  ? "none"
+                  : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
               }}
             >
               <Save className="h-4 w-4" />

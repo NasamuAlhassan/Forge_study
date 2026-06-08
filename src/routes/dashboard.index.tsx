@@ -24,7 +24,10 @@ function DashboardOverview() {
       <main className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <StatsGrid />
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
-          <WeekCalendar {...calProps} />
+          {/* min-w-0 prevents the grid cell from expanding beyond its allotted width on mobile */}
+          <div className="min-w-0 overflow-hidden">
+            <WeekCalendar {...calProps} />
+          </div>
           <div className="space-y-6">
             <TodaysAgenda {...calProps} />
             <AIRecommendations />

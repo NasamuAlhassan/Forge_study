@@ -60,9 +60,10 @@ export function FloatingForgeButton() {
         border: "none",
         cursor: dragging ? "grabbing" : "grab",
         background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-        boxShadow: hovered || dragging
-          ? "0 0 0 1px oklch(0.62 0.21 285 / 0.45), 0 16px 48px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.22) inset"
-          : "0 0 0 1px oklch(0.62 0.21 285 / 0.25), 0 6px 24px oklch(0.62 0.21 285 / 0.32), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+        boxShadow:
+          hovered || dragging
+            ? "0 0 0 1px oklch(0.62 0.21 285 / 0.45), 0 16px 48px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.22) inset"
+            : "0 0 0 1px oklch(0.62 0.21 285 / 0.25), 0 6px 24px oklch(0.62 0.21 285 / 0.32), 0 1px 0 oklch(1 0 0 / 0.2) inset",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -77,11 +78,7 @@ export function FloatingForgeButton() {
         transition: dragging
           ? "box-shadow 0.2s ease"
           : "box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        transform: dragging
-          ? "scale(1.05)"
-          : hovered
-          ? "translateY(-2px) scale(1.02)"
-          : "scale(1)",
+        transform: dragging ? "scale(1.05)" : hovered ? "translateY(-2px) scale(1.02)" : "scale(1)",
       }}
     >
       <span

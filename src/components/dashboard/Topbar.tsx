@@ -1,4 +1,15 @@
-import { Bell, BookOpen, CalendarClock, Clock, LogOut, Moon, Search, Sparkles, Sun, Swords } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  CalendarClock,
+  Clock,
+  LogOut,
+  Moon,
+  Search,
+  Sparkles,
+  Sun,
+  Swords,
+} from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
@@ -14,19 +25,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const levelStyle: Record<NotifLevel, string> = {
-  now:      "text-rose-400",
-  soon:     "text-amber-400",
-  today:    "text-primary",
+  now: "text-rose-400",
+  soon: "text-amber-400",
+  today: "text-primary",
   tomorrow: "text-muted-foreground",
-  exam:     "text-orange-400",
+  exam: "text-orange-400",
 };
 
 const levelIcon: Record<NotifLevel, React.ReactNode> = {
-  now:      <Clock className="h-3.5 w-3.5" />,
-  soon:     <Clock className="h-3.5 w-3.5" />,
-  today:    <CalendarClock className="h-3.5 w-3.5" />,
+  now: <Clock className="h-3.5 w-3.5" />,
+  soon: <Clock className="h-3.5 w-3.5" />,
+  today: <CalendarClock className="h-3.5 w-3.5" />,
   tomorrow: <CalendarClock className="h-3.5 w-3.5" />,
-  exam:     <Swords className="h-3.5 w-3.5" />,
+  exam: <Swords className="h-3.5 w-3.5" />,
 };
 
 export function Topbar({ title, subtitle }: { title: string; subtitle?: string }) {
@@ -48,14 +59,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     .toUpperCase();
 
   const dropdownStyle = {
-    background: isDark
-      ? "oklch(0.19 0.04 275 / 0.96)"
-      : "oklch(0.99 0.005 280 / 0.97)",
+    background: isDark ? "oklch(0.19 0.04 275 / 0.96)" : "oklch(0.99 0.005 280 / 0.97)",
     backdropFilter: "blur(40px) saturate(200%)",
     WebkitBackdropFilter: "blur(40px) saturate(200%)",
-    border: isDark
-      ? "1px solid oklch(1 0 0 / 0.1)"
-      : "1px solid oklch(0 0 0 / 0.08)",
+    border: isDark ? "1px solid oklch(1 0 0 / 0.1)" : "1px solid oklch(0 0 0 / 0.08)",
     boxShadow: isDark
       ? "0 1px 0 oklch(1 0 0 / 0.13) inset, 0 24px 64px -16px oklch(0.04 0.02 275 / 0.8)"
       : "0 1px 0 oklch(1 1 0 / 0.7) inset, 0 24px 64px -16px oklch(0 0 0 / 0.14)",
@@ -78,14 +85,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       className="sticky top-0 z-30 pl-12 lg:pl-6 pr-4 sm:pr-5 flex items-center justify-between gap-4"
       style={{
         height: "60px",
-        background: isDark
-          ? "oklch(0.13 0.03 275 / 0.92)"
-          : "oklch(0.98 0.005 280 / 0.92)",
+        background: isDark ? "oklch(0.13 0.03 275 / 0.92)" : "oklch(0.98 0.005 280 / 0.92)",
         backdropFilter: "blur(32px) saturate(180%)",
         WebkitBackdropFilter: "blur(32px) saturate(180%)",
-        borderBottom: isDark
-          ? "1px solid oklch(1 0 0 / 0.07)"
-          : "1px solid oklch(0 0 0 / 0.07)",
+        borderBottom: isDark ? "1px solid oklch(1 0 0 / 0.07)" : "1px solid oklch(0 0 0 / 0.07)",
         boxShadow: isDark
           ? "0 1px 0 oklch(1 0 0 / 0.09) inset"
           : "0 1px 0 oklch(1 1 0 / 0.8) inset, 0 2px 12px oklch(0 0 0 / 0.05)",
@@ -108,7 +111,6 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
 
       {/* Right controls */}
       <div className="flex items-center gap-1 sm:gap-1.5">
-
         {/* Search — md+ only */}
         <div
           className={[
@@ -122,9 +124,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           ].join(" ")}
           style={{
             background: isDark ? "oklch(1 0 0 / 0.04)" : "oklch(0 0 0 / 0.04)",
-            border: isDark
-              ? "1px solid oklch(1 0 0 / 0.07)"
-              : "1px solid oklch(0 0 0 / 0.09)",
+            border: isDark ? "1px solid oklch(1 0 0 / 0.07)" : "1px solid oklch(0 0 0 / 0.09)",
           }}
         >
           <Search className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
@@ -141,18 +141,17 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
           className={iconBtn}
         >
-          {isDark
-            ? <Sun  className="h-[15px] w-[15px]" aria-hidden="true" />
-            : <Moon className="h-[15px] w-[15px]" aria-hidden="true" />}
+          {isDark ? (
+            <Sun className="h-[15px] w-[15px]" aria-hidden="true" />
+          ) : (
+            <Moon className="h-[15px] w-[15px]" aria-hidden="true" />
+          )}
         </button>
 
         {/* Notification bell — sm+ */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button
-              aria-label="Notifications"
-              className={cn("hidden sm:grid relative", iconBtn)}
-            >
+            <button aria-label="Notifications" className={cn("hidden sm:grid relative", iconBtn)}>
               <Bell className="h-[15px] w-[15px]" aria-hidden="true" />
               {urgentCount > 0 && (
                 <span className="absolute top-[7px] right-[7px] h-[7px] w-[7px] rounded-full bg-rose-500 ring-[1.5px] ring-background animate-pulse" />
@@ -162,7 +161,11 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
               )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 border-0 p-0 overflow-hidden" style={dropdownStyle}>
+          <DropdownMenuContent
+            align="end"
+            className="w-80 border-0 p-0 overflow-hidden"
+            style={dropdownStyle}
+          >
             <div
               className="px-4 py-3"
               style={{
@@ -191,7 +194,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
                     key={n.id}
                     className={cn(
                       "flex items-start gap-3 px-4 py-3 transition-colors duration-150",
-                      isDark ? "hover:bg-white/[0.04]" : "hover:bg-black/[0.03]"
+                      isDark ? "hover:bg-white/[0.04]" : "hover:bg-black/[0.03]",
                     )}
                   >
                     <div className={cn("mt-0.5 shrink-0 opacity-75", levelStyle[n.level])}>

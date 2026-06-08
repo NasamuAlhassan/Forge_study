@@ -17,16 +17,28 @@ type Entry = {
 };
 
 const DAY_ABBR: Record<string, string> = {
-  Monday: "Mo", Tuesday: "Tu", Wednesday: "We", Thursday: "Th",
-  Friday: "Fr", Saturday: "Sa", Sunday: "Su",
-  Mon: "Mo", Tue: "Tu", Wed: "We", Thu: "Th",
-  Fri: "Fr", Sat: "Sa", Sun: "Su",
+  Monday: "Mo",
+  Tuesday: "Tu",
+  Wednesday: "We",
+  Thursday: "Th",
+  Friday: "Fr",
+  Saturday: "Sa",
+  Sunday: "Su",
+  Mon: "Mo",
+  Tue: "Tu",
+  Wed: "We",
+  Thu: "Th",
+  Fri: "Fr",
+  Sat: "Sa",
+  Sun: "Su",
 };
 
 export function TimetableUploader() {
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "extracting" | "done" | "error" | "saving">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "uploading" | "extracting" | "done" | "error" | "saving"
+  >("idle");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +52,9 @@ export function TimetableUploader() {
     setStatus("saving");
     try {
       await persistTimetableEntries(user.id, entries);
-      toast.success(`Added ${entries.length} class${entries.length === 1 ? "" : "es"} to your calendar`);
+      toast.success(
+        `Added ${entries.length} class${entries.length === 1 ? "" : "es"} to your calendar`,
+      );
       navigate({ to: "/dashboard/calendar" });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
@@ -61,7 +75,9 @@ export function TimetableUploader() {
           const res = await extract(dataUrl);
           setEntries(res.entries);
           setStatus("done");
-          toast.success(`Extracted ${res.entries.length} class${res.entries.length === 1 ? "" : "es"}`);
+          toast.success(
+            `Extracted ${res.entries.length} class${res.entries.length === 1 ? "" : "es"}`,
+          );
         } catch (e) {
           const msg = e instanceof Error ? e.message : "Extraction failed";
           setError(msg);
@@ -84,7 +100,10 @@ export function TimetableUploader() {
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       <div
-        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => {
           e.preventDefault();
@@ -93,14 +112,22 @@ export function TimetableUploader() {
           if (f) handleFile(f);
         }}
         className="ring-gradient glass hover-lift rounded-2xl p-8 text-center relative overflow-hidden transition-all duration-300"
-        style={dragOver ? {
-          boxShadow: "0 0 48px -8px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.14) inset",
-          transform: "scale(1.01)",
-        } : undefined}
+        style={
+          dragOver
+            ? {
+                boxShadow:
+                  "0 0 48px -8px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.14) inset",
+                transform: "scale(1.01)",
+              }
+            : undefined
+        }
       >
         <div
           className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 35% at 20% 0%, oklch(1 0 0 / 0.055) 0%, transparent 60%)",
+          }}
         />
 
         {!preview ? (
@@ -109,7 +136,8 @@ export function TimetableUploader() {
               className="mx-auto h-16 w-16 rounded-2xl grid place-items-center relative overflow-hidden"
               style={{
                 background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow: "0 0 32px -6px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.22) inset",
+                boxShadow:
+                  "0 0 32px -6px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.22) inset",
                 animation: "float 3s ease-in-out infinite",
               }}
             >
@@ -128,7 +156,8 @@ export function TimetableUploader() {
               className="mt-6 h-10 px-5 rounded-xl flex items-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
               style={{
                 background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow: "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                boxShadow:
+                  "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
               }}
               onClick={() => inputRef.current?.click()}
             >
@@ -152,7 +181,12 @@ export function TimetableUploader() {
           </div>
         ) : (
           <div className="text-left relative">
-            <div className="rounded-xl overflow-hidden" style={{ border: "1px solid oklch(1 0 0 / 0.1)" }}>
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{
+                border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
+              }}
+            >
               <img
                 src={preview}
                 alt="Uploaded timetable"
@@ -163,26 +197,39 @@ export function TimetableUploader() {
             <div className="mt-3 flex items-center gap-2 text-[13px] px-1">
               {status === "extracting" && (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin shrink-0" style={{ color: "oklch(0.74 0.19 295)" }} />
+                  <Loader2
+                    className="h-4 w-4 animate-spin shrink-0"
+                    style={{ color: "oklch(0.74 0.19 295)" }}
+                  />
                   <span className="text-muted-foreground">AI is reading your timetable...</span>
                 </>
               )}
               {status === "done" && (
                 <>
-                  <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: "oklch(0.72 0.17 160)" }} />
-                  <span>Extracted {entries.length} {entries.length === 1 ? "entry" : "entries"}</span>
+                  <CheckCircle2
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "oklch(0.72 0.17 160)" }}
+                  />
+                  <span>
+                    Extracted {entries.length} {entries.length === 1 ? "entry" : "entries"}
+                  </span>
                 </>
               )}
               {status === "error" && (
                 <>
-                  <AlertCircle className="h-4 w-4 shrink-0" style={{ color: "oklch(0.65 0.24 25)" }} />
+                  <AlertCircle
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: "oklch(0.65 0.24 25)" }}
+                  />
                   <span style={{ color: "oklch(0.65 0.24 25)" }}>{error}</span>
                 </>
               )}
               <button
                 onClick={reset}
                 className="ml-auto flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-                style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+                style={{
+                  border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
+                }}
               >
                 <RotateCcw className="h-3 w-3" />
                 Reset
@@ -195,18 +242,27 @@ export function TimetableUploader() {
       <div className="ring-gradient glass hover-lift rounded-2xl p-5 relative overflow-hidden">
         <div
           className="absolute inset-0 rounded-2xl pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)" }}
+          style={{
+            background:
+              "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(1 0 0 / 0.045) 0%, transparent 60%)",
+          }}
         />
         <div className="relative">
-          <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>Extracted classes</h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Review and confirm before adding to your calendar.</p>
+          <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
+            Extracted classes
+          </h3>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Review and confirm before adding to your calendar.
+          </p>
         </div>
 
         <div className="mt-4 space-y-2 max-h-[28rem] overflow-y-auto pr-1 relative">
           {entries.length === 0 && status !== "extracting" && (
             <div
               className="text-[13px] text-muted-foreground/50 py-16 text-center rounded-2xl"
-              style={{ border: "1px dashed oklch(1 0 0 / 0.09)" }}
+              style={{
+                border: "1px dashed color-mix(in oklch, var(--foreground) 9%, transparent)",
+              }}
             >
               Upload a timetable to see extracted entries here.
             </div>
@@ -216,7 +272,10 @@ export function TimetableUploader() {
               <div
                 key={i}
                 className="h-[60px] rounded-xl animate-pulse"
-                style={{ background: "oklch(1 0 0 / 0.04)", animationDelay: `${i * 80}ms` }}
+                style={{
+                  background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+                  animationDelay: `${i * 80}ms`,
+                }}
               />
             ))}
           {entries.map((e, i) => (
@@ -224,8 +283,8 @@ export function TimetableUploader() {
               key={i}
               className="flex items-center gap-3 p-3 rounded-xl relative overflow-hidden"
               style={{
-                background: "oklch(1 0 0 / 0.04)",
-                border: "1px solid oklch(1 0 0 / 0.07)",
+                background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+                border: "1px solid color-mix(in oklch, var(--foreground) 7%, transparent)",
                 boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
               }}
             >
@@ -242,7 +301,10 @@ export function TimetableUploader() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-medium truncate" style={{ letterSpacing: "-0.01em" }}>
+                  <span
+                    className="text-[13px] font-medium truncate"
+                    style={{ letterSpacing: "-0.01em" }}
+                  >
                     {e.course}
                   </span>
                   {e.code && (
@@ -276,11 +338,16 @@ export function TimetableUploader() {
             className="mt-4 w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
             style={{
               background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-              boxShadow: status === "saving" ? "none" : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+              boxShadow:
+                status === "saving"
+                  ? "none"
+                  : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
             }}
           >
             {status === "saving" ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
+              </>
             ) : (
               `Add ${entries.length} ${entries.length === 1 ? "class" : "classes"} to calendar`
             )}

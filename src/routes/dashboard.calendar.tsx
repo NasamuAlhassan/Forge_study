@@ -74,26 +74,26 @@ function CalendarPage() {
   const { events, subjects, hasData, refetch } = useSchedule();
   const { user } = useAuth();
 
-  const [view, setView]   = useState<View>("week");
+  const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(() => new Date());
-  const [editing, setEditing]         = useState<EventBlock | null>(null);
-  const [createOpen, setCreateOpen]   = useState(false);
-  const [createSlot, setCreateSlot]   = useState<{ day: number; startMinute: number } | null>(null);
-  const [resetOpen, setResetOpen]     = useState(false);
-  const [dupOpen, setDupOpen]       = useState(false);
-  const [dupMode, setDupMode]       = useState<"day" | "week">("day");
-  const [srcDay, setSrcDay]         = useState("0");
-  const [tgtDay, setTgtDay]         = useState("1");
+  const [editing, setEditing] = useState<EventBlock | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createSlot, setCreateSlot] = useState<{ day: number; startMinute: number } | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [dupOpen, setDupOpen] = useState(false);
+  const [dupMode, setDupMode] = useState<"day" | "week">("day");
+  const [srcDay, setSrcDay] = useState("0");
+  const [tgtDay, setTgtDay] = useState("1");
 
-  const calEvents   = events;
+  const calEvents = events;
   const calSubjects = subjects;
 
   // ── navigation ─────────────────────────────────────────────────────────────
   const shift = (dir: 1 | -1) => {
     setAnchor((prev) => {
       const d = new Date(prev);
-      if (view === "day")   d.setDate(d.getDate() + dir);
-      if (view === "week")  d.setDate(d.getDate() + dir * 7);
+      if (view === "day") d.setDate(d.getDate() + dir);
+      if (view === "week") d.setDate(d.getDate() + dir * 7);
       if (view === "month") d.setMonth(d.getMonth() + dir);
       return d;
     });
@@ -103,11 +103,17 @@ function CalendarPage() {
 
   const periodLabel = useMemo(() => {
     if (view === "day") {
-      return anchor.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      return anchor.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
     }
     if (view === "week") {
       const mon = getMonday(anchor);
-      const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+      const sun = new Date(mon);
+      sun.setDate(mon.getDate() + 6);
       const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       return `${fmt(mon)} – ${sun.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
     }
@@ -145,7 +151,10 @@ function CalendarPage() {
     try {
       if (dupMode === "day") {
         const src = calEvents.filter((e) => e.day === Number(srcDay));
-        if (src.length === 0) { toast.error(`No events on ${DAY_NAMES[Number(srcDay)]}`); return; }
+        if (src.length === 0) {
+          toast.error(`No events on ${DAY_NAMES[Number(srcDay)]}`);
+          return;
+        }
         const rows = src.map((e) => ({
           user_id: user.id,
           subject_id: e.subjectId || null,
@@ -161,7 +170,10 @@ function CalendarPage() {
         toast.success(`${DAY_NAMES[Number(srcDay)]} → ${DAY_NAMES[Number(tgtDay)]} copied`);
       } else {
         // Duplicate week: copy all events creating new rows (same day_of_week)
-        if (calEvents.length === 0) { toast.error("No events to duplicate"); return; }
+        if (calEvents.length === 0) {
+          toast.error("No events to duplicate");
+          return;
+        }
         const rows = calEvents.map((e) => ({
           user_id: user.id,
           subject_id: e.subjectId || null,
@@ -201,7 +213,7 @@ function CalendarPage() {
     : null;
 
   const handleEventClick = (e: EventBlock) => setEditing(e);
-  const handleSlotClick  = (day: number, startMinute: number) => {
+  const handleSlotClick = (day: number, startMinute: number) => {
     setCreateSlot({ day, startMinute });
     setCreateOpen(true);
   };
@@ -211,17 +223,17 @@ function CalendarPage() {
     const [sh, sm] = draft.start.split(":").map(Number);
     const [eh, em] = draft.end.split(":").map(Number);
     const startMin = sh * 60 + sm;
-    const endMin   = eh * 60 + em;
+    const endMin = eh * 60 + em;
 
     const { error } = await supabase.from("events").insert({
-      user_id:     user.id,
-      subject_id:  draft.subjectId || null,
-      title:       draft.title.trim(),
-      type:        draft.type,
+      user_id: user.id,
+      subject_id: draft.subjectId || null,
+      title: draft.title.trim(),
+      type: draft.type,
       day_of_week: draft.day,
       start_minute: startMin,
-      end_minute:   endMin,
-      venue:        draft.venue.trim() || null,
+      end_minute: endMin,
+      venue: draft.venue.trim() || null,
     });
     if (error) throw new Error(error.message);
     await refetch();
@@ -232,13 +244,13 @@ function CalendarPage() {
     <>
       <Topbar
         title="Calendar"
-        subtitle={hasData ? "Click any block to edit it." : "Import a timetable to see your own schedule."}
+        subtitle={
+          hasData ? "Click any block to edit it." : "Import a timetable to see your own schedule."
+        }
       />
       <main className="p-4 sm:p-6 space-y-4">
-
         {/* ── Toolbar ─────────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center gap-3">
-
           {/* View switcher */}
           <div
             className="flex items-center rounded-xl p-1 gap-0.5"
@@ -256,14 +268,22 @@ function CalendarPage() {
                   "px-3 py-1.5 rounded-lg text-[13px] font-medium capitalize transition-all duration-150 relative overflow-hidden",
                   view === v
                     ? "text-white"
-                    : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06] active:scale-[0.97]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/[0.06] active:scale-[0.97]",
                 )}
-                style={view === v ? {
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 0 12px -3px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                } : undefined}
+                style={
+                  view === v
+                    ? {
+                        background:
+                          "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
+                        boxShadow:
+                          "0 0 12px -3px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                      }
+                    : undefined
+                }
               >
-                {view === v && <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />}
+                {view === v && (
+                  <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+                )}
                 <span className="relative">{v}</span>
               </button>
             ))}
@@ -273,6 +293,7 @@ function CalendarPage() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => shift(-1)}
+              aria-label="Previous period"
               className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.93] transition-all duration-150"
               style={{ border: "1px solid var(--border)" }}
             >
@@ -287,6 +308,7 @@ function CalendarPage() {
             </button>
             <button
               onClick={() => shift(1)}
+              aria-label="Next period"
               className="h-8 w-8 rounded-lg grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.93] transition-all duration-150"
               style={{ border: "1px solid var(--border)" }}
             >
@@ -305,11 +327,15 @@ function CalendarPage() {
           {/* Actions — pushed right */}
           <div className="flex items-center gap-2 ml-auto">
             <button
-              onClick={() => { setCreateSlot(null); setCreateOpen(true); }}
+              onClick={() => {
+                setCreateSlot(null);
+                setCreateOpen(true);
+              }}
               className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
               style={{
                 background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow: "0 0 16px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                boxShadow:
+                  "0 0 16px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
               }}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -321,7 +347,10 @@ function CalendarPage() {
               <DropdownMenuTrigger asChild>
                 <button
                   className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150"
-                  style={{ border: "1px solid var(--border)", background: "color-mix(in oklch, var(--muted) 60%, transparent)" }}
+                  style={{
+                    border: "1px solid var(--border)",
+                    background: "color-mix(in oklch, var(--muted) 60%, transparent)",
+                  }}
                 >
                   <Copy className="h-3.5 w-3.5" /> Duplicate
                 </button>
@@ -378,7 +407,10 @@ function CalendarPage() {
             anchor={anchor}
             events={calEvents}
             subjects={calSubjects}
-            onDayClick={(d) => { setAnchor(d); setView("day"); }}
+            onDayClick={(d) => {
+              setAnchor(d);
+              setView("day");
+            }}
           />
         )}
       </main>
@@ -389,7 +421,8 @@ function CalendarPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Clear entire calendar?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes all your events and subjects. You'll need to re-import your timetable to restore them.
+              This permanently deletes all your events and subjects. You'll need to re-import your
+              timetable to restore them.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -422,7 +455,9 @@ function CalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {DAY_NAMES.map((d, i) => (
-                      <SelectItem key={i} value={String(i)}>{d}</SelectItem>
+                      <SelectItem key={i} value={String(i)}>
+                        {d}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -435,7 +470,9 @@ function CalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {DAY_NAMES.map((d, i) => (
-                      <SelectItem key={i} value={String(i)} disabled={i === Number(srcDay)}>{d}</SelectItem>
+                      <SelectItem key={i} value={String(i)} disabled={i === Number(srcDay)}>
+                        {d}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -443,11 +480,16 @@ function CalendarPage() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground py-2">
-              This will create a copy of all {calEvents.length} events in your weekly schedule. The copies are independent and can be edited or deleted separately.
+              This will create a copy of all {calEvents.length} events in your weekly schedule. The
+              copies are independent and can be edited or deleted separately.
             </p>
           )}
           <DialogFooter>
-            <Button variant="outline" className="glass border-white/10" onClick={() => setDupOpen(false)}>
+            <Button
+              variant="outline"
+              className="glass border-white/10"
+              onClick={() => setDupOpen(false)}
+            >
               Cancel
             </Button>
             <Button className="bg-gradient-primary" onClick={handleDuplicate}>
@@ -497,7 +539,10 @@ function CalendarPage() {
         open={createOpen}
         initial={createSlot}
         subjects={calSubjects}
-        onClose={() => { setCreateOpen(false); setCreateSlot(null); }}
+        onClose={() => {
+          setCreateOpen(false);
+          setCreateSlot(null);
+        }}
         onSave={handleCreate}
       />
     </>

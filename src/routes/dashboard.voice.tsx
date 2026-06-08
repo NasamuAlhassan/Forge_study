@@ -7,16 +7,36 @@ export const Route = createFileRoute("/dashboard/voice")({
   component: VoicePage,
 });
 
-type SR = typeof window extends { webkitSpeechRecognition: infer T } ? T : any;
+// Minimal Web Speech API typings (not included in the TS DOM lib).
+interface SpeechRecognitionAlternativeLike {
+  readonly transcript: string;
+}
+interface SpeechRecognitionEventLike {
+  readonly results: ArrayLike<ArrayLike<SpeechRecognitionAlternativeLike>>;
+}
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: (ev: SpeechRecognitionEventLike) => void;
+  onend: () => void;
+  start: () => void;
+  stop: () => void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
 
 function VoicePage() {
   const [supported, setSupported] = useState(true);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const recRef = useRef<any>(null);
+  const recRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
-    const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const w = window as unknown as {
+      webkitSpeechRecognition?: SpeechRecognitionCtor;
+      SpeechRecognition?: SpeechRecognitionCtor;
+    };
+    const SR = w.webkitSpeechRecognition || w.SpeechRecognition;
     if (!SR) {
       setSupported(false);
       return;
@@ -25,7 +45,7 @@ function VoicePage() {
     rec.continuous = true;
     rec.interimResults = true;
     rec.lang = "en-US";
-    rec.onresult = (ev: any) => {
+    rec.onresult = (ev: SpeechRecognitionEventLike) => {
       let txt = "";
       for (let i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript;
       setTranscript(txt);
@@ -67,16 +87,20 @@ function VoicePage() {
         <div
           className="max-w-3xl mx-auto text-center rounded-3xl p-10 relative overflow-hidden"
           style={{
-            background: "oklch(0.16 0.04 275 / 0.93)",
+            background: "color-mix(in oklch, var(--card) 93%, transparent)",
             backdropFilter: "blur(40px) saturate(200%) brightness(1.05)",
-            border: "1px solid oklch(1 0 0 / 0.08)",
-            boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 32px 80px oklch(0 0 0 / 0.35), 0 0 0 1px oklch(0 0 0 / 0.15)",
+            border: "1px solid var(--border)",
+            boxShadow:
+              "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 32px 80px oklch(0 0 0 / 0.35), 0 0 0 1px oklch(0 0 0 / 0.15)",
           }}
         >
           {/* Top-left light hit */}
           <div
             className="absolute inset-0 rounded-3xl pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 70% 40% at 10% 0%, oklch(1 0 0 / 0.06) 0%, transparent 60%)" }}
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 40% at 10% 0%, oklch(1 0 0 / 0.06) 0%, transparent 60%)",
+            }}
           />
 
           {/* Mic button + rings */}
@@ -94,7 +118,8 @@ function VoicePage() {
                   className="absolute inset-0 rounded-full"
                   style={{
                     background: "oklch(0.62 0.21 285 / 0.2)",
-                    animation: "voice-ring-pulse-2 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s infinite",
+                    animation:
+                      "voice-ring-pulse-2 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s infinite",
                   }}
                 />
               </>
@@ -108,15 +133,24 @@ function VoicePage() {
                 boxShadow: listening
                   ? "0 0 0 3px oklch(0.62 0.21 285 / 0.45), 0 0 40px oklch(0.62 0.21 285 / 0.35), 0 8px 32px oklch(0 0 0 / 0.4), 0 1px 0 oklch(1 0 0 / 0.22) inset"
                   : "0 0 0 1px oklch(0.62 0.21 285 / 0.2), 0 8px 32px oklch(0 0 0 / 0.35), 0 1px 0 oklch(1 0 0 / 0.22) inset",
-                animation: !listening && supported ? "voice-mic-float 3s ease-in-out infinite" : "none",
-                transition: "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                animation:
+                  !listening && supported ? "voice-mic-float 3s ease-in-out infinite" : "none",
+                transition:
+                  "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
               }}
             >
               <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-              {listening
-                ? <Square className="h-8 w-8 text-white relative z-10" style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.3))" }} />
-                : <Mic className="h-10 w-10 text-white relative z-10" style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.3))" }} />
-              }
+              {listening ? (
+                <Square
+                  className="h-8 w-8 text-white relative z-10"
+                  style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.3))" }}
+                />
+              ) : (
+                <Mic
+                  className="h-10 w-10 text-white relative z-10"
+                  style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.3))" }}
+                />
+              )}
             </button>
           </div>
 
@@ -124,15 +158,19 @@ function VoicePage() {
             className="mt-8 font-display text-2xl font-semibold relative"
             style={{
               letterSpacing: "-0.03em",
-              color: listening ? "oklch(0.88 0.08 285)" : "oklch(0.96 0.01 280)",
+              color: listening ? "var(--primary)" : "var(--foreground)",
               transition: "color 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            {listening ? "Listening…" : supported ? "Tap to speak" : "Voice not supported in this browser"}
+            {listening
+              ? "Listening…"
+              : supported
+                ? "Tap to speak"
+                : "Voice not supported in this browser"}
           </h3>
-          <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "oklch(0.62 0.03 280)" }}>
+          <p className="mt-2 text-sm max-w-md mx-auto" style={{ color: "var(--muted-foreground)" }}>
             Try:{" "}
-            <span style={{ color: "oklch(0.80 0.04 280)", fontStyle: "italic" }}>
+            <span style={{ color: "var(--foreground)", fontStyle: "italic" }}>
               "I have Calculus on Monday from 8 to 10 in LT 1."
             </span>
           </p>
@@ -141,8 +179,8 @@ function VoicePage() {
           <div
             className="mt-7 rounded-2xl p-5 text-left relative overflow-hidden"
             style={{
-              background: "oklch(1 0 0 / 0.04)",
-              border: "1px solid oklch(1 0 0 / 0.08)",
+              background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
+              border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
               boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
               minHeight: "8rem",
               transition: "border-color 0.3s ease",
@@ -153,8 +191,9 @@ function VoicePage() {
               <div
                 className="h-5 w-5 rounded-lg grid place-items-center"
                 style={{
-                  background: "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
-                  border: "1px solid oklch(1 0 0 / 0.1)",
+                  background:
+                    "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
+                  border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
                 }}
               >
                 <Sparkles className="h-3 w-3" style={{ color: "oklch(0.74 0.19 295)" }} />
@@ -175,7 +214,7 @@ function VoicePage() {
             </div>
             <p
               className="text-base leading-relaxed"
-              style={{ color: transcript ? "oklch(0.92 0.01 280)" : "oklch(0.45 0.02 280)" }}
+              style={{ color: transcript ? "var(--foreground)" : "var(--muted-foreground)" }}
             >
               {transcript || "…"}
             </p>
@@ -187,12 +226,16 @@ function VoicePage() {
               className="mt-5 relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm text-white overflow-hidden transition-all duration-150 hover:brightness-110 active:scale-[0.97]"
               style={{
                 background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-                boxShadow: "0 4px 20px oklch(0.62 0.21 285 / 0.35), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                boxShadow:
+                  "0 4px 20px oklch(0.62 0.21 285 / 0.35), 0 1px 0 oklch(1 0 0 / 0.2) inset",
                 letterSpacing: "-0.01em",
               }}
             >
               <span className="absolute inset-0 bg-gradient-to-br from-white/18 to-transparent pointer-events-none rounded-xl" />
-              <Wand2 className="h-4 w-4 relative z-10" style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.25))" }} />
+              <Wand2
+                className="h-4 w-4 relative z-10"
+                style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.25))" }}
+              />
               <span className="relative z-10">Convert to schedule</span>
             </button>
           )}

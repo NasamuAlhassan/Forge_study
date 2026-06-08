@@ -55,7 +55,9 @@ function EmptyState() {
         <CalendarDays className="h-6 w-6 text-primary/60" aria-hidden="true" />
       </div>
       <p className="text-sm text-muted-foreground text-center">
-        No schedule data yet.<br />Import a timetable to see analytics.
+        No schedule data yet.
+        <br />
+        Import a timetable to see analytics.
       </p>
     </div>
   );
@@ -66,9 +68,7 @@ function AnalyticsPage() {
   const { theme } = useTheme();
 
   const tooltipStyle = {
-    background: theme === "light"
-      ? "oklch(0.98 0.01 280)"
-      : "oklch(0.20 0.04 275)",
+    background: theme === "light" ? "oklch(0.98 0.01 280)" : "oklch(0.20 0.04 275)",
     border: `1px solid ${theme === "light" ? "oklch(0.88 0.03 280)" : "oklch(1 0 0 / 0.08)"}`,
     borderRadius: 12,
     color: theme === "light" ? "oklch(0.20 0.04 275)" : "oklch(0.95 0.01 280)",
@@ -83,9 +83,13 @@ function AnalyticsPage() {
     // Hours per day of week (class + study stacked)
     const hoursByDay = DAY_LABELS.map((label, dow) => {
       const dayEvents = events.filter((e) => e.day === dow);
-      const classH = round1(dayEvents.filter((e) => e.type === "class").reduce((s, e) => s + e.end - e.start, 0) / 60);
-      const studyH = round1(dayEvents.filter((e) => e.type === "study").reduce((s, e) => s + e.end - e.start, 0) / 60);
-      const totalH = round1((dayEvents.reduce((s, e) => s + e.end - e.start, 0)) / 60);
+      const classH = round1(
+        dayEvents.filter((e) => e.type === "class").reduce((s, e) => s + e.end - e.start, 0) / 60,
+      );
+      const studyH = round1(
+        dayEvents.filter((e) => e.type === "study").reduce((s, e) => s + e.end - e.start, 0) / 60,
+      );
+      const totalH = round1(dayEvents.reduce((s, e) => s + e.end - e.start, 0) / 60);
       return { d: label, class: classH, study: studyH, total: totalH };
     });
 
@@ -99,7 +103,11 @@ function AnalyticsPage() {
     const subjectHours = Array.from(subjectMap.entries())
       .map(([id, mins]) => {
         const subj = subjects.find((s) => s.id === id);
-        return { s: subj?.code ?? subj?.name ?? id.slice(0, 6), name: subj?.name ?? id, h: round1(mins / 60) };
+        return {
+          s: subj?.code ?? subj?.name ?? id.slice(0, 6),
+          name: subj?.name ?? id,
+          h: round1(mins / 60),
+        };
       })
       .sort((a, b) => b.h - a.h)
       .slice(0, 7);
@@ -119,11 +127,21 @@ function AnalyticsPage() {
 
     // Summary metrics
     const totalMins = events.reduce((s, e) => s + e.end - e.start, 0);
-    const studyMins = events.filter((e) => e.type === "study").reduce((s, e) => s + e.end - e.start, 0);
+    const studyMins = events
+      .filter((e) => e.type === "study")
+      .reduce((s, e) => s + e.end - e.start, 0);
     const activeDays = new Set(events.map((e) => e.day)).size;
     const studySessions = events.filter((e) => e.type === "study").length;
 
-    return { hoursByDay, subjectHours, typeBreakdown, totalMins, studyMins, activeDays, studySessions };
+    return {
+      hoursByDay,
+      subjectHours,
+      typeBreakdown,
+      totalMins,
+      studyMins,
+      activeDays,
+      studySessions,
+    };
   }, [events, subjects, hasData]);
 
   const summaryCards = computed
@@ -144,16 +162,23 @@ function AnalyticsPage() {
         {computed && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {summaryCards.map(({ label, value, icon: Icon }) => (
-              <div key={label} className="ring-gradient glass hover-lift rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden">
+              <div
+                key={label}
+                className="ring-gradient glass hover-lift rounded-2xl p-4 flex items-center gap-3 relative overflow-hidden"
+              >
                 <div
                   className="absolute inset-0 rounded-2xl pointer-events-none"
-                  style={{ background: "radial-gradient(ellipse 80% 50% at 15% 0%, oklch(1 0 0 / 0.05) 0%, transparent 65%)" }}
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 80% 50% at 15% 0%, oklch(1 0 0 / 0.05) 0%, transparent 65%)",
+                  }}
                 />
                 <div
                   className="h-9 w-9 rounded-xl grid place-items-center shrink-0 relative overflow-hidden"
                   style={{
-                    background: "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
-                    border: "1px solid oklch(1 0 0 / 0.1)",
+                    background:
+                      "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
+                    border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
                     boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset",
                   }}
                 >
@@ -184,15 +209,39 @@ function AnalyticsPage() {
                 <ResponsiveContainer>
                   <BarChart data={computed.hoursByDay} barCategoryGap="30%">
                     <CartesianGrid stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="d" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} unit="h" />
+                    <XAxis
+                      dataKey="d"
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      unit="h"
+                    />
                     <Tooltip
                       contentStyle={tooltipStyle}
                       formatter={(value: number, name: string) => [`${value}h`, name]}
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="class" name="Class" stackId="a" fill={TYPE_COLORS.class} radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="study" name="Study" stackId="a" fill={TYPE_COLORS.study} radius={[6, 6, 0, 0]} />
+                    <Bar
+                      dataKey="class"
+                      name="Class"
+                      stackId="a"
+                      fill={TYPE_COLORS.class}
+                      radius={[0, 0, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="study"
+                      name="Study"
+                      stackId="a"
+                      fill={TYPE_COLORS.study}
+                      radius={[6, 6, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -204,20 +253,38 @@ function AnalyticsPage() {
           {/* Subject distribution */}
           <div className="ring-gradient glass rounded-2xl p-5">
             <h3 className="text-base font-semibold">Subject distribution</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Hours per subject (class + study)</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Hours per subject (class + study)
+            </p>
             <div className="h-64 mt-4">
               {computed && computed.subjectHours.length > 0 ? (
                 <ResponsiveContainer>
                   <BarChart data={computed.subjectHours} layout="vertical" barCategoryGap="25%">
                     <CartesianGrid stroke={gridColor} horizontal={false} />
-                    <XAxis type="number" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} unit="h" />
-                    <YAxis type="category" dataKey="s" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} width={52} />
+                    <XAxis
+                      type="number"
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      unit="h"
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="s"
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      width={52}
+                    />
                     <Tooltip
                       contentStyle={tooltipStyle}
-                      formatter={(value: number, _name: string, props: { payload?: { name: string } }) => [
-                        `${value}h`,
-                        props.payload?.name ?? "Subject",
-                      ]}
+                      formatter={(
+                        value: number,
+                        _name: string,
+                        props: { payload?: { name: string } },
+                      ) => [`${value}h`, props.payload?.name ?? "Subject"]}
                     />
                     <Bar dataKey="h" radius={[0, 6, 6, 0]}>
                       {computed.subjectHours.map((_, i) => (
@@ -247,8 +314,20 @@ function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="d" stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke={axisColor} fontSize={12} tickLine={false} axisLine={false} unit="h" />
+                    <XAxis
+                      dataKey="d"
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      stroke={axisColor}
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      unit="h"
+                    />
                     <Tooltip
                       contentStyle={tooltipStyle}
                       formatter={(value: number) => [`${value}h`, "Study"]}

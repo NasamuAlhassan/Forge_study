@@ -32,7 +32,11 @@ function DashboardLayout() {
 
   if (loading || !session) {
     return (
-      <div className="min-h-screen grid place-items-center bg-background" aria-label="Loading workspace" role="status">
+      <div
+        className="min-h-screen grid place-items-center bg-background"
+        aria-label="Loading workspace"
+        role="status"
+      >
         <div className="flex flex-col items-center gap-5">
           {/* Branded loader */}
           <div className="relative">
@@ -44,14 +48,22 @@ function DashboardLayout() {
             </span>
           </div>
           <div className="text-center space-y-1">
-            <p className="text-sm font-semibold font-display text-foreground">Loading your workspace</p>
+            <p className="text-sm font-semibold font-display text-foreground">
+              Loading your workspace
+            </p>
             <p className="text-xs text-muted-foreground">Setting up your AI academic OS…</p>
           </div>
           {/* Skeleton bars */}
           <div className="w-48 space-y-2 opacity-40">
             <div className="h-1.5 rounded-full bg-primary/30 animate-shimmer bg-[length:200%_100%]" />
-            <div className="h-1.5 rounded-full bg-primary/20 w-3/4 animate-shimmer bg-[length:200%_100%]" style={{ animationDelay: "0.2s" }} />
-            <div className="h-1.5 rounded-full bg-primary/15 w-1/2 animate-shimmer bg-[length:200%_100%]" style={{ animationDelay: "0.4s" }} />
+            <div
+              className="h-1.5 rounded-full bg-primary/20 w-3/4 animate-shimmer bg-[length:200%_100%]"
+              style={{ animationDelay: "0.2s" }}
+            />
+            <div
+              className="h-1.5 rounded-full bg-primary/15 w-1/2 animate-shimmer bg-[length:200%_100%]"
+              style={{ animationDelay: "0.4s" }}
+            />
           </div>
         </div>
       </div>
