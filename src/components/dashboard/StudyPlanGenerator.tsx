@@ -99,6 +99,10 @@ const categoryConfig: Record<
   },
 };
 
+function plansKey(userId: string) {
+  return `forge-study-plans:${userId}`;
+}
+
 export function StudyPlanGenerator() {
   const [context, setContext] = useState("");
   const [loading, setLoading] = useState(false);
@@ -109,6 +113,23 @@ export function StudyPlanGenerator() {
   const generate = generateStudyPlan;
   const { user } = useAuth();
   const { subjects, events, refetch } = useSchedule();
+
+  // Restore previously generated plans from localStorage on mount
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(plansKey(user.id));
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as StudyPlanOption[];
+      if (parsed.length > 0) {
+        setOptions(parsed);
+        const bi = parsed.findIndex((o) => o.name === "Balanced");
+        setSelectedOption(bi >= 0 ? bi : 0);
+      }
+    } catch {
+      /* ignore corrupt data */
+    }
+  }, [user?.id]);
 
   // Derived: the currently viewed plan
   const activePlan = options[selectedOption] ?? null;
@@ -200,6 +221,14 @@ export function StudyPlanGenerator() {
       // Default to Balanced if available
       const balancedIdx = opts.findIndex((o) => o.name === "Balanced");
       setSelectedOption(balancedIdx >= 0 ? balancedIdx : 0);
+      // Persist so switching pages doesn't lose the plans
+      if (user?.id && opts.length > 0) {
+        try {
+          localStorage.setItem(plansKey(user.id), JSON.stringify(opts));
+        } catch {
+          /* ignore quota errors */
+        }
+      }
       toast.success("Three plan options are ready");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Generation failed");
@@ -213,15 +242,15 @@ export function StudyPlanGenerator() {
     if (!activePlan || sessions.length === 0) return;
     setSaving(true);
     try {
-      await supabase.from("study_plans").insert({
-        user_id: user.id,
-        context,
-        rationale: activePlan.rationale,
-        plan: { sessions } as never,
-      });
+      // Replace all existing study + break events with this plan.
+      // Class events (from the timetable import) are left untouched.
+      await supabase.from("events").delete().eq("user_id", user.id).in("type", ["study", "break"]);
+
       await persistStudySessions(user.id, sessions, subjects);
       await refetch();
-      toast.success(`Added ${sessions.length} blocks from the ${activePlan.name} plan`);
+      toast.success(
+        `Calendar replaced with the ${activePlan.name} plan — ${sessions.length} blocks applied`,
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
@@ -414,7 +443,7 @@ export function StudyPlanGenerator() {
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
                   <>
-                    <CalendarPlus className="h-3.5 w-3.5" /> Save to calendar
+                    <CalendarPlus className="h-3.5 w-3.5" /> Apply to calendar
                   </>
                 )}
                 <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />

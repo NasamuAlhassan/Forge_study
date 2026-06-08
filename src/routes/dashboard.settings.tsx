@@ -56,6 +56,28 @@ interface SubjectRow {
   isNew?: boolean;
 }
 
+// ── Difficulty localStorage fallback ─────────────────────────────────────────
+// The Supabase generated types don't include `difficulty` so the DB save is
+// done with `as any`. If the column is missing or the save is rejected, we
+// keep the value in localStorage so it survives page reloads.
+function diffKey(userId: string) {
+  return `forge-difficulties:${userId}`;
+}
+function loadDiffs(userId: string): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(diffKey(userId)) ?? "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+function saveDiffs(userId: string, map: Record<string, string>): void {
+  try {
+    localStorage.setItem(diffKey(userId), JSON.stringify(map));
+  } catch {
+    /* ignore quota errors */
+  }
+}
+
 function SettingsPage() {
   const { user } = useAuth();
   const { refetch } = useSchedule();
@@ -102,13 +124,18 @@ function SettingsPage() {
       .select("*")
       .eq("user_id", user.id)
       .then(({ data }) => {
+        const saved = loadDiffs(user.id);
         setSubjects(
           (data ?? []).map((s) => ({
             id: s.id,
             name: s.name,
             code: s.code ?? "",
             instructor: s.instructor ?? "",
-            difficulty: ((s as Record<string, unknown>).difficulty as Difficulty) ?? "medium",
+            // DB value wins if present; otherwise fall back to localStorage, then "medium"
+            difficulty:
+              (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
+              (saved[s.id] as Difficulty | undefined) ??
+              "medium",
             color: s.color,
           })),
         );
@@ -185,7 +212,7 @@ function SettingsPage() {
           if (error) throw error;
         }
 
-        // Difficulty — saved separately so a missing column doesn't block core save
+        // Difficulty — also attempt DB save (column may not be in the generated types)
         if (savedId) {
           await supabase
             .from("subjects")
@@ -193,20 +220,28 @@ function SettingsPage() {
             .update({ difficulty: s.difficulty } as any)
             .eq("id", savedId)
             .then(() => {
-              /* silently ignore if column doesn't exist yet */
+              /* silently continue — localStorage is the reliable fallback */
             });
         }
       }
 
-      // Refresh local state with real IDs
+      // Persist difficulties to localStorage so they survive regardless of DB column state
+      const diffMap = Object.fromEntries(subjects.map((s) => [s.id, s.difficulty]));
+      saveDiffs(user.id, diffMap);
+
+      // Refresh local state with real IDs, merging localStorage difficulties
       const { data } = await supabase.from("subjects").select("*").eq("user_id", user.id);
+      const saved = loadDiffs(user.id);
       setSubjects(
         (data ?? []).map((s) => ({
           id: s.id,
           name: s.name,
           code: s.code ?? "",
           instructor: s.instructor ?? "",
-          difficulty: ((s as Record<string, unknown>).difficulty as Difficulty) ?? "medium",
+          difficulty:
+            (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
+            (saved[s.id] as Difficulty | undefined) ??
+            "medium",
           color: s.color,
         })),
       );

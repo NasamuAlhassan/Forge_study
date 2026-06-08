@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Copy, Download, Plus, RotateCcw } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Download,
+  FileText,
+  Image,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
 import { DayView } from "@/components/dashboard/DayView";
@@ -410,21 +420,21 @@ function CalendarPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px]">
                 <DropdownMenuItem onClick={() => handleExport("ics")} className="gap-2">
-                  <span className="text-base leading-none">📅</span>
+                  <Calendar className="h-4 w-4 shrink-0 text-primary/70" aria-hidden="true" />
                   <div>
                     <div className="text-[13px] font-medium">Calendar file (.ics)</div>
                     <div className="text-[11px] text-muted-foreground">Google, Apple, Outlook…</div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport("png")} className="gap-2">
-                  <span className="text-base leading-none">🖼️</span>
+                  <Image className="h-4 w-4 shrink-0 text-primary/70" aria-hidden="true" />
                   <div>
                     <div className="text-[13px] font-medium">Image (.png)</div>
                     <div className="text-[11px] text-muted-foreground">Share or save this week</div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2">
-                  <span className="text-base leading-none">📄</span>
+                  <FileText className="h-4 w-4 shrink-0 text-primary/70" aria-hidden="true" />
                   <div>
                     <div className="text-[13px] font-medium">PDF</div>
                     <div className="text-[11px] text-muted-foreground">Print or save as PDF</div>

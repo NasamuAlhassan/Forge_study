@@ -92,13 +92,25 @@ export function useSchedule() {
       supabase.from("subjects").select("*").eq("user_id", user.id),
       supabase.from("events").select("*").eq("user_id", user.id),
     ]);
+    // Merge localStorage difficulties as a reliable fallback for the DB column
+    let savedDiffs: Record<string, string> = {};
+    try {
+      savedDiffs = JSON.parse(
+        localStorage.getItem(`forge-difficulties:${user.id}`) ?? "{}",
+      ) as Record<string, string>;
+    } catch {
+      /* ignore */
+    }
     const mappedSubs: Subject[] = (subs ?? []).map((s) => ({
       id: s.id,
       name: s.name,
       code: s.code ?? "",
       color: s.color,
       lecturer: s.instructor ?? undefined,
-      difficulty: ((s as Record<string, unknown>).difficulty as Subject["difficulty"]) ?? undefined,
+      difficulty:
+        (((s as Record<string, unknown>).difficulty as Subject["difficulty"]) || undefined) ??
+        (savedDiffs[s.id] as Subject["difficulty"] | undefined) ??
+        undefined,
     }));
     const mappedEvts: EventBlock[] = (evts ?? []).map((e) => ({
       id: e.id,
