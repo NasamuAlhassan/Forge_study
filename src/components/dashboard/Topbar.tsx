@@ -4,6 +4,7 @@ import {
   CalendarClock,
   Clock,
   LogOut,
+  Menu,
   Moon,
   Search,
   Sparkles,
@@ -82,7 +83,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
 
   return (
     <header
-      className="sticky top-0 z-30 pl-12 lg:pl-6 pr-4 sm:pr-5 flex items-center justify-between gap-4"
+      className="sticky top-0 z-30 pl-3 sm:pl-4 lg:pl-6 pr-4 sm:pr-5 flex items-center gap-2 sm:gap-3"
       style={{
         height: "60px",
         background: isDark ? "oklch(0.13 0.03 275 / 0.92)" : "oklch(0.98 0.005 280 / 0.92)",
@@ -94,8 +95,18 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           : "0 1px 0 oklch(1 1 0 / 0.8) inset, 0 2px 12px oklch(0 0 0 / 0.05)",
       }}
     >
+      {/* Mobile hamburger — sits inside the bar, hidden on desktop */}
+      <button
+        type="button"
+        aria-label="Open navigation"
+        onClick={() => window.dispatchEvent(new CustomEvent("sidebar:open"))}
+        className={cn("lg:hidden shrink-0", iconBtn)}
+      >
+        <Menu className="h-[15px] w-[15px]" aria-hidden="true" />
+      </button>
+
       {/* Page title */}
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <h1
           className="font-display font-semibold truncate leading-tight text-[17px] sm:text-[19px] lg:text-[21px]"
           style={{ letterSpacing: "-0.025em" }}
@@ -110,7 +121,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-1 sm:gap-1.5">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
         {/* Search — md+ only */}
         <div
           className={[

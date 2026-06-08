@@ -9,12 +9,11 @@ import {
   Settings,
   Sparkles,
   Flame,
-  Menu,
   TimerReset,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useMemo, useState } from "react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useEffect, useMemo, useState } from "react";
 import { useSchedule } from "@/hooks/use-schedule";
 
 const items = [
@@ -196,6 +195,13 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
 export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
   const [open, setOpen] = useState(false);
 
+  // Listen for the open event dispatched by the hamburger inside Topbar
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("sidebar:open", handler);
+    return () => window.removeEventListener("sidebar:open", handler);
+  }, []);
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -203,25 +209,8 @@ export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
         <SidebarNav onFocus={onFocus} />
       </aside>
 
-      {/* Mobile hamburger + drawer */}
+      {/* Mobile drawer — triggered by the hamburger inside Topbar */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <button
-            type="button"
-            aria-label="Open navigation"
-            className="lg:hidden fixed top-3 left-3 z-40 h-10 w-10 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:brightness-110 active:scale-[0.93] transition-all duration-150 relative overflow-hidden"
-            style={{
-              background: "color-mix(in oklch, var(--card) 92%, transparent)",
-              backdropFilter: "blur(20px) saturate(160%)",
-              WebkitBackdropFilter: "blur(20px) saturate(160%)",
-              border: "1px solid var(--border)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 4px 16px oklch(0 0 0 / 0.12)",
-            }}
-          >
-            <Menu className="h-4 w-4 relative z-10" />
-            <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-          </button>
-        </SheetTrigger>
         <SheetContent
           side="left"
           className="p-0 flex flex-col w-[260px] border-r-0 bg-transparent glass-sidebar"
