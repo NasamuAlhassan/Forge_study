@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Copy, Plus, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, Download, Plus, RotateCcw } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
 import { DayView } from "@/components/dashboard/DayView";
@@ -50,8 +50,10 @@ import {
   indexToDay,
 } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventBlock } from "@/lib/demo-data";
+import { exportICS, exportPNG, exportPDF } from "@/lib/export";
 
 export const Route = createFileRoute("/dashboard/calendar")({
   component: CalendarPage,
@@ -73,6 +75,7 @@ function getMonday(d: Date): Date {
 function CalendarPage() {
   const { events, subjects, hasData, refetch } = useSchedule();
   const { user } = useAuth();
+  const { theme } = useTheme();
 
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(() => new Date());
@@ -193,6 +196,33 @@ function CalendarPage() {
       toast.error("Duplication failed");
     } finally {
       setDupOpen(false);
+    }
+  };
+
+  // ── export ──────────────────────────────────────────────────────────────────
+  const weekStart = getMonday(anchor);
+
+  const handleExport = (format: "ics" | "png" | "pdf") => {
+    if (!hasData) {
+      toast.error("No schedule to export — import a timetable first.");
+      return;
+    }
+    const label = periodLabel;
+    try {
+      if (format === "ics") {
+        exportICS(events, subjects);
+        toast.success(
+          "Calendar file downloaded — import it into Google Calendar, Apple Calendar, or Outlook.",
+        );
+      } else if (format === "png") {
+        exportPNG(events, subjects, weekStart, label, theme === "dark");
+        toast.success("Timetable image saved as PNG.");
+      } else {
+        exportPDF(events, subjects, weekStart, label);
+        toast.success('Print window opened — choose "Save as PDF" to download.');
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed. Please try again.");
     }
   };
 
@@ -361,6 +391,44 @@ function CalendarPage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => openDuplicate("week")}>
                   Duplicate whole week
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  disabled={!hasData}
+                  className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.07] active:scale-[0.97] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    border: "1px solid var(--border)",
+                    background: "color-mix(in oklch, var(--muted) 60%, transparent)",
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" /> Export
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[180px]">
+                <DropdownMenuItem onClick={() => handleExport("ics")} className="gap-2">
+                  <span className="text-base leading-none">📅</span>
+                  <div>
+                    <div className="text-[13px] font-medium">Calendar file (.ics)</div>
+                    <div className="text-[11px] text-muted-foreground">Google, Apple, Outlook…</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("png")} className="gap-2">
+                  <span className="text-base leading-none">🖼️</span>
+                  <div>
+                    <div className="text-[13px] font-medium">Image (.png)</div>
+                    <div className="text-[11px] text-muted-foreground">Share or save this week</div>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport("pdf")} className="gap-2">
+                  <span className="text-base leading-none">📄</span>
+                  <div>
+                    <div className="text-[13px] font-medium">PDF</div>
+                    <div className="text-[11px] text-muted-foreground">Print or save as PDF</div>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
