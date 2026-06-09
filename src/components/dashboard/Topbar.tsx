@@ -59,13 +59,16 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     .charAt(0)
     .toUpperCase();
 
+  // More opaque so the dropdown reads clearly over the wallpaper.
+  // NO saturate() — that was amplifying the orange background.
   const dropdownStyle = {
-    background:              "var(--glass-bg-dark)",
-    backdropFilter:          "blur(var(--glass-blur)) saturate(200%)",
-    WebkitBackdropFilter:    "blur(var(--glass-blur)) saturate(200%)",
-    border:                  "1px solid var(--glass-border-dark)",
-    boxShadow:               "0 1px 0 rgba(255,255,255,0.10) inset, 0 24px 64px -16px rgba(4,2,18,0.70)",
-    borderRadius:            "16px",
+    background:           "rgba(255,255,255,0.28)",
+    backdropFilter:       "blur(40px)",
+    WebkitBackdropFilter: "blur(40px)",
+    border:               "1px solid rgba(255,255,255,0.30)",
+    boxShadow:            "0 1px 0 rgba(255,255,255,0.25) inset, 0 16px 48px rgba(0,0,0,0.25)",
+    borderRadius:         "16px",
+    color:                isDark ? "white" : "rgba(10,10,20,0.90)",
   };
 
   const iconBtn = [
@@ -207,18 +210,34 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("forge:open"))}
           aria-label="Ask Forge AI"
-          className="btn-primary hidden sm:inline-flex h-9 px-3.5 rounded-xl text-[13px]"
+          className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold transition-all duration-150 active:scale-[0.96]"
+          style={{
+            background:           "rgba(255,255,255,0.22)",
+            backdropFilter:       "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border:               "1px solid rgba(255,255,255,0.50)",
+            color:                "rgba(255,255,255,0.95)",
+            boxShadow:            "0 1px 0 rgba(255,255,255,0.30) inset",
+          }}
         >
-          <Sparkles className="h-3.5 w-3.5 relative z-10" aria-hidden="true" />
-          <span className="relative z-10">Ask Forge</span>
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>Ask Forge</span>
         </button>
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("forge:open"))}
           aria-label="Ask Forge AI"
-          className="btn-primary sm:hidden h-9 w-9 rounded-xl shrink-0 p-0"
+          className="sm:hidden h-9 w-9 rounded-full shrink-0 grid place-items-center transition-all duration-150 active:scale-[0.93]"
+          style={{
+            background:           "rgba(255,255,255,0.22)",
+            backdropFilter:       "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border:               "1px solid rgba(255,255,255,0.50)",
+            color:                "rgba(255,255,255,0.95)",
+            boxShadow:            "0 1px 0 rgba(255,255,255,0.30) inset",
+          }}
         >
-          <Sparkles className="h-3.5 w-3.5 relative z-10" />
+          <Sparkles className="h-3.5 w-3.5" />
         </button>
 
         {/* Avatar + user menu */}

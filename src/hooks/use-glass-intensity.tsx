@@ -24,27 +24,29 @@ export function applyGlassIntensity(intensity: number): void {
   const n = Math.max(0, Math.min(100, intensity));
   const root = document.documentElement;
 
-  // ── Blur ────────────────────────────────────────────────────────────────
-  const blur = (Math.max(15, 40 - n * 0.25)).toFixed(1) + "px";
+  // ── Blur: 64 px (heavy frost) → 8 px (crystal liquid) ──────────────────
+  const blur = (Math.max(8, 64 - n * 0.56)).toFixed(1) + "px";
 
-  // ── Standard panel opacity ────────────────────────────────────────────
-  const bgDark  = Math.max(0.02, 0.14 - n * 0.0011); // 0.14 → 0.03
-  const bgLight = Math.max(0.10, 0.55 - n * 0.0043); // 0.55 → 0.12
+  // ── Standard panel opacity ─────────────────────────────────────────────
+  // dark:  0.45 (opaque frost) → 0.04 (barely-there liquid)
+  // light: 0.80 (milky frost)  → 0.12 (clear liquid)
+  const bgDark  = Math.max(0.04, 0.45 - n * 0.0041);
+  const bgLight = Math.max(0.12, 0.80 - n * 0.0068);
 
-  // ── Button tier (interactive elements) ───────────────────────────────
-  const bgBtnDark  = Math.min(0.22, bgDark  * 1.55);
-  const bgBtnLight = Math.min(0.70, bgLight * 1.38);
+  // ── Button tier — ~1.4× standard ─────────────────────────────────────
+  const bgBtnDark  = Math.min(0.58, bgDark  * 1.4);
+  const bgBtnLight = Math.min(0.90, bgLight * 1.2);
 
-  // ── Active / hover tier ───────────────────────────────────────────────
-  const bgActiveDark  = Math.min(0.26, bgDark  * 2.1);
-  const bgActiveLight = Math.min(0.75, bgLight * 1.60);
+  // ── Active / hover tier — ~2× standard ──────────────────────────────
+  const bgActiveDark  = Math.min(0.68, bgDark  * 2.0);
+  const bgActiveLight = Math.min(0.95, bgLight * 1.4);
 
-  // ── Borders ────────────────────────────────────────────────────────────
-  const borderDark  = Math.max(0.08, 0.22 - n * 0.0014); // 0.22 → 0.08
-  const borderLight = Math.max(0.28, 0.65 - n * 0.0037); // 0.65 → 0.28
+  // ── Borders: thicker/brighter at frost, finer at liquid ─────────────
+  const borderDark  = Math.max(0.10, 0.40 - n * 0.003);  // 0.40 → 0.10
+  const borderLight = Math.max(0.20, 0.70 - n * 0.005);  // 0.70 → 0.20
 
-  // ── Drop shadow ────────────────────────────────────────────────────────
-  const shadowA = (Math.max(0.06, 0.20 - n * 0.0014)).toFixed(3);
+  // ── Drop shadow ───────────────────────────────────────────────────────
+  const shadowA = (Math.max(0.08, 0.30 - n * 0.0022)).toFixed(3);
   const shadow  = `0 8px 32px rgba(0,0,0,${shadowA}), 0 2px 8px rgba(0,0,0,${(Number(shadowA)*0.55).toFixed(3)})`;
 
   const f = (v: number) => v.toFixed(3);

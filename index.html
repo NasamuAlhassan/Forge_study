@@ -24,16 +24,16 @@
         // Mirror of applyGlassIntensity() in use-glass-intensity.tsx
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
-        var blur        = (Math.max(15, 40 - n * 0.25)).toFixed(1) + 'px';
-        var bgD  = Math.max(0.02, 0.14 - n * 0.0011);
-        var bgL  = Math.max(0.10, 0.55 - n * 0.0043);
-        var bgBD = Math.min(0.22, bgD  * 1.55);
-        var bgBL = Math.min(0.70, bgL  * 1.38);
-        var bgAD = Math.min(0.26, bgD  * 2.1);
-        var bgAL = Math.min(0.75, bgL  * 1.60);
-        var boD  = Math.max(0.08, 0.22 - n * 0.0014);
-        var boL  = Math.max(0.28, 0.65 - n * 0.0037);
-        var shA  = Math.max(0.06, 0.20 - n * 0.0014);
+        var blur        = (Math.max(8,   64   - n * 0.56  )).toFixed(1) + 'px';
+        var bgD  = Math.max(0.04, 0.45 - n * 0.0041);
+        var bgL  = Math.max(0.12, 0.80 - n * 0.0068);
+        var bgBD = Math.min(0.58, bgD  * 1.4);
+        var bgBL = Math.min(0.90, bgL  * 1.2);
+        var bgAD = Math.min(0.68, bgD  * 2.0);
+        var bgAL = Math.min(0.95, bgL  * 1.4);
+        var boD  = Math.max(0.10, 0.40 - n * 0.003);
+        var boL  = Math.max(0.20, 0.70 - n * 0.005);
+        var shA  = Math.max(0.08, 0.30 - n * 0.0022);
         function w(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
         var r = document.documentElement;
         r.style.setProperty('--glass-intensity',       String(n));
