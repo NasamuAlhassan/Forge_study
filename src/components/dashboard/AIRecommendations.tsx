@@ -165,9 +165,15 @@ export function AIRecommendations() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 relative">
-        <div className="h-8 w-8 rounded-xl bg-gradient-primary grid place-items-center shadow-glow shrink-0 relative overflow-hidden">
-          <Sparkles className="h-[14px] w-[14px] text-white" aria-hidden="true" />
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
+        <div
+          className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
+          style={{
+            background: "var(--glass-bg-btn-dark)",
+            border:     "1px solid var(--glass-border-dark)",
+            boxShadow:  "0 1px 0 rgba(255,255,255,0.10) inset",
+          }}
+        >
+          <Sparkles className="h-[14px] w-[14px] text-white/80" aria-hidden="true" />
         </div>
         <div className="min-w-0">
           <h3
@@ -187,25 +193,26 @@ export function AIRecommendations() {
         {recs.map((r, i) => (
           <div
             key={r.title}
-            className="flex gap-3 p-3.5 rounded-xl relative overflow-hidden group"
+            className="flex gap-3 p-3.5 rounded-xl"
             style={{
-              background: `linear-gradient(135deg, ${r.from}, ${r.to})`,
-              border: "1px solid color-mix(in oklch, var(--foreground) 7%, transparent)",
-              transition: "border-color 200ms ease, background 200ms ease",
-              animationDelay: `${i * 60}ms`,
+              background:    "var(--glass-bg-dark)",
+              backdropFilter:"blur(var(--glass-blur))",
+              WebkitBackdropFilter:"blur(var(--glass-blur))",
+              border:        "1px solid var(--glass-border-dark)",
+              animationDelay:`${i * 60}ms`,
+              transition:    "background 200ms ease",
             }}
           >
             {/* Icon */}
             <div
-              className="h-8 w-8 rounded-xl shrink-0 grid place-items-center mt-0.5 relative overflow-hidden"
+              className="h-8 w-8 rounded-xl shrink-0 grid place-items-center mt-0.5"
               style={{
-                background: `linear-gradient(135deg, ${r.from.replace("/ 0.25", "/ 0.55").replace("/ 0.22", "/ 0.5")}, ${r.to.replace("/ 0.12", "/ 0.3").replace("/ 0.1", "/ 0.25")})`,
-                border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
-                boxShadow: "0 1px 0 oklch(1 0 0 / 0.15) inset",
+                background: "var(--glass-bg-btn-dark)",
+                border:     "1px solid var(--glass-border-dark)",
+                boxShadow:  "0 1px 0 rgba(255,255,255,0.08) inset",
               }}
             >
-              <r.icon className="h-[14px] w-[14px] text-white/90" aria-hidden="true" />
-              <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/20 to-transparent" />
+              <r.icon className="h-[14px] w-[14px] text-white/80" aria-hidden="true" />
             </div>
 
             <div className="min-w-0">

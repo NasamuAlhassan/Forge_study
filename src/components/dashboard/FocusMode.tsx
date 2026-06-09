@@ -470,14 +470,13 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
         {Array.from({ length: LONG_BREAK_AFTER }).map((_, i) => (
           <span
             key={i}
-            className={cn(
-              "h-1.5 w-1.5 rounded-full transition-all duration-500",
-              i < pomodoroCount % LONG_BREAK_AFTER
-                ? `${cfg.dot} scale-125`
-                : isDark
-                  ? "bg-white/15"
-                  : "bg-black/15",
-            )}
+            className="h-1.5 w-1.5 rounded-full transition-all duration-500"
+            style={{
+              background: i < pomodoroCount % LONG_BREAK_AFTER
+                ? "rgba(255,255,255,0.75)"
+                : "rgba(255,255,255,0.15)",
+              transform: i < pomodoroCount % LONG_BREAK_AFTER ? "scale(1.25)" : "scale(1)",
+            }}
           />
         ))}
       </div>
@@ -606,23 +605,17 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
             running ? "hover:brightness-110" : "hover:brightness-110",
           ].join(" ")}
           style={{
-            background: running
-              ? isDark
-                ? "oklch(1 0 0 / 0.1)"
-                : "oklch(0 0 0 / 0.08)"
-              : "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-            boxShadow: running
-              ? isDark
-                ? "0 1px 0 oklch(1 0 0 / 0.15) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.5)"
-                : "0 1px 0 oklch(1 0 0 / 0.6) inset, 0 4px 12px -4px oklch(0.5 0.05 275 / 0.15)"
-              : "0 0 40px -8px oklch(0.62 0.21 285 / 0.55), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-            border: `1px solid ${isDark ? "oklch(1 0 0 / 0.12)" : "oklch(0 0 0 / 0.08)"}`,
+            background:           running ? "var(--glass-bg-active-dark)" : "var(--glass-bg-btn-dark)",
+            backdropFilter:       "blur(var(--glass-blur))",
+            WebkitBackdropFilter: "blur(var(--glass-blur))",
+            border:               "1px solid var(--glass-border-dark)",
+            boxShadow:            "0 1px 0 rgba(255,255,255,0.14) inset, var(--glass-shadow)",
           }}
         >
           {running ? (
-            <Pause className="h-6 w-6" style={{ color: "var(--foreground)" }} />
+            <Pause className="h-6 w-6 text-white/80" />
           ) : (
-            <Play className="h-6 w-6 text-white ml-0.5" />
+            <Play className="h-6 w-6 text-white/90 ml-0.5" />
           )}
           <span className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
         </button>

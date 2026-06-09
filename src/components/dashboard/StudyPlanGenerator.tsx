@@ -273,14 +273,16 @@ export function StudyPlanGenerator() {
 
         <div className="flex items-center gap-3 relative">
           <div
-            className="h-8 w-8 rounded-xl grid place-items-center relative overflow-hidden shrink-0"
+            className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
             style={{
-              background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
+              background:          "var(--glass-bg-btn-dark)",
+              backdropFilter:      "blur(var(--glass-blur))",
+              WebkitBackdropFilter:"blur(var(--glass-blur))",
+              border:              "1px solid var(--glass-border-dark)",
+              boxShadow:           "0 1px 0 rgba(255,255,255,0.10) inset",
             }}
           >
-            <Brain className="h-[14px] w-[14px] text-white relative z-10" />
-            <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+            <Brain className="h-[14px] w-[14px] text-white/80 relative z-10" />
           </div>
           <div className="flex-1 min-w-0">
             <h3
@@ -304,22 +306,25 @@ export function StudyPlanGenerator() {
             style={
               listening
                 ? {
-                    background: "linear-gradient(135deg, oklch(0.65 0.24 25), oklch(0.58 0.26 15))",
-                    boxShadow:
-                      "0 0 16px -4px oklch(0.65 0.24 25 / 0.6), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                    border: "1px solid oklch(1 0 0 / 0.12)",
+                    background:          "var(--glass-bg-active-dark)",
+                    backdropFilter:      "blur(var(--glass-blur))",
+                    WebkitBackdropFilter:"blur(var(--glass-blur))",
+                    border:              "1px solid rgba(255,255,255,0.28)",
+                    boxShadow:           "0 0 14px rgba(255,255,255,0.10), 0 1px 0 rgba(255,255,255,0.12) inset",
                   }
                 : transcribing
                   ? {
-                      background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
-                      border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
-                      opacity: 0.5,
-                      cursor: "wait",
+                      background:  "var(--glass-bg-dark)",
+                      border:      "1px solid var(--glass-border-dark)",
+                      opacity:     0.5,
+                      cursor:      "wait",
                     }
                   : {
-                      background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
-                      border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
-                      boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
+                      background:          "var(--glass-bg-dark)",
+                      backdropFilter:      "blur(var(--glass-blur))",
+                      WebkitBackdropFilter:"blur(var(--glass-blur))",
+                      border:              "1px solid var(--glass-border-dark)",
+                      boxShadow:           "0 1px 0 rgba(255,255,255,0.08) inset",
                     }
             }
           >
@@ -381,13 +386,7 @@ export function StudyPlanGenerator() {
         <button
           onClick={run}
           disabled={loading}
-          className="mt-4 w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
-          style={{
-            background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-            boxShadow: loading
-              ? "none"
-              : "0 0 24px -6px oklch(0.62 0.21 285 / 0.55), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-          }}
+          className="btn-primary btn-primary-full mt-4 h-10 rounded-xl text-[13px]"
         >
           {loading ? (
             <>
@@ -433,20 +432,16 @@ export function StudyPlanGenerator() {
               <button
                 onClick={saveToCalendar}
                 disabled={saving || sessions.length === 0}
-                className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] disabled:opacity-60 transition-all duration-150"
-                style={{
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
-                }}
+                className="btn-primary h-8 px-3 rounded-xl text-[12px]"
               >
                 {saving ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin relative z-10" />
                 ) : (
                   <>
-                    <CalendarPlus className="h-3.5 w-3.5" /> Apply to calendar
+                    <CalendarPlus className="h-3.5 w-3.5 relative z-10" />
+                    <span className="relative z-10">Apply to calendar</span>
                   </>
                 )}
-                <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
               </button>
             </div>
           )}
@@ -558,14 +553,9 @@ export function StudyPlanGenerator() {
             return (
               <div
                 key={`${selectedOption}-${i}`}
-                className="group relative p-3 rounded-xl overflow-hidden"
-                style={{
-                  background: `linear-gradient(135deg, ${fromColor}, ${toColor})`,
-                  border: "1px solid oklch(1 0 0 / 0.08)",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.1) inset",
-                }}
+                className="glass-event-tile group relative p-3 rounded-xl overflow-hidden"
               >
-                <span className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                <span className="absolute inset-0 bg-gradient-to-br from-white/08 to-transparent pointer-events-none" />
 
                 <div className="flex items-center justify-between text-[11px] relative">
                   <span

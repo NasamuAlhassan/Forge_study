@@ -174,16 +174,14 @@ function AnalyticsPage() {
                   }}
                 />
                 <div
-                  className="h-9 w-9 rounded-xl grid place-items-center shrink-0 relative overflow-hidden"
+                  className="h-9 w-9 rounded-xl grid place-items-center shrink-0"
                   style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
-                    border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
-                    boxShadow: "0 1px 0 oklch(1 0 0 / 0.12) inset",
+                    background: "var(--glass-bg-btn-dark)",
+                    border:     "1px solid var(--glass-border-dark)",
+                    boxShadow:  "0 1px 0 rgba(255,255,255,0.08) inset",
                   }}
                 >
-                  <Icon className="h-4 w-4 text-primary relative z-10" aria-hidden="true" />
-                  <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+                  <Icon className="h-4 w-4 text-white/70" aria-hidden="true" />
                 </div>
                 <div className="relative">
                   <div

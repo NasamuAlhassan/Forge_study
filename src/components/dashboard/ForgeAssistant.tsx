@@ -499,24 +499,23 @@ export function ForgeAssistant() {
         onClick={() => {
           if (!bubbleDidDrag.current) setOpen(true);
         }}
-        className="z-50 h-14 w-14 rounded-[18px] grid place-items-center overflow-hidden hover:brightness-110 active:scale-[0.92] transition-all duration-200"
+        className="z-50 h-14 w-14 rounded-[18px] grid place-items-center active:scale-[0.92]"
         style={{
-          position: "fixed",
+          position:            "fixed",
           ...(bubblePos ? { left: bubblePos.x, top: bubblePos.y } : { bottom: 24, right: 24 }),
-          cursor: "grab",
-          background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-          boxShadow:
-            "0 0 48px -8px oklch(0.62 0.21 285 / 0.75), 0 8px 24px -4px oklch(0.06 0.02 275 / 0.45), 0 1px 0 oklch(1 0 0 / 0.22) inset",
-          border: "1px solid oklch(1 0 0 / 0.15)",
-          transition:
-            "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease, filter 150ms ease",
-          touchAction: "none",
-          userSelect: "none",
+          cursor:              "grab",
+          background:          "var(--glass-bg-btn-dark)",
+          backdropFilter:      "blur(var(--glass-blur))",
+          WebkitBackdropFilter:"blur(var(--glass-blur))",
+          border:              "1px solid var(--glass-border-dark)",
+          boxShadow:           "0 1px 0 rgba(255,255,255,0.14) inset, var(--glass-shadow)",
+          transition:          "transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease",
+          touchAction:         "none",
+          userSelect:          "none",
         }}
         aria-label="Open Forge AI assistant"
       >
         <Sparkles className="h-5 w-5 text-white relative z-10" aria-hidden="true" />
-        <span className="absolute inset-0 bg-gradient-to-br from-white/22 to-transparent pointer-events-none" />
       </button>
     );
   }
@@ -593,8 +592,8 @@ export function ForgeAssistant() {
             !isMobile && "cursor-grab active:cursor-grabbing",
           )}
           style={{
-            borderBottom: "1px solid var(--border)",
-            background: "color-mix(in oklch, var(--muted) 50%, transparent)",
+            borderBottom: "1px solid var(--glass-border-dark)",
+            background:   "var(--glass-bg-active-dark)",
           }}
         >
           <div className="flex items-center gap-2.5">
@@ -645,14 +644,13 @@ export function ForgeAssistant() {
             >
               {m.role === "assistant" && (
                 <div
-                  className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mr-2 mt-1 relative overflow-hidden"
+                  className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mr-2 mt-1"
                   style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
-                    border: "1px solid var(--border)",
+                    background: "var(--glass-bg-btn-dark)",
+                    border:     "1px solid var(--glass-border-dark)",
                   }}
                 >
-                  <Sparkles className="h-[9px] w-[9px] text-primary-glow" aria-hidden="true" />
+                  <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
                 </div>
               )}
               <div
@@ -663,15 +661,18 @@ export function ForgeAssistant() {
                 style={
                   m.role === "user"
                     ? {
-                        background:
-                          "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                        boxShadow:
-                          "0 1px 0 oklch(1 0 0 / 0.18) inset, 0 4px 12px -4px oklch(0.62 0.21 285 / 0.35)",
-                        color: "white",
+                        background:          "var(--glass-bg-active-dark)",
+                        backdropFilter:      "blur(var(--glass-blur))",
+                        WebkitBackdropFilter:"blur(var(--glass-blur))",
+                        border:              "1px solid var(--glass-border-dark)",
+                        boxShadow:           "0 1px 0 rgba(255,255,255,0.12) inset",
+                        color:               "rgba(255,255,255,0.92)",
                       }
                     : {
-                        background: "var(--muted)",
-                        border: "1px solid var(--border)",
+                        background:          "var(--glass-bg-dark)",
+                        backdropFilter:      "blur(var(--glass-blur))",
+                        WebkitBackdropFilter:"blur(var(--glass-blur))",
+                        border:              "1px solid var(--glass-border-dark)",
                       }
                 }
               >
@@ -686,14 +687,13 @@ export function ForgeAssistant() {
           {loading && (
             <div className="flex justify-start items-end gap-2">
               <div
-                className="h-5 w-5 rounded-lg grid place-items-center shrink-0 relative overflow-hidden"
+                className="h-5 w-5 rounded-lg grid place-items-center shrink-0"
                 style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.4), oklch(0.55 0.23 250 / 0.25))",
-                  border: "1px solid var(--border)",
+                  background: "var(--glass-bg-btn-dark)",
+                  border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Sparkles className="h-[9px] w-[9px] text-primary-glow" aria-hidden="true" />
+                <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
               </div>
               <div
                 className="rounded-2xl rounded-tl-sm px-3 py-2.5"
@@ -749,16 +749,10 @@ export function ForgeAssistant() {
             <div className="flex gap-2 relative">
               <button
                 onClick={applyAction}
-                className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-xl text-white text-[12px] font-semibold relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
-                style={{
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow:
-                    "0 1px 0 oklch(1 0 0 / 0.2) inset, 0 4px 12px -4px oklch(0.62 0.21 285 / 0.4)",
-                }}
+                className="btn-primary flex-1 h-8 rounded-xl text-[12px]"
               >
-                <Check className="h-3.5 w-3.5" />
-                <span>Accept</span>
-                <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+                <Check className="h-3.5 w-3.5 relative z-10" />
+                <span className="relative z-10">Accept</span>
               </button>
               <button
                 onClick={rejectAction}
@@ -834,22 +828,24 @@ export function ForgeAssistant() {
               style={
                 listening
                   ? {
-                      background:
-                        "linear-gradient(135deg, oklch(0.65 0.24 25), oklch(0.58 0.26 15))",
-                      border: "1px solid oklch(1 0 0 / 0.15)",
-                      boxShadow:
-                        "0 0 20px -4px oklch(0.65 0.24 25 / 0.65), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                      background:          "var(--glass-bg-active-dark)",
+                      backdropFilter:      "blur(var(--glass-blur))",
+                      WebkitBackdropFilter:"blur(var(--glass-blur))",
+                      border:              "1px solid rgba(255,255,255,0.30)",
+                      boxShadow:           "0 0 16px rgba(255,255,255,0.12), 0 1px 0 rgba(255,255,255,0.14) inset",
                     }
                   : transcribing
                     ? {
-                        background: "var(--muted)",
-                        border: "1px solid var(--border)",
-                        opacity: 0.5,
-                        cursor: "not-allowed",
+                        background:  "var(--glass-bg-dark)",
+                        border:      "1px solid var(--glass-border-dark)",
+                        opacity:     0.5,
+                        cursor:      "not-allowed",
                       }
                     : {
-                        background: "var(--muted)",
-                        border: "1px solid var(--border)",
+                        background:          "var(--glass-bg-dark)",
+                        backdropFilter:      "blur(var(--glass-blur))",
+                        WebkitBackdropFilter:"blur(var(--glass-blur))",
+                        border:              "1px solid var(--glass-border-dark)",
                       }
               }
               aria-label={listening ? "Stop recording" : "Start voice input"}
@@ -870,20 +866,17 @@ export function ForgeAssistant() {
             <button
               onClick={send}
               disabled={!input.trim() || loading}
-              className="h-9 w-9 rounded-xl grid place-items-center disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.93] transition-all duration-150 shrink-0 relative overflow-hidden"
+              className="h-9 w-9 rounded-xl grid place-items-center disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.93] transition-all duration-150 shrink-0"
               style={{
-                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow:
-                  !input.trim() || loading
-                    ? "none"
-                    : "0 0 16px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                transition:
-                  "transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease, box-shadow 150ms ease",
+                background:              "var(--glass-bg-btn-dark)",
+                backdropFilter:          "blur(var(--glass-blur))",
+                WebkitBackdropFilter:    "blur(var(--glass-blur))",
+                border:                  "1px solid var(--glass-border-dark)",
+                boxShadow:               "0 1px 0 rgba(255,255,255,0.10) inset",
               }}
               aria-label="Send message"
             >
               <Send className="h-3.5 w-3.5 text-white relative z-10" />
-              <span className="absolute inset-0 bg-gradient-to-br from-white/18 to-transparent pointer-events-none" />
             </button>
           </div>
 

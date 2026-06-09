@@ -31,11 +31,12 @@ const typeIcon: Record<EventBlock["type"], React.ElementType> = {
   exam: AlertTriangle,
 };
 
+// All type badges: neutral glass pill
 const typeBadge: Record<EventBlock["type"], { bg: string; text: string }> = {
-  class: { bg: "oklch(0.55 0.22 250 / 0.15)", text: "oklch(0.72 0.18 250)" },
-  study: { bg: "oklch(0.62 0.21 285 / 0.15)", text: "oklch(0.74 0.19 295)" },
-  break: { bg: "oklch(1 0 0 / 0.06)", text: "oklch(0.68 0.03 280)" },
-  exam: { bg: "oklch(0.65 0.24 25 / 0.15)", text: "oklch(0.72 0.22 25)" },
+  class: { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
+  study: { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
+  break: { bg: "var(--glass-bg-dark)",     text: "rgba(255,255,255,0.55)" },
+  exam:  { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
 };
 
 function AgendaItem({ e, subjectById }: { e: EventBlock; subjectById: (id: string) => Subject }) {
@@ -49,20 +50,16 @@ function AgendaItem({ e, subjectById }: { e: EventBlock; subjectById: (id: strin
     <div
       className={cn(
         "group flex items-center gap-3 px-3 py-2.5 min-h-[52px] rounded-xl",
-        "transition-all duration-200 relative overflow-hidden",
-        isNow
-          ? "bg-primary/[0.08] ring-1 ring-primary/20"
-          : "hover:bg-white/[0.05] active:bg-white/[0.08]",
+        "transition-all duration-200 relative",
+        !isNow && "hover:bg-white/[0.05] active:bg-white/[0.08]",
         isPast && !isNow && "opacity-45",
       )}
+      style={isNow ? {
+        background:   "var(--glass-bg-active-dark)",
+        border:       "1px solid var(--glass-border-dark)",
+        borderRadius: "12px",
+      } : undefined}
     >
-      {/* Left color bar with glow */}
-      <div
-        className={cn("h-9 w-[3px] rounded-full shrink-0 bg-gradient-to-b", s.color)}
-        style={{
-          boxShadow: isNow ? "0 0 8px -1px currentColor" : undefined,
-        }}
-      />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

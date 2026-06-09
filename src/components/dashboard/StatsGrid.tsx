@@ -195,14 +195,14 @@ function StreakDetail({
               {week.map((cell, di) => (
                 <div
                   key={di}
-                  className={cn(
-                    "h-8 rounded-lg transition-all",
+                  className={cn("h-8 rounded-lg transition-all")}
+                  style={
                     cell.today
-                      ? "ring-2 ring-primary bg-gradient-primary"
+                      ? { background: "var(--glass-bg-active-dark)", border: "1px solid var(--glass-border-dark)" }
                       : cell.active
-                        ? "bg-gradient-to-br from-amber-500 to-rose-500"
-                        : "bg-white/5",
-                  )}
+                        ? { background: "var(--glass-bg-btn-dark)", border: "1px solid var(--glass-border-dark)" }
+                        : { background: "var(--glass-bg-dark)",     border: "1px solid var(--glass-border-dark)" }
+                  }
                 />
               ))}
             </div>

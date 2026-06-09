@@ -147,35 +147,34 @@ export function MonthView({
                     className={cn(
                       "text-[13px] font-semibold w-7 h-7 grid place-items-center rounded-full transition-all duration-150",
                       isToday
-                        ? "bg-gradient-primary text-white shadow-glow text-[12px]"
+                        ? "text-white text-[12px]"
                         : "group-hover:bg-white/[0.08]",
                     )}
                     style={
-                      !isToday
-                        ? { color: "color-mix(in oklch, var(--foreground) 80%, transparent)" }
-                        : undefined
+                      isToday
+                        ? {
+                            background:          "var(--glass-bg-active-dark)",
+                            backdropFilter:      "blur(var(--glass-blur))",
+                            WebkitBackdropFilter:"blur(var(--glass-blur))",
+                            border:              "1px solid var(--glass-border-dark)",
+                          }
+                        : { color: "color-mix(in oklch, var(--foreground) 80%, transparent)" }
                     }
                   >
                     {date.getDate()}
                   </span>
                   <div className="space-y-0.5 flex-1">
                     {shown.map((e) => {
-                      const s = subjectById(e.subjectId);
-                      const isBreak = e.type === "break";
-                      const chipClass = isBreak
-                        ? breakChipGradient(e.title)
-                        : e.type !== "exam"
-                          ? cn("bg-gradient-to-r", s.color)
-                          : typeChip[e.type];
                       return (
                         <div
                           key={e.id}
-                          className={cn(
-                            "text-[10px] px-1.5 py-0.5 rounded-md truncate relative overflow-hidden text-white",
-                            chipClass,
-                          )}
+                          className="text-[10px] px-1.5 py-0.5 rounded-md truncate"
+                          style={{
+                            background:   "var(--glass-bg-btn-dark)",
+                            border:       "1px solid var(--glass-border-dark)",
+                            color:        "rgba(255,255,255,0.88)",
+                          }}
                         >
-                          <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
                           <span className="relative">{e.title}</span>
                         </div>
                       );

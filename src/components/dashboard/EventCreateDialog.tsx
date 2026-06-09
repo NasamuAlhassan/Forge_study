@@ -235,17 +235,8 @@ export function EventCreateDialog({
           >
             Cancel
           </button>
-          <button
-            onClick={submit}
-            disabled={busy || !valid}
-            className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
-            }}
-          >
-            Add block
-            <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+          <button onClick={submit} disabled={busy || !valid} className="btn-primary h-9 px-4 rounded-xl text-[13px]">
+            <span className="relative z-10">Add block</span>
           </button>
         </DialogFooter>
       </DialogContent>

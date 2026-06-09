@@ -280,11 +280,11 @@ function SettingsPage() {
             <div
               className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
               style={{
-                background: "linear-gradient(135deg, rgba(107,71,255,0.30), rgba(59,123,255,0.18))",
-                border: "1px solid rgba(255,255,255,0.10)",
+                background: "var(--glass-bg-btn-dark)",
+                border:     "1px solid var(--glass-border-dark)",
               }}
             >
-              <Paintbrush className="h-[14px] w-[14px] text-primary" />
+              <Paintbrush className="h-[14px] w-[14px] text-white/70" />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Appearance
@@ -298,9 +298,9 @@ function SettingsPage() {
               <span
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
-                  background: "linear-gradient(135deg, rgba(107,71,255,0.18), rgba(59,123,255,0.10))",
-                  border: "1px solid rgba(107,71,255,0.25)",
-                  color: "rgba(150,120,255,1)",
+                  background: "var(--glass-bg-btn-dark)",
+                  border:     "1px solid var(--glass-border-dark)",
+                  color:      "rgba(255,255,255,0.80)",
                 }}
               >
                 {intensity}
@@ -344,11 +344,11 @@ function SettingsPage() {
               <div
                 className="h-8 w-8 rounded-xl grid place-items-center"
                 style={{
-                  background: "linear-gradient(135deg, rgba(107,71,255,0.25), rgba(59,123,255,0.15))",
-                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "var(--glass-bg-btn-dark)",
+                  border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Paintbrush className="h-3.5 w-3.5 text-primary/70" />
+                <Paintbrush className="h-3.5 w-3.5 text-white/60" />
               </div>
             </div>
           </div>
@@ -365,15 +365,13 @@ function SettingsPage() {
           />
           <div className="flex items-center gap-3 relative">
             <div
-              className="h-8 w-8 rounded-xl grid place-items-center relative overflow-hidden shrink-0"
+              className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
               style={{
-                background:
-                  "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.35), oklch(0.55 0.23 250 / 0.2))",
-                border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
+                background: "var(--glass-bg-btn-dark)",
+                border:     "1px solid var(--glass-border-dark)",
               }}
             >
-              <User className="h-[14px] w-[14px] text-primary relative z-10" />
-              <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent" />
+              <User className="h-[14px] w-[14px] text-white/70" />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Profile
@@ -391,18 +389,9 @@ function SettingsPage() {
                 style={inputStyle}
                 onKeyDown={(e) => e.key === "Enter" && saveProfile()}
               />
-              <button
-                onClick={saveProfile}
-                disabled={savingProfile || !displayName.trim()}
-                className="h-9 px-4 rounded-xl flex items-center gap-1.5 text-[12px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 shrink-0"
-                style={{
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
-                }}
-              >
-                <Save className="h-3.5 w-3.5" />
-                Save
-                <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+              <button onClick={saveProfile} disabled={savingProfile || !displayName.trim()} className="btn-primary h-9 px-4 rounded-xl text-[12px] shrink-0">
+                <Save className="h-3.5 w-3.5 relative z-10" />
+                <span className="relative z-10">Save</span>
               </button>
             </div>
           </div>
@@ -565,17 +554,10 @@ function SettingsPage() {
             <button
               onClick={saveSubjects}
               disabled={savingSubjects}
-              className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow: savingSubjects
-                  ? "none"
-                  : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-              }}
+              className="btn-primary btn-primary-full h-10 rounded-xl text-[13px]"
             >
-              <Save className="h-4 w-4" />
-              {savingSubjects ? "Saving…" : "Save subjects"}
-              <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+              <Save className="h-4 w-4 relative z-10" />
+              <span className="relative z-10">{savingSubjects ? "Saving…" : "Save subjects"}</span>
             </button>
           )}
         </section>

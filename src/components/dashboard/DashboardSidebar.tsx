@@ -73,33 +73,19 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
               onClick={onNavigate}
               style={{ animationDelay: `${i * 30}ms` }}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded-xl text-sm font-medium",
+                "relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] text-sm font-medium",
                 "transition-all duration-200",
                 active
-                  ? [
-                      // Glass active pill — glass surface + gradient accent
-                      "glass text-foreground",
-                      "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-                      "before:w-[3px] before:h-5 before:rounded-r-full before:rounded-l-sm",
-                      "before:bg-gradient-primary before:shadow-glow",
-                    ].join(" ")
+                  ? "glass-active-nav text-foreground"
                   : [
-                      "text-muted-foreground",
+                      "rounded-xl text-muted-foreground",
                       "hover:text-foreground hover:bg-white/[0.06]",
                       "active:scale-[0.98] active:bg-white/[0.09]",
                     ].join(" "),
               )}
             >
-              <item.icon
-                className={cn(
-                  "h-4 w-4 shrink-0 transition-colors duration-200",
-                  active ? "text-primary-glow" : "",
-                )}
-              />
-              <span className={active ? "text-gradient font-semibold" : ""}>{item.label}</span>
-              {active && (
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/[0.08] to-transparent pointer-events-none" />
-              )}
+              <item.icon className="h-4 w-4 shrink-0 transition-colors duration-200" />
+              <span className={active ? "font-semibold" : ""}>{item.label}</span>
             </Link>
           );
         })}

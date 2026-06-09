@@ -5,11 +5,12 @@ const HOURS = Array.from({ length: 17 }, (_, i) => i + 6); // 6..22
 const HOUR_PX = 64;
 const DAY_START = 6 * 60;
 
+// All event types use glass tiles — no coloured backgrounds
 const typeStyle: Record<EventBlock["type"], string> = {
-  class: "bg-gradient-to-br shadow-glow",
-  study: "bg-gradient-to-br opacity-90",
+  class: "",
+  study: "",
   break: "",
-  exam: "bg-gradient-to-br from-rose-500 to-orange-500 shadow-glow",
+  exam:  "",
 };
 
 function dateString(d: Date): string {
@@ -62,15 +63,16 @@ export function DayView({
           style={
             isToday
               ? {
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow:
-                    "0 0 20px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                  color: "white",
+                  background:          "var(--glass-bg-active-dark)",
+                  backdropFilter:      "blur(var(--glass-blur))",
+                  WebkitBackdropFilter:"blur(var(--glass-blur))",
+                  border:              "1px solid var(--glass-border-dark)",
+                  boxShadow:           "0 1px 0 rgba(255,255,255,0.14) inset",
+                  color:               "rgba(255,255,255,0.92)",
                 }
               : {
-                  background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
-                  border: "1px solid color-mix(in oklch, var(--foreground) 9%, transparent)",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.08) inset",
+                  background: "var(--glass-bg-dark)",
+                  border:     "1px solid var(--glass-border-dark)",
                 }
           }
         >
@@ -149,12 +151,9 @@ export function DayView({
               >
                 <div
                   className="h-2.5 w-2.5 rounded-full -ml-1.5 shrink-0"
-                  style={{
-                    background: "oklch(0.65 0.22 285)",
-                    boxShadow: "0 0 8px oklch(0.65 0.22 285 / 0.7)",
-                  }}
+                  style={{ background: "rgba(255,255,255,0.70)", boxShadow: "0 0 6px rgba(255,255,255,0.40)" }}
                 />
-                <div className="flex-1 h-px" style={{ background: "oklch(0.65 0.22 285 / 0.6)" }} />
+                <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.35)" }} />
               </div>
             )}
 
@@ -167,47 +166,18 @@ export function DayView({
               return (
                 <div
                   key={e.id}
-                  onClick={(evt) => {
-                    evt.stopPropagation();
-                    onEventClick?.(e);
-                  }}
-                  style={{
-                    top,
-                    height,
-                    ...(isBreak
-                      ? {
-                          background: "color-mix(in oklch, var(--foreground) 5%, transparent)",
-                          border:
-                            "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
-                        }
-                      : {}),
-                  }}
-                  className={cn(
-                    "absolute left-2 right-2 rounded-xl p-3 text-xs text-white overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.005] group",
-                    !isBreak && typeStyle[e.type],
-                    e.type !== "break" && e.type !== "exam" && subj.color,
-                  )}
+                  onClick={(evt) => { evt.stopPropagation(); onEventClick?.(e); }}
+                  style={{ top, height, position: "absolute", left: "8px", right: "8px" }}
+                  className="glass-event-tile rounded-xl p-3 group"
                 >
-                  {/* Specular overlay */}
-                  {!isBreak && (
-                    <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/18 to-transparent pointer-events-none" />
-                  )}
-                  <div
-                    className="font-semibold text-[13px] truncate relative"
-                    style={{ letterSpacing: "-0.01em" }}
-                  >
+                  <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/08 to-transparent pointer-events-none" />
+                  <div className="font-semibold text-[13px] truncate relative" style={{ letterSpacing: "-0.01em" }}>
                     {e.title}
                   </div>
-                  <div className="opacity-80 mt-0.5 text-[11px] relative">
-                    {Math.floor(e.start / 60)
-                      .toString()
-                      .padStart(2, "0")}
-                    :{(e.start % 60).toString().padStart(2, "0")}
+                  <div className="opacity-60 mt-0.5 text-[11px] relative">
+                    {Math.floor(e.start / 60).toString().padStart(2, "0")}:{(e.start % 60).toString().padStart(2, "0")}
                     {" – "}
-                    {Math.floor(e.end / 60)
-                      .toString()
-                      .padStart(2, "0")}
-                    :{(e.end % 60).toString().padStart(2, "0")}
+                    {Math.floor(e.end / 60).toString().padStart(2, "0")}:{(e.end % 60).toString().padStart(2, "0")}
                     {e.venue ? ` · ${e.venue}` : ""}
                   </div>
                 </div>

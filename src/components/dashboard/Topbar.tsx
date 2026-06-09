@@ -226,17 +226,17 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
           <DropdownMenuTrigger asChild>
             <button
               aria-label={`User menu for ${user?.email ?? "account"}`}
-              className={[
-                "h-9 w-9 rounded-full shrink-0",
-                "grid place-items-center",
-                "text-[13px] font-bold text-white",
-                "bg-gradient-primary shadow-glow",
-                "ring-2 ring-background hover:ring-primary/40",
-                "active:scale-[0.93] transition-all duration-150 relative overflow-hidden",
-              ].join(" ")}
+              className="h-9 w-9 rounded-full shrink-0 grid place-items-center text-[13px] font-bold active:scale-[0.93] transition-all duration-150"
+              style={{
+                background:              "var(--glass-bg-btn-dark)",
+                backdropFilter:          "blur(var(--glass-blur))",
+                WebkitBackdropFilter:    "blur(var(--glass-blur))",
+                border:                  "1px solid var(--glass-border-dark)",
+                boxShadow:               "0 1px 0 rgba(255,255,255,0.12) inset",
+                color:                   "rgba(255,255,255,0.90)",
+              }}
             >
               {initial}
-              <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent

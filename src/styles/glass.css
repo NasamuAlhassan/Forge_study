@@ -1,138 +1,150 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   Forge — Liquid Glass Design System
+   Forge — Liquid Glass Design System  v2
    ════════════════════════════════════════════════════════════════════════════
-   All glass variables are driven by --glass-intensity (0–100).
-   They are initialised before first paint in index.html, then managed
-   by the useGlassIntensity hook (src/hooks/use-glass-intensity.tsx).
+
+   PRINCIPLE: every surface is a pure white frost.  No colored backgrounds
+   except the logo.  Backdrop blur + a neutral white tint + a white border.
+   All opacity and blur values are derived from --glass-intensity (0–100)
+   and updated by useGlassIntensity + the inline script in index.html.
+
+   Variable taxonomy
+   ─────────────────────────────────────────────────────────────────────────
+   --glass-blur           blur radius for all surfaces
+   --glass-bg-dark        standard panel bg (dark mode)
+   --glass-bg-light       standard panel bg (light mode)
+   --glass-bg-btn-dark    button bg — ~1.5× standard (dark)
+   --glass-bg-btn-light   button bg — ~1.4× standard (light)
+   --glass-bg-active-dark active/hover state — ~2× standard (dark)
+   --glass-bg-active-light active/hover state — ~1.6× standard (light)
+   --glass-border-dark    border (dark)
+   --glass-border-light   border (light)
+   --glass-shadow         drop shadow (opacity scales with intensity)
    ════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Glass intensity ────────────────────────────────────────────────────
-     0  = frost   (40 px blur, most opaque)
-     100 = liquid  (15 px blur, most transparent)
-     Default = 50 → ~27.5 px blur                                           */
-  --glass-intensity:    50;
+  /* Defaults — overridden before first paint by index.html + useGlassIntensity */
+  --glass-intensity:       50;
+  --glass-blur:            27.5px;
 
-  /* Derived glass values (JS-overridden on mount via index.html + hook)      */
-  --glass-blur:         27.5px;
-  --glass-bg-dark:      rgba(8, 8, 24, 0.30);
-  --glass-bg-light:     rgba(255, 255, 255, 0.18);
-  --glass-border-dark:  rgba(255, 255, 255, 0.10);
-  --glass-border-light: rgba(255, 255, 255, 0.40);
-  --glass-shadow:       0 8px 32px rgba(0, 0, 0, 0.20), 0 2px 8px rgba(0, 0, 0, 0.10);
+  /* ── Neutral white tints ──────────────────────────────────────────────── */
+  --glass-bg-dark:         rgba(255, 255, 255, 0.08);
+  --glass-bg-light:        rgba(255, 255, 255, 0.34);
+  --glass-bg-btn-dark:     rgba(255, 255, 255, 0.12);
+  --glass-bg-btn-light:    rgba(255, 255, 255, 0.46);
+  --glass-bg-active-dark:  rgba(255, 255, 255, 0.16);
+  --glass-bg-active-light: rgba(255, 255, 255, 0.52);
 
-  /* ── Brand accent ────────────────────────────────────────────────────── */
-  --accent-start:    #6B47FF;
-  --accent-end:      #3B7BFF;
-  --accent-gradient: linear-gradient(135deg, #6B47FF, #3B7BFF);
-  --accent-glow:     rgba(107, 71, 255, 0.45);
+  --glass-border-dark:     rgba(255, 255, 255, 0.16);
+  --glass-border-light:    rgba(255, 255, 255, 0.50);
+
+  --glass-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 2px 8px  rgba(0, 0, 0, 0.08);
 
   /* ── Satoshi font stack ─────────────────────────────────────────────── */
   --font-satoshi: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* ── Explicit glass classes ──────────────────────────────────────────────── */
+/* ── Shared backdrop mixin — pure blur, no saturation boost ─────────────── */
+/* Applied via backdrop-filter on every class below.                         */
 
-/* Always dark glass */
-.glass-dark {
-  background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border:                  1px solid var(--glass-border-dark);
-  border-radius:           16px;
-  box-shadow:              var(--glass-shadow);
-}
-
-/* Always light glass */
-.glass-light {
-  background:              var(--glass-bg-light);
-  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
-  border:                  1px solid var(--glass-border-light);
-  border-radius:           16px;
-  box-shadow:              var(--glass-shadow);
-}
-
-/* ── Auto-switching panel (dark by default, light in html.light) ─────────── */
+/* ── Auto-switching panel (dark default → light in html.light) ──────────── */
 .glass-panel {
   background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(var(--glass-blur)) saturate(180%) brightness(1.04);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border:                  1px solid var(--glass-border-dark);
   border-radius:           16px;
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.08) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.10) inset,
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
     var(--glass-shadow);
 }
-
 html.light .glass-panel {
   background:   var(--glass-bg-light);
   border-color: var(--glass-border-light);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.80) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+    0 1px 0 rgba(255, 255, 255, 0.70) inset,
+    var(--glass-shadow);
+}
+
+/* Explicit dark */
+.glass-dark {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           16px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.10) inset,
+    var(--glass-shadow);
+}
+
+/* Explicit light */
+.glass-light {
+  background:              var(--glass-bg-light);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:                  1px solid var(--glass-border-light);
+  border-radius:           16px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.70) inset,
     var(--glass-shadow);
 }
 
 /* ── Sidebar: flush left, rounded right ──────────────────────────────────── */
 .glass-sidebar-new {
   background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(var(--glass-blur)) saturate(160%) brightness(1.02);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-right:            1px solid var(--glass-border-dark);
   border-radius:           0 16px 16px 0;
   box-shadow:
-    1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    1px 0 0 rgba(255, 255, 255, 0.06) inset,
     var(--glass-shadow);
 }
-
 html.light .glass-sidebar-new {
-  background:    var(--glass-bg-light);
-  border-color:  var(--glass-border-light);
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
 }
 
-/* ── Top bar: flush top, no radius ───────────────────────────────────────── */
+/* ── Topbar: flush top ───────────────────────────────────────── */
 .glass-topbar-new {
   background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-bottom:           1px solid var(--glass-border-dark);
-  border-radius:           0;
-  box-shadow:              0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  border-radius:           25px;
+  box-shadow:              0 1px 0 rgba(255, 255, 255, 0.08) inset;
 }
-
 html.light .glass-topbar-new {
   background:   var(--glass-bg-light);
   border-color: var(--glass-border-light);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.60) inset,
-    0 2px 12px rgba(0, 0, 0, 0.05);
+    0 1px 0 rgba(0, 0, 0, 0.262) inset,
+    0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 /* ── Calendar event tile ──────────────────────────────────────────────────── */
 .glass-event-tile {
   background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter:         blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border:                  1px solid var(--glass-border-dark);
   border-radius:           8px;
-  box-shadow:              0 2px 8px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255,255,255,0.06) inset;
-  color:                   white;
+  box-shadow:              0 2px 8px rgba(0, 0, 0, 0.10),
+                           0 1px 0 rgba(255,255,255,0.08) inset;
   overflow:                hidden;
   cursor:                  pointer;
   transition:              transform 200ms ease, box-shadow 200ms ease;
 }
-
 html.light .glass-event-tile {
   background:   var(--glass-bg-light);
   border-color: var(--glass-border-light);
-  color:        rgba(10, 10, 40, 0.90);
 }
-
 .glass-event-tile:hover {
-  transform:   translateY(-1px);
-  box-shadow:  0 4px 16px rgba(0, 0, 0, 0.20), 0 1px 0 rgba(255,255,255,0.08) inset;
+  transform:  translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16),
+              0 1px 0 rgba(255,255,255,0.12) inset;
 }
 
 /* ── Glass input ─────────────────────────────────────────────────────────── */
@@ -146,68 +158,85 @@ html.light .glass-event-tile {
   font-family:             var(--font-satoshi);
   transition:              border-color 150ms ease, box-shadow 150ms ease;
 }
-
 html.light .glass-input {
   background:   var(--glass-bg-light);
   border-color: var(--glass-border-light);
 }
-
 .glass-input:focus {
   outline:      none;
-  border-color: rgba(107, 71, 255, 0.55);
-  box-shadow:   0 0 0 3px rgba(107, 71, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.40);
+  box-shadow:   0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+html.light .glass-input:focus {
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow:   0 0 0 3px rgba(255, 255, 255, 0.25);
 }
 
-/* ── Primary button ──────────────────────────────────────────────────────── */
+/* ── Primary button — glass pill with white border ───────────────────────── */
+/* No gradient fill. Neutral white frost, white border.                       */
 .btn-primary {
-  background:      var(--accent-gradient);
-  border:          none;
-  border-radius:   100px;
-  padding:         10px 22px;
-  color:           white;
-  font-family:     var(--font-satoshi);
-  font-weight:     600;
-  font-size:       14px;
-  line-height:     1.2;
-  letter-spacing:  -0.01em;
-  cursor:          pointer;
-  position:        relative;
-  overflow:        hidden;
-  display:         inline-flex;
-  align-items:     center;
-  justify-content: center;
-  gap:             6px;
-  white-space:     nowrap;
-  box-shadow:      0 4px 24px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.22);
-  transition:      transform 200ms ease, box-shadow 200ms ease, filter 150ms ease;
+  background:              var(--glass-bg-btn-dark);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:                  1px solid rgba(255, 255, 255, 0.30);
+  border-radius:           100px;
+  padding:                 10px 22px;
+  color:                   rgba(255, 255, 255, 0.92);
+  font-family:             var(--font-satoshi);
+  font-weight:             600;
+  font-size:               14px;
+  line-height:             1.2;
+  letter-spacing:          -0.01em;
+  cursor:                  pointer;
+  position:                relative;
+  overflow:                hidden;
+  display:                 inline-flex;
+  align-items:             center;
+  justify-content:         center;
+  gap:                     6px;
+  white-space:             nowrap;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    var(--glass-shadow);
+  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
 }
-
 .btn-primary::after {
   content:        '';
   position:       absolute;
   inset:          0;
-  background:     linear-gradient(to bottom right, rgba(255,255,255,0.16), transparent);
+  background:     linear-gradient(to bottom, rgba(255,255,255,0.10), transparent);
   border-radius:  inherit;
   pointer-events: none;
 }
-
 .btn-primary:hover:not(:disabled) {
-  box-shadow:  0 6px 32px rgba(107, 71, 255, 0.60), inset 0 1px 0 rgba(255,255,255,0.28);
-  transform:   translateY(-1px);
-  filter:      brightness(1.06);
+  background: var(--glass-bg-active-dark);
+  transform:  translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 8px 24px rgba(0, 0, 0, 0.18);
 }
-
 .btn-primary:active:not(:disabled) {
   transform:           scale(0.97) translateY(0);
   transition-duration: 100ms;
 }
-
 .btn-primary:disabled {
-  opacity: 0.50;
+  opacity: 0.45;
   cursor:  not-allowed;
 }
 
-/* Full-width variant for sidebar Focus button */
+html.light .btn-primary {
+  background:   var(--glass-bg-btn-light);
+  border-color: rgba(255, 255, 255, 0.65);
+  color:        rgba(20, 20, 40, 0.88);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    var(--glass-shadow);
+}
+html.light .btn-primary:hover:not(:disabled) {
+  background: var(--glass-bg-active-light);
+}
+
+/* Full-width variant */
 .btn-primary-full {
   width: 100%;
 }
@@ -215,8 +244,8 @@ html.light .glass-input {
 /* ── Ghost glass button ──────────────────────────────────────────────────── */
 .btn-ghost-glass {
   background:              var(--glass-bg-dark);
-  backdrop-filter:         blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border:                  1px solid var(--glass-border-dark);
   border-radius:           10px;
   color:                   inherit;
@@ -230,15 +259,52 @@ html.light .glass-input {
   gap:                     6px;
   transition:              all 150ms ease;
 }
-
 html.light .btn-ghost-glass {
   background:   var(--glass-bg-light);
   border-color: var(--glass-border-light);
 }
-
 .btn-ghost-glass:hover {
-  transform:   translateY(-1px);
-  box-shadow:  0 2px 8px rgba(0, 0, 0, 0.12);
+  background: var(--glass-bg-active-dark);
+  transform:  translateY(-1px);
+}
+html.light .btn-ghost-glass:hover {
+  background: var(--glass-bg-active-light);
+}
+
+/* ── Active nav item (sidebar) ───────────────────────────────────────────── */
+.glass-active-nav {
+  background:              var(--glass-bg-active-dark);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           12px;
+  box-shadow:              0 1px 0 rgba(255,255,255,0.10) inset;
+}
+html.light .glass-active-nav {
+  background:   var(--glass-bg-active-light);
+  border-color: var(--glass-border-light);
+  box-shadow:   0 1px 0 rgba(255,255,255,0.65) inset;
+}
+
+/* ── Glass circle (large mic / avatar buttons) ───────────────────────────── */
+.glass-circle {
+  background:              var(--glass-bg-btn-dark);
+  backdrop-filter:         blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border:                  1px solid var(--glass-border-dark);
+  box-shadow:              0 1px 0 rgba(255,255,255,0.12) inset, var(--glass-shadow);
+  transition:              background 200ms ease, box-shadow 200ms ease, transform 150ms ease;
+}
+.glass-circle:hover {
+  background: var(--glass-bg-active-dark);
+}
+html.light .glass-circle {
+  background:   var(--glass-bg-btn-light);
+  border-color: var(--glass-border-light);
+  box-shadow:   0 1px 0 rgba(255,255,255,0.70) inset, var(--glass-shadow);
+}
+html.light .glass-circle:hover {
+  background: var(--glass-bg-active-light);
 }
 
 /* ── Glass intensity slider ──────────────────────────────────────────────── */
@@ -250,9 +316,12 @@ html.light .btn-ghost-glass {
   border-radius:      999px;
   outline:            none;
   cursor:             pointer;
-  background:         linear-gradient(to right, #a5b4fc, #6B47FF, #3B7BFF);
+  background:
+    linear-gradient(to right,
+      rgba(255,255,255,0.25),
+      rgba(255,255,255,0.55),
+      rgba(255,255,255,0.80));
 }
-
 .glass-intensity-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance:         none;
@@ -260,23 +329,21 @@ html.light .btn-ghost-glass {
   height:             20px;
   border-radius:      50%;
   background:         white;
-  border:             2px solid #6B47FF;
-  box-shadow:         0 2px 8px rgba(107, 71, 255, 0.40);
+  border:             2px solid rgba(255,255,255,0.60);
+  box-shadow:         0 2px 8px rgba(0, 0, 0, 0.25);
   cursor:             pointer;
   transition:         box-shadow 150ms ease, transform 150ms ease;
 }
-
 .glass-intensity-slider::-webkit-slider-thumb:hover {
-  box-shadow: 0 4px 16px rgba(107, 71, 255, 0.60);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   transform:  scale(1.12);
 }
-
 .glass-intensity-slider::-moz-range-thumb {
-  width:        20px;
-  height:       20px;
+  width:         20px;
+  height:        20px;
   border-radius: 50%;
-  background:   white;
-  border:       2px solid #6B47FF;
-  box-shadow:   0 2px 8px rgba(107, 71, 255, 0.40);
-  cursor:       pointer;
+  background:    white;
+  border:        2px solid rgba(255,255,255,0.60);
+  box-shadow:    0 2px 8px rgba(0, 0, 0, 0.25);
+  cursor:        pointer;
 }

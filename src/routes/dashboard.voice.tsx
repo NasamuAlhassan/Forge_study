@@ -118,19 +118,20 @@ function VoicePage() {
             <button
               onClick={toggle}
               disabled={!supported}
-              className="relative h-28 w-28 rounded-full grid place-items-center disabled:opacity-40 transition-all duration-150 active:scale-[0.94]"
+              className="glass-circle relative h-28 w-28 rounded-full grid place-items-center disabled:opacity-40 active:scale-[0.94]"
               style={{
-                background: "linear-gradient(145deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-                boxShadow: listening
-                  ? "0 0 0 3px oklch(0.62 0.21 285 / 0.45), 0 0 40px oklch(0.62 0.21 285 / 0.35), 0 8px 32px oklch(0 0 0 / 0.4), 0 1px 0 oklch(1 0 0 / 0.22) inset"
-                  : "0 0 0 1px oklch(0.62 0.21 285 / 0.2), 0 8px 32px oklch(0 0 0 / 0.35), 0 1px 0 oklch(1 0 0 / 0.22) inset",
-                animation:
-                  !listening && supported ? "voice-mic-float 3s ease-in-out infinite" : "none",
-                transition:
-                  "box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                borderRadius:  "50%",
+                background:    listening ? "var(--glass-bg-active-dark)" : "var(--glass-bg-btn-dark)",
+                backdropFilter:"blur(var(--glass-blur))",
+                WebkitBackdropFilter:"blur(var(--glass-blur))",
+                border:        listening ? "1px solid rgba(255,255,255,0.30)" : "1px solid var(--glass-border-dark)",
+                boxShadow:     listening
+                  ? "0 0 0 3px rgba(255,255,255,0.12), 0 1px 0 rgba(255,255,255,0.16) inset, var(--glass-shadow)"
+                  : "0 1px 0 rgba(255,255,255,0.12) inset, var(--glass-shadow)",
+                animation:     !listening && supported ? "voice-mic-float 3s ease-in-out infinite" : "none",
+                transition:    "background 300ms ease, box-shadow 300ms ease, transform 150ms cubic-bezier(0.34,1.56,0.64,1)",
               }}
             >
-              <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
               {listening ? (
                 <Square
                   className="h-8 w-8 text-white relative z-10"
@@ -149,7 +150,7 @@ function VoicePage() {
             className="mt-8 font-display text-2xl font-semibold relative"
             style={{
               letterSpacing: "-0.03em",
-              color: listening ? "var(--primary)" : "var(--foreground)",
+              color: "var(--foreground)",
               transition: "color 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
@@ -172,30 +173,29 @@ function VoicePage() {
             style={{
               minHeight: "8rem",
               transition: "border-color 0.3s ease",
-              ...(listening ? { borderColor: "rgba(107, 71, 255, 0.45)" } : {}),
+              ...(listening ? { borderColor: "rgba(255,255,255,0.28)" } : {}),
             }}
           >
             <div className="flex items-center gap-2 mb-3">
               <div
                 className="h-5 w-5 rounded-lg grid place-items-center"
                 style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.62 0.21 285 / 0.3), oklch(0.55 0.23 250 / 0.15))",
-                  border: "1px solid color-mix(in oklch, var(--foreground) 10%, transparent)",
+                  background: "var(--glass-bg-btn-dark)",
+                  border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Sparkles className="h-3 w-3" style={{ color: "oklch(0.74 0.19 295)" }} />
+                <Sparkles className="h-3 w-3 text-white/70" />
               </div>
-              <span className="text-xs font-medium" style={{ color: "oklch(0.55 0.03 280)" }}>
+              <span className="text-xs font-medium text-muted-foreground">
                 Live transcript
               </span>
               {listening && (
                 <span
                   className="ml-auto h-1.5 w-1.5 rounded-full"
                   style={{
-                    background: "oklch(0.62 0.21 285)",
-                    boxShadow: "0 0 6px oklch(0.62 0.21 285 / 0.7)",
-                    animation: "voice-mic-float 1s ease-in-out infinite",
+                    background: "rgba(255,255,255,0.70)",
+                    boxShadow:  "0 0 6px rgba(255,255,255,0.40)",
+                    animation:  "voice-mic-float 1s ease-in-out infinite",
                   }}
                 />
               )}

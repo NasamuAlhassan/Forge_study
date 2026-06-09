@@ -313,17 +313,15 @@ function CalendarPage() {
                 style={
                   view === v
                     ? {
-                        background:
-                          "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                        boxShadow:
-                          "0 0 12px -3px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
+                        background:          "var(--glass-bg-active-dark)",
+                        backdropFilter:      "blur(var(--glass-blur))",
+                        WebkitBackdropFilter:"blur(var(--glass-blur))",
+                        border:              "1px solid var(--glass-border-dark)",
+                        boxShadow:           "0 1px 0 rgba(255,255,255,0.10) inset",
                       }
                     : undefined
                 }
               >
-                {view === v && (
-                  <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
-                )}
                 <span className="relative">{v}</span>
               </button>
             ))}
@@ -367,20 +365,11 @@ function CalendarPage() {
           {/* Actions — pushed right */}
           <div className="flex items-center gap-2 ml-auto">
             <button
-              onClick={() => {
-                setCreateSlot(null);
-                setCreateOpen(true);
-              }}
-              className="h-8 px-3 rounded-xl flex items-center gap-1.5 text-[12px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow:
-                  "0 0 16px -4px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-              }}
+              onClick={() => { setCreateSlot(null); setCreateOpen(true); }}
+              className="btn-primary h-8 px-3 rounded-xl text-[12px]"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add event</span>
-              <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+              <Plus className="h-3.5 w-3.5 relative z-10" />
+              <span className="relative z-10">Add event</span>
             </button>
 
             <DropdownMenu>
@@ -563,16 +552,15 @@ function CalendarPage() {
             </p>
           )}
           <DialogFooter>
-            <Button
-              variant="outline"
-              className="glass border-white/10"
+            <button
+              className="btn-ghost-glass h-9 px-4 rounded-xl text-[13px]"
               onClick={() => setDupOpen(false)}
             >
               Cancel
-            </Button>
-            <Button className="bg-gradient-primary" onClick={handleDuplicate}>
-              Duplicate
-            </Button>
+            </button>
+            <button className="btn-primary h-9 px-4 rounded-xl text-[13px]" onClick={handleDuplicate}>
+              <span className="relative z-10">Duplicate</span>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

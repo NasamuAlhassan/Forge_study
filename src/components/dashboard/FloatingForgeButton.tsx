@@ -50,46 +50,36 @@ export function FloatingForgeButton() {
       onMouseLeave={() => setHovered(false)}
       aria-label="Ask Forge AI"
       style={{
-        position: "fixed",
+        position:            "fixed",
         left: pos.x,
-        top: pos.y,
-        zIndex: 9998,
-        width: BUTTON_W,
-        height: BUTTON_H,
-        borderRadius: "14px",
-        border: "none",
-        cursor: dragging ? "grabbing" : "grab",
-        background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-        boxShadow:
-          hovered || dragging
-            ? "0 0 0 1px oklch(0.62 0.21 285 / 0.45), 0 16px 48px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.22) inset"
-            : "0 0 0 1px oklch(0.62 0.21 285 / 0.25), 0 6px 24px oklch(0.62 0.21 285 / 0.32), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        color: "white",
-        fontSize: 13,
-        fontWeight: 600,
-        letterSpacing: "-0.01em",
-        userSelect: "none",
-        touchAction: "none",
-        overflow: "hidden",
-        transition: dragging
+        top:  pos.y,
+        zIndex:              9998,
+        width:               BUTTON_W,
+        height:              BUTTON_H,
+        borderRadius:        "14px",
+        border:              "1px solid var(--glass-border-dark)",
+        cursor:              dragging ? "grabbing" : "grab",
+        background:          hovered || dragging ? "var(--glass-bg-active-dark)" : "var(--glass-bg-btn-dark)",
+        backdropFilter:      "blur(var(--glass-blur))",
+        WebkitBackdropFilter:"blur(var(--glass-blur))",
+        boxShadow:           "0 1px 0 rgba(255,255,255,0.12) inset, var(--glass-shadow)",
+        display:             "flex",
+        alignItems:          "center",
+        justifyContent:      "center",
+        gap:                 8,
+        color:               "rgba(255,255,255,0.90)",
+        fontSize:            13,
+        fontWeight:          600,
+        letterSpacing:       "-0.01em",
+        userSelect:          "none",
+        touchAction:         "none",
+        overflow:            "hidden",
+        transition:          dragging
           ? "box-shadow 0.2s ease"
-          : "box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          : "box-shadow 0.25s ease, background 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)",
         transform: dragging ? "scale(1.05)" : hovered ? "translateY(-2px) scale(1.02)" : "scale(1)",
       }}
     >
-      <span
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 55%)",
-          borderRadius: "14px",
-          pointerEvents: "none",
-        }}
-      />
       <Sparkles
         style={{
           width: 15,

@@ -133,16 +133,17 @@ export function TimetableUploader() {
         {!preview ? (
           <div className="flex flex-col items-center relative">
             <div
-              className="mx-auto h-16 w-16 rounded-2xl grid place-items-center relative overflow-hidden"
+              className="mx-auto h-16 w-16 rounded-2xl grid place-items-center"
               style={{
-                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow:
-                  "0 0 32px -6px oklch(0.62 0.21 285 / 0.6), 0 1px 0 oklch(1 0 0 / 0.22) inset",
-                animation: "float 3s ease-in-out infinite",
+                background:          "var(--glass-bg-btn-dark)",
+                backdropFilter:      "blur(var(--glass-blur))",
+                WebkitBackdropFilter:"blur(var(--glass-blur))",
+                border:              "1px solid var(--glass-border-dark)",
+                boxShadow:           "0 1px 0 rgba(255,255,255,0.12) inset",
+                animation:           "float 3s ease-in-out infinite",
               }}
             >
-              <Upload className="h-7 w-7 text-white relative z-10" />
-              <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
+              <Upload className="h-7 w-7 text-white/80 relative z-10" />
             </div>
 
             <h3 className="mt-5 text-[17px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
@@ -152,18 +153,9 @@ export function TimetableUploader() {
               PNG, JPG, or screenshot. Forge reads every class in seconds.
             </p>
 
-            <button
-              className="mt-6 h-10 px-5 rounded-xl flex items-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.97] transition-all duration-150"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                boxShadow:
-                  "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-              }}
-              onClick={() => inputRef.current?.click()}
-            >
-              <FileImage className="h-4 w-4" />
-              Choose file
-              <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
+            <button className="btn-primary mt-6 h-10 px-5 rounded-xl text-[13px]" onClick={() => inputRef.current?.click()}>
+              <FileImage className="h-4 w-4 relative z-10" />
+              <span className="relative z-10">Choose file</span>
             </button>
 
             <p className="mt-3 text-[11px] text-muted-foreground/40">or drag and drop here</p>
@@ -289,15 +281,15 @@ export function TimetableUploader() {
               }}
             >
               <div
-                className="h-9 w-9 rounded-xl grid place-items-center text-[12px] font-bold text-white relative overflow-hidden shrink-0"
+                className="h-9 w-9 rounded-xl grid place-items-center text-[12px] font-bold shrink-0"
                 style={{
-                  background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-                  boxShadow: "0 1px 0 oklch(1 0 0 / 0.2) inset",
-                  letterSpacing: "-0.01em",
+                  background:   "var(--glass-bg-btn-dark)",
+                  border:       "1px solid var(--glass-border-dark)",
+                  letterSpacing:"-0.01em",
+                  color:        "rgba(255,255,255,0.88)",
                 }}
               >
                 {DAY_ABBR[e.day] ?? e.day.slice(0, 2)}
-                <span className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -311,9 +303,9 @@ export function TimetableUploader() {
                     <span
                       className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0"
                       style={{
-                        background: "oklch(0.55 0.22 250 / 0.15)",
-                        color: "oklch(0.74 0.19 295)",
-                        border: "1px solid oklch(0.55 0.22 250 / 0.2)",
+                        background: "var(--glass-bg-btn-dark)",
+                        border:     "1px solid var(--glass-border-dark)",
+                        color:      "rgba(255,255,255,0.75)",
                       }}
                     >
                       {e.code}
@@ -332,26 +324,12 @@ export function TimetableUploader() {
         </div>
 
         {entries.length > 0 && (
-          <button
-            onClick={save}
-            disabled={status === "saving"}
-            className="mt-4 w-full h-10 rounded-xl flex items-center justify-center gap-2 text-[13px] font-semibold text-white relative overflow-hidden hover:brightness-110 active:scale-[0.98] disabled:opacity-60 transition-all duration-150"
-            style={{
-              background: "linear-gradient(135deg, oklch(0.65 0.22 285), oklch(0.56 0.23 250))",
-              boxShadow:
-                status === "saving"
-                  ? "none"
-                  : "0 0 24px -6px oklch(0.62 0.21 285 / 0.5), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-            }}
-          >
+          <button onClick={save} disabled={status === "saving"} className="btn-primary btn-primary-full mt-4 h-10 rounded-xl text-[13px]">
             {status === "saving" ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Saving...
-              </>
+              <><Loader2 className="h-4 w-4 animate-spin relative z-10" /><span className="relative z-10">Saving…</span></>
             ) : (
-              `Add ${entries.length} ${entries.length === 1 ? "class" : "classes"} to calendar`
+              <span className="relative z-10">Add {entries.length} {entries.length === 1 ? "class" : "classes"} to calendar</span>
             )}
-            <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
           </button>
         )}
       </div>

@@ -390,8 +390,8 @@ html.light body {
    */
   .glass {
     background: var(--glass-bg-dark);
-    backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.05);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.05);
+    backdrop-filter: blur(var(--glass-blur)) brightness(1.05);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.05);
     border: 1px solid var(--glass-border-dark);
     box-shadow:
       0 1px 0 0 rgba(255, 255, 255, 0.09) inset,
@@ -401,8 +401,8 @@ html.light body {
 
   .glass-strong {
     background: var(--glass-bg-dark);
-    backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.07);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.07);
+    backdrop-filter: blur(var(--glass-blur)) brightness(1.07);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.07);
     border: 1px solid var(--glass-border-dark);
     box-shadow:
       0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
@@ -413,8 +413,8 @@ html.light body {
   /* Elevated glass — for floating panels, dialogs */
   .glass-elevated {
     background: var(--glass-bg-dark);
-    backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.06);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.06);
+    backdrop-filter: blur(var(--glass-blur)) brightness(1.06);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.06);
     border: 1px solid var(--glass-border-dark);
     box-shadow:
       0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
@@ -426,8 +426,8 @@ html.light body {
   /* Sidebar glass — flush left, rounded right */
   .glass-sidebar {
     background: var(--glass-bg-dark);
-    backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    backdrop-filter: blur(var(--glass-blur)) brightness(1.02);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.02);
     border-right: 1px solid var(--glass-border-dark);
     border-radius: 0 16px 16px 0;
     box-shadow: 1px 0 0 0 rgba(255, 255, 255, 0.04) inset;
@@ -630,8 +630,8 @@ html.light body {
 html.light {
   .glass {
     background:              var(--glass-bg-light);
-    backdrop-filter:         blur(var(--glass-blur)) saturate(160%) brightness(1.02);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    backdrop-filter:         blur(var(--glass-blur)) brightness(1.02);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) brightness(1.02);
     border:                  1px solid var(--glass-border-light);
     box-shadow:
       0 1px 0 0 rgba(255,255,255,0.80) inset,
@@ -641,8 +641,8 @@ html.light {
 
   .glass-strong {
     background:              var(--glass-bg-light);
-    backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter:         blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border:                  1px solid var(--glass-border-light);
     box-shadow:
       0 1px 0 0 rgba(255,255,255,0.82) inset,
@@ -651,8 +651,8 @@ html.light {
 
   .glass-elevated {
     background:              var(--glass-bg-light);
-    backdrop-filter:         blur(var(--glass-blur)) saturate(170%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+    backdrop-filter:         blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border:                  1px solid var(--glass-border-light);
     box-shadow:
       0 1px 0 0 rgba(255,255,255,0.85) inset,
@@ -661,8 +661,8 @@ html.light {
 
   .glass-sidebar {
     background:              var(--glass-bg-light);
-    backdrop-filter:         blur(var(--glass-blur)) saturate(140%);
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    backdrop-filter:         blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
     border-right:            1px solid var(--glass-border-light);
     border-radius:           0 16px 16px 0;
   }
