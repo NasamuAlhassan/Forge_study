@@ -60,14 +60,12 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     .toUpperCase();
 
   const dropdownStyle = {
-    background: isDark ? "oklch(0.19 0.04 275 / 0.96)" : "oklch(0.99 0.005 280 / 0.97)",
-    backdropFilter: "blur(40px) saturate(200%)",
-    WebkitBackdropFilter: "blur(40px) saturate(200%)",
-    border: isDark ? "1px solid oklch(1 0 0 / 0.1)" : "1px solid oklch(0 0 0 / 0.08)",
-    boxShadow: isDark
-      ? "0 1px 0 oklch(1 0 0 / 0.13) inset, 0 24px 64px -16px oklch(0.04 0.02 275 / 0.8)"
-      : "0 1px 0 oklch(1 1 0 / 0.7) inset, 0 24px 64px -16px oklch(0 0 0 / 0.14)",
-    borderRadius: "16px",
+    background:              "var(--glass-bg-dark)",
+    backdropFilter:          "blur(var(--glass-blur)) saturate(200%)",
+    WebkitBackdropFilter:    "blur(var(--glass-blur)) saturate(200%)",
+    border:                  "1px solid var(--glass-border-dark)",
+    boxShadow:               "0 1px 0 rgba(255,255,255,0.10) inset, 0 24px 64px -16px rgba(4,2,18,0.70)",
+    borderRadius:            "16px",
   };
 
   const iconBtn = [
@@ -83,17 +81,8 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
 
   return (
     <header
-      className="sticky top-0 z-30 pl-3 sm:pl-4 lg:pl-6 pr-4 sm:pr-5 flex items-center gap-2 sm:gap-3"
-      style={{
-        height: "60px",
-        background: isDark ? "oklch(0.13 0.03 275 / 0.92)" : "oklch(0.98 0.005 280 / 0.92)",
-        backdropFilter: "blur(32px) saturate(180%)",
-        WebkitBackdropFilter: "blur(32px) saturate(180%)",
-        borderBottom: isDark ? "1px solid oklch(1 0 0 / 0.07)" : "1px solid oklch(0 0 0 / 0.07)",
-        boxShadow: isDark
-          ? "0 1px 0 oklch(1 0 0 / 0.09) inset"
-          : "0 1px 0 oklch(1 1 0 / 0.8) inset, 0 2px 12px oklch(0 0 0 / 0.05)",
-      }}
+      className="glass-topbar-new sticky top-0 z-30 pl-3 sm:pl-4 lg:pl-6 pr-4 sm:pr-5 flex items-center gap-2 sm:gap-3"
+      style={{ height: "60px" }}
     >
       {/* Mobile hamburger — sits inside the bar, hidden on desktop */}
       <button
@@ -124,18 +113,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
       <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
         {/* Search — md+ only */}
         <div
-          className={[
-            "hidden md:flex items-center gap-2 px-3 py-[7px]",
-            "rounded-xl text-sm text-muted-foreground",
-            "w-44 lg:w-60",
-            "transition-all duration-200",
-            isDark
-              ? "focus-within:ring-1 focus-within:ring-primary/25"
-              : "focus-within:ring-2 focus-within:ring-primary/20",
-          ].join(" ")}
+          className="hidden md:flex items-center gap-2 px-3 py-[7px] rounded-xl text-sm text-muted-foreground w-44 lg:w-60 transition-all duration-200 focus-within:ring-1 focus-within:ring-primary/25"
           style={{
-            background: isDark ? "oklch(1 0 0 / 0.04)" : "oklch(0 0 0 / 0.04)",
-            border: isDark ? "1px solid oklch(1 0 0 / 0.07)" : "1px solid oklch(0 0 0 / 0.09)",
+            background:  "var(--glass-bg-dark)",
+            border:      "1px solid var(--glass-border-dark)",
           }}
         >
           <Search className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
@@ -226,40 +207,18 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("forge:open"))}
           aria-label="Ask Forge AI"
-          className={[
-            "hidden sm:flex items-center gap-1.5",
-            "h-9 px-3.5 rounded-xl",
-            "text-[13px] font-semibold text-white",
-            "hover:brightness-110 active:scale-[0.96] active:brightness-95",
-            "transition-all duration-150 relative overflow-hidden",
-          ].join(" ")}
-          style={{
-            background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-            boxShadow: "0 4px 16px oklch(0.62 0.21 285 / 0.3), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-            letterSpacing: "-0.01em",
-          }}
+          className="btn-primary hidden sm:inline-flex h-9 px-3.5 rounded-xl text-[13px]"
         >
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Ask Forge</span>
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/16 to-transparent pointer-events-none" />
+          <Sparkles className="h-3.5 w-3.5 relative z-10" aria-hidden="true" />
+          <span className="relative z-10">Ask Forge</span>
         </button>
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("forge:open"))}
           aria-label="Ask Forge AI"
-          className={[
-            "sm:hidden grid place-items-center",
-            "h-9 w-9 rounded-xl shrink-0",
-            "text-white",
-            "active:scale-[0.93] transition-all duration-150 relative overflow-hidden",
-          ].join(" ")}
-          style={{
-            background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-            boxShadow: "0 4px 16px oklch(0.62 0.21 285 / 0.3), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-          }}
+          className="btn-primary sm:hidden h-9 w-9 rounded-xl shrink-0 p-0"
         >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/16 to-transparent pointer-events-none" />
+          <Sparkles className="h-3.5 w-3.5 relative z-10" />
         </button>
 
         {/* Avatar + user menu */}

@@ -94,10 +94,10 @@ export function WeekCalendar({
         <div
           className="sticky top-0 z-10 grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]"
           style={{
-            borderBottom: "1px solid var(--border)",
-            background: "color-mix(in oklch, var(--card) 95%, transparent)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            borderBottom: "1px solid var(--glass-border-dark)",
+            background:   "var(--glass-bg-dark)",
+            backdropFilter:        "blur(12px)",
+            WebkitBackdropFilter:  "blur(12px)",
           }}
         >
           <div />
@@ -197,12 +197,6 @@ export function WeekCalendar({
                   const isExam = e.type === "exam";
 
                   // Determine gradient classes
-                  const gradientClasses = isBreak
-                    ? cn("bg-gradient-to-br", breakGradient(e.title))
-                    : isExam
-                      ? typeStyle.exam
-                      : cn(typeStyle[e.type], subj.color);
-
                   return (
                     <div
                       key={e.id}
@@ -210,27 +204,24 @@ export function WeekCalendar({
                         evt.stopPropagation();
                         onEventClick?.(e);
                       }}
-                      style={{ top, height }}
-                      className={cn(
-                        "absolute left-1 right-1 rounded-lg p-1.5 text-xs text-white overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg group",
-                        gradientClasses,
-                      )}
+                      style={{ top, height, position: "absolute", left: "3px", right: "3px" }}
+                      className="glass-event-tile p-1.5 group"
                     >
-                      {/* Specular overlay on all event blocks */}
-                      <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-white/18 to-transparent pointer-events-none" />
+                      {/* Specular overlay */}
+                      <span className="absolute inset-0 rounded-[8px] bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
                       <div
-                        className="font-semibold truncate text-[11px] relative"
+                        className="font-semibold truncate text-[11px] relative leading-tight"
                         style={{ letterSpacing: "-0.01em" }}
                       >
                         {e.title}
                       </div>
-                      <div className="opacity-80 truncate text-[10px] relative">
-                        {Math.floor(e.start / 60)
-                          .toString()
-                          .padStart(2, "0")}
-                        :{(e.start % 60).toString().padStart(2, "0")}
-                        {e.venue ? ` · ${e.venue}` : ""}
-                      </div>
+                      {height > 24 && (
+                        <div className="truncate text-[10px] relative opacity-60 mt-0.5">
+                          {Math.floor(e.start / 60).toString().padStart(2, "0")}
+                          :{(e.start % 60).toString().padStart(2, "0")}
+                          {e.venue ? ` · ${e.venue}` : ""}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

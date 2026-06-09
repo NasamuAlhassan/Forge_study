@@ -33,8 +33,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 
   /* ── Easing curves (physical, spring-like) ── */
@@ -215,7 +215,11 @@
   }
 
   body {
-    background: var(--background);
+    background-color: var(--background);
+    background-image: url('./assets/dark-bg.png');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
     color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings:
@@ -356,6 +360,11 @@ html.light {
   --sidebar-ring: oklch(0.52 0.22 285);
 }
 
+html.light body {
+  background-image: url('./assets/light-bg.jpg');
+  background-color: var(--background);
+}
+
 @layer utilities {
   /* ── Text gradient ── */
   .text-gradient {
@@ -373,90 +382,90 @@ html.light {
     background: var(--gradient-primary);
   }
 
-  /* ── Liquid glass — three-layer material ── */
+  /* ── Liquid glass — intensity-driven material ── */
   /*
-   * Layer 1: translucent fill
-   * Layer 2: backdrop blur + saturation + brightness lift
-   * Layer 3: specular inset shadows (top edge brighter, bottom edge darker)
-   * Border: very subtle white stroke
+   * Blur and tint are controlled by --glass-intensity (0–100).
+   * See src/styles/glass.css for the variable system.
+   * JS sets the variables from localStorage on first paint.
    */
   .glass {
-    background: oklch(0.21 0.04 275 / 0.56);
-    backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
-    -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.05);
-    border: 1px solid oklch(1 0 0 / 0.09);
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.05);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.05);
+    border: 1px solid var(--glass-border-dark);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.13) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.12) inset,
-      0 8px 32px -8px oklch(0.06 0.02 275 / 0.55);
+      0 1px 0 0 rgba(255, 255, 255, 0.09) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.10) inset,
+      0 8px 32px -8px rgba(4, 2, 18, 0.55);
   }
 
   .glass-strong {
-    background: oklch(0.19 0.04 275 / 0.78);
-    backdrop-filter: blur(40px) saturate(200%) brightness(1.07);
-    -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.07);
-    border: 1px solid oklch(1 0 0 / 0.11);
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.07);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%) brightness(1.07);
+    border: 1px solid var(--glass-border-dark);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.16) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.15) inset,
-      0 12px 40px -10px oklch(0.06 0.02 275 / 0.65);
+      0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.12) inset,
+      0 12px 40px -10px rgba(4, 2, 18, 0.65);
   }
 
   /* Elevated glass — for floating panels, dialogs */
   .glass-elevated {
-    background: oklch(0.23 0.045 275 / 0.7);
-    backdrop-filter: blur(36px) saturate(190%) brightness(1.06);
-    -webkit-backdrop-filter: blur(36px) saturate(190%) brightness(1.06);
-    border: 1px solid oklch(1 0 0 / 0.1);
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.06);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(190%) brightness(1.06);
+    border: 1px solid var(--glass-border-dark);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.15) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.1) inset,
-      0 24px 64px -16px oklch(0.04 0.02 275 / 0.7),
-      0 4px 16px -4px oklch(0.04 0.02 275 / 0.4);
+      0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.08) inset,
+      0 24px 64px -16px rgba(4, 2, 18, 0.70),
+      0 4px 16px -4px rgba(4, 2, 18, 0.40);
   }
 
-  /* Sidebar glass — denser, darker */
+  /* Sidebar glass — flush left, rounded right */
   .glass-sidebar {
-    background: oklch(0.17 0.035 275 / 0.85);
-    backdrop-filter: blur(32px) saturate(160%) brightness(1.02);
-    -webkit-backdrop-filter: blur(32px) saturate(160%) brightness(1.02);
-    border-right: 1px solid oklch(1 0 0 / 0.07);
-    box-shadow: 1px 0 0 0 oklch(1 0 0 / 0.04) inset;
+    background: var(--glass-bg-dark);
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    border-right: 1px solid var(--glass-border-dark);
+    border-radius: 0 16px 16px 0;
+    box-shadow: 1px 0 0 0 rgba(255, 255, 255, 0.04) inset;
   }
 
   /* ── Light-mode glass overrides ── */
   html.light .glass {
-    background: oklch(0.99 0.004 275 / 0.84);
-    border: 1px solid oklch(0 0 0 / 0.07);
+    background: var(--glass-bg-light);
+    border-color: var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.9) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.04) inset,
-      0 8px 32px -8px oklch(0.5 0.05 275 / 0.08);
+      0 1px 0 0 rgba(255, 255, 255, 0.88) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.04) inset,
+      0 8px 32px -8px rgba(80, 50, 180, 0.08);
   }
 
   html.light .glass-strong {
-    background: oklch(1 0 0 / 0.9);
-    border: 1px solid oklch(0 0 0 / 0.08);
+    background: var(--glass-bg-light);
+    border-color: var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.95) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.05) inset,
-      0 12px 40px -10px oklch(0.5 0.05 275 / 0.1);
+      0 1px 0 0 rgba(255, 255, 255, 0.92) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.04) inset,
+      0 12px 40px -10px rgba(80, 50, 180, 0.10);
   }
 
   html.light .glass-elevated {
-    background: oklch(1 0 0 / 0.9);
-    border: 1px solid oklch(0 0 0 / 0.08);
+    background: var(--glass-bg-light);
+    border-color: var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.95) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.04) inset,
-      0 24px 64px -16px oklch(0.5 0.05 275 / 0.12),
-      0 4px 16px -4px oklch(0.5 0.05 275 / 0.06);
+      0 1px 0 0 rgba(255, 255, 255, 0.90) inset,
+      0 -1px 0 0 rgba(0, 0, 0, 0.03) inset,
+      0 24px 64px -16px rgba(80, 50, 180, 0.12),
+      0 4px 16px -4px rgba(80, 50, 180, 0.06);
   }
 
   html.light .glass-sidebar {
-    background: oklch(0.95 0.008 275 / 0.92);
-    border-right: 1px solid oklch(0 0 0 / 0.06);
-    box-shadow: 1px 0 0 0 oklch(1 0 0 / 0.6) inset;
+    background:    var(--glass-bg-light);
+    border-color:  var(--glass-border-light);
+    box-shadow:    1px 0 0 0 rgba(255, 255, 255, 0.60) inset;
   }
 
   /* ── Gradient border ring ── */
@@ -620,45 +629,46 @@ html.light {
 /* ─── Light mode utility overrides ────────────────────────────────────────── */
 html.light {
   .glass {
-    background: oklch(1 0 0 / 0.82);
-    backdrop-filter: blur(28px) saturate(160%) brightness(1.02);
-    -webkit-backdrop-filter: blur(28px) saturate(160%) brightness(1.02);
-    border: 1px solid oklch(0 0 0 / 0.07);
+    background:              var(--glass-bg-light);
+    backdrop-filter:         blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+    border:                  1px solid var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.8) inset,
-      0 -1px 0 0 oklch(0 0 0 / 0.06) inset,
-      0 4px 20px -4px oklch(0.5 0.05 275 / 0.12);
+      0 1px 0 0 rgba(255,255,255,0.80) inset,
+      0 -1px 0 0 rgba(0,0,0,0.04) inset,
+      0 4px 20px -4px rgba(80,50,180,0.10);
   }
 
   .glass-strong {
-    background: oklch(1 0 0 / 0.94);
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid oklch(0 0 0 / 0.09);
+    background:              var(--glass-bg-light);
+    backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    border:                  1px solid var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.8) inset,
-      0 4px 24px -6px oklch(0.5 0.05 275 / 0.15);
+      0 1px 0 0 rgba(255,255,255,0.82) inset,
+      0 4px 24px -6px rgba(80,50,180,0.12);
   }
 
   .glass-elevated {
-    background: oklch(1 0 0 / 0.92);
-    backdrop-filter: blur(36px) saturate(170%);
-    -webkit-backdrop-filter: blur(36px) saturate(170%);
-    border: 1px solid oklch(0 0 0 / 0.08);
+    background:              var(--glass-bg-light);
+    backdrop-filter:         blur(var(--glass-blur)) saturate(170%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(170%);
+    border:                  1px solid var(--glass-border-light);
     box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 0.9) inset,
-      0 24px 64px -16px oklch(0.5 0.05 275 / 0.18);
+      0 1px 0 0 rgba(255,255,255,0.85) inset,
+      0 24px 64px -16px rgba(80,50,180,0.16);
   }
 
   .glass-sidebar {
-    background: oklch(0.945 0.009 275 / 0.92);
-    backdrop-filter: blur(32px) saturate(140%);
-    -webkit-backdrop-filter: blur(32px) saturate(140%);
-    border-right: 1px solid oklch(0 0 0 / 0.07);
+    background:              var(--glass-bg-light);
+    backdrop-filter:         blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    border-right:            1px solid var(--glass-border-light);
+    border-radius:           0 16px 16px 0;
   }
 
   .specular::after {
-    background: radial-gradient(ellipse 80% 40% at 30% 0%, oklch(1 0 0 / 0.5) 0%, transparent 60%);
+    background: radial-gradient(ellipse 80% 40% at 30% 0%, rgba(255,255,255,0.50) 0%, transparent 60%);
   }
 
   .hover-lift:hover {

@@ -1,0 +1,282 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   Forge — Liquid Glass Design System
+   ════════════════════════════════════════════════════════════════════════════
+   All glass variables are driven by --glass-intensity (0–100).
+   They are initialised before first paint in index.html, then managed
+   by the useGlassIntensity hook (src/hooks/use-glass-intensity.tsx).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Glass intensity ────────────────────────────────────────────────────
+     0  = frost   (40 px blur, most opaque)
+     100 = liquid  (15 px blur, most transparent)
+     Default = 50 → ~27.5 px blur                                           */
+  --glass-intensity:    50;
+
+  /* Derived glass values (JS-overridden on mount via index.html + hook)      */
+  --glass-blur:         27.5px;
+  --glass-bg-dark:      rgba(8, 8, 24, 0.30);
+  --glass-bg-light:     rgba(255, 255, 255, 0.18);
+  --glass-border-dark:  rgba(255, 255, 255, 0.10);
+  --glass-border-light: rgba(255, 255, 255, 0.40);
+  --glass-shadow:       0 8px 32px rgba(0, 0, 0, 0.20), 0 2px 8px rgba(0, 0, 0, 0.10);
+
+  /* ── Brand accent ────────────────────────────────────────────────────── */
+  --accent-start:    #6B47FF;
+  --accent-end:      #3B7BFF;
+  --accent-gradient: linear-gradient(135deg, #6B47FF, #3B7BFF);
+  --accent-glow:     rgba(107, 71, 255, 0.45);
+
+  /* ── Satoshi font stack ─────────────────────────────────────────────── */
+  --font-satoshi: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ── Explicit glass classes ──────────────────────────────────────────────── */
+
+/* Always dark glass */
+.glass-dark {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           16px;
+  box-shadow:              var(--glass-shadow);
+}
+
+/* Always light glass */
+.glass-light {
+  background:              var(--glass-bg-light);
+  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border:                  1px solid var(--glass-border-light);
+  border-radius:           16px;
+  box-shadow:              var(--glass-shadow);
+}
+
+/* ── Auto-switching panel (dark by default, light in html.light) ─────────── */
+.glass-panel {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(var(--glass-blur)) saturate(180%) brightness(1.04);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.04);
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           16px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.10) inset,
+    var(--glass-shadow);
+}
+
+html.light .glass-panel {
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.80) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.04) inset,
+    var(--glass-shadow);
+}
+
+/* ── Sidebar: flush left, rounded right ──────────────────────────────────── */
+.glass-sidebar-new {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%) brightness(1.02);
+  border-right:            1px solid var(--glass-border-dark);
+  border-radius:           0 16px 16px 0;
+  box-shadow:
+    1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    var(--glass-shadow);
+}
+
+html.light .glass-sidebar-new {
+  background:    var(--glass-bg-light);
+  border-color:  var(--glass-border-light);
+}
+
+/* ── Top bar: flush top, no radius ───────────────────────────────────────── */
+.glass-topbar-new {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-bottom:           1px solid var(--glass-border-dark);
+  border-radius:           0;
+  box-shadow:              0 1px 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+html.light .glass-topbar-new {
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.60) inset,
+    0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Calendar event tile ──────────────────────────────────────────────────── */
+.glass-event-tile {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           8px;
+  box-shadow:              0 2px 8px rgba(0, 0, 0, 0.14), 0 1px 0 rgba(255,255,255,0.06) inset;
+  color:                   white;
+  overflow:                hidden;
+  cursor:                  pointer;
+  transition:              transform 200ms ease, box-shadow 200ms ease;
+}
+
+html.light .glass-event-tile {
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+  color:        rgba(10, 10, 40, 0.90);
+}
+
+.glass-event-tile:hover {
+  transform:   translateY(-1px);
+  box-shadow:  0 4px 16px rgba(0, 0, 0, 0.20), 0 1px 0 rgba(255,255,255,0.08) inset;
+}
+
+/* ── Glass input ─────────────────────────────────────────────────────────── */
+.glass-input {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           12px;
+  color:                   inherit;
+  font-family:             var(--font-satoshi);
+  transition:              border-color 150ms ease, box-shadow 150ms ease;
+}
+
+html.light .glass-input {
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+}
+
+.glass-input:focus {
+  outline:      none;
+  border-color: rgba(107, 71, 255, 0.55);
+  box-shadow:   0 0 0 3px rgba(107, 71, 255, 0.12);
+}
+
+/* ── Primary button ──────────────────────────────────────────────────────── */
+.btn-primary {
+  background:      var(--accent-gradient);
+  border:          none;
+  border-radius:   100px;
+  padding:         10px 22px;
+  color:           white;
+  font-family:     var(--font-satoshi);
+  font-weight:     600;
+  font-size:       14px;
+  line-height:     1.2;
+  letter-spacing:  -0.01em;
+  cursor:          pointer;
+  position:        relative;
+  overflow:        hidden;
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             6px;
+  white-space:     nowrap;
+  box-shadow:      0 4px 24px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.22);
+  transition:      transform 200ms ease, box-shadow 200ms ease, filter 150ms ease;
+}
+
+.btn-primary::after {
+  content:        '';
+  position:       absolute;
+  inset:          0;
+  background:     linear-gradient(to bottom right, rgba(255,255,255,0.16), transparent);
+  border-radius:  inherit;
+  pointer-events: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow:  0 6px 32px rgba(107, 71, 255, 0.60), inset 0 1px 0 rgba(255,255,255,0.28);
+  transform:   translateY(-1px);
+  filter:      brightness(1.06);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform:           scale(0.97) translateY(0);
+  transition-duration: 100ms;
+}
+
+.btn-primary:disabled {
+  opacity: 0.50;
+  cursor:  not-allowed;
+}
+
+/* Full-width variant for sidebar Focus button */
+.btn-primary-full {
+  width: 100%;
+}
+
+/* ── Ghost glass button ──────────────────────────────────────────────────── */
+.btn-ghost-glass {
+  background:              var(--glass-bg-dark);
+  backdrop-filter:         blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border:                  1px solid var(--glass-border-dark);
+  border-radius:           10px;
+  color:                   inherit;
+  font-family:             var(--font-satoshi);
+  font-weight:             500;
+  font-size:               13px;
+  cursor:                  pointer;
+  padding:                 6px 14px;
+  display:                 inline-flex;
+  align-items:             center;
+  gap:                     6px;
+  transition:              all 150ms ease;
+}
+
+html.light .btn-ghost-glass {
+  background:   var(--glass-bg-light);
+  border-color: var(--glass-border-light);
+}
+
+.btn-ghost-glass:hover {
+  transform:   translateY(-1px);
+  box-shadow:  0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Glass intensity slider ──────────────────────────────────────────────── */
+.glass-intensity-slider {
+  -webkit-appearance: none;
+  appearance:         none;
+  width:              100%;
+  height:             6px;
+  border-radius:      999px;
+  outline:            none;
+  cursor:             pointer;
+  background:         linear-gradient(to right, #a5b4fc, #6B47FF, #3B7BFF);
+}
+
+.glass-intensity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance:         none;
+  width:              20px;
+  height:             20px;
+  border-radius:      50%;
+  background:         white;
+  border:             2px solid #6B47FF;
+  box-shadow:         0 2px 8px rgba(107, 71, 255, 0.40);
+  cursor:             pointer;
+  transition:         box-shadow 150ms ease, transform 150ms ease;
+}
+
+.glass-intensity-slider::-webkit-slider-thumb:hover {
+  box-shadow: 0 4px 16px rgba(107, 71, 255, 0.60);
+  transform:  scale(1.12);
+}
+
+.glass-intensity-slider::-moz-range-thumb {
+  width:        20px;
+  height:       20px;
+  border-radius: 50%;
+  background:   white;
+  border:       2px solid #6B47FF;
+  box-shadow:   0 2px 8px rgba(107, 71, 255, 0.40);
+  cursor:       pointer;
+}

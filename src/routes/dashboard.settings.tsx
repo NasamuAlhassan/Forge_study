@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, User } from "lucide-react";
+import { Plus, Trash2, Save, User, Paintbrush } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useSchedule } from "@/hooks/use-schedule";
 import type { Difficulty } from "@/lib/demo-data";
 import { broadcastScheduleUpdate } from "@/hooks/use-schedule";
+import { useGlassIntensity } from "@/hooks/use-glass-intensity";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
@@ -81,6 +82,7 @@ function saveDiffs(userId: string, map: Record<string, string>): void {
 function SettingsPage() {
   const { user } = useAuth();
   const { refetch } = useSchedule();
+  const { intensity, update: updateIntensity } = useGlassIntensity();
 
   // ── Profile ─────────────────────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState(
@@ -264,6 +266,94 @@ function SettingsPage() {
     <>
       <Topbar title="Settings" subtitle="Manage your profile and subjects." />
       <main className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
+
+        {/* ── Appearance ──────────────────────────────────────────────────── */}
+        <section className="ring-gradient glass rounded-2xl p-6 space-y-5 relative overflow-hidden">
+          <div
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 35% at 20% 0%, rgba(107,71,255,0.06) 0%, transparent 60%)",
+            }}
+          />
+          <div className="flex items-center gap-3 relative">
+            <div
+              className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
+              style={{
+                background: "linear-gradient(135deg, rgba(107,71,255,0.30), rgba(59,123,255,0.18))",
+                border: "1px solid rgba(255,255,255,0.10)",
+              }}
+            >
+              <Paintbrush className="h-[14px] w-[14px] text-primary" />
+            </div>
+            <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
+              Appearance
+            </h3>
+          </div>
+
+          {/* Glass Style slider */}
+          <div className="space-y-3 relative">
+            <div className="flex items-center justify-between">
+              <Label className="text-[13px] font-medium">Glass Style</Label>
+              <span
+                className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                style={{
+                  background: "linear-gradient(135deg, rgba(107,71,255,0.18), rgba(59,123,255,0.10))",
+                  border: "1px solid rgba(107,71,255,0.25)",
+                  color: "rgba(150,120,255,1)",
+                }}
+              >
+                {intensity}
+              </span>
+            </div>
+
+            {/* Slider */}
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={intensity}
+              onChange={(e) => updateIntensity(Number(e.target.value))}
+              className="glass-intensity-slider"
+              aria-label="Glass intensity — 0 is frost, 100 is liquid"
+            />
+
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground select-none">
+              <span>❄️ Frost</span>
+              <span>💧 Glass</span>
+            </div>
+
+            {/* Live preview card */}
+            <div
+              className="glass-panel rounded-xl p-4 mt-1 flex items-center justify-between"
+              aria-label="Glass style preview"
+            >
+              <div>
+                <p className="text-[11px] text-muted-foreground mb-0.5">Preview</p>
+                <p
+                  className="font-display font-bold"
+                  style={{ fontSize: 22, letterSpacing: "-0.03em", lineHeight: 1 }}
+                >
+                  72.1h
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 opacity-70">
+                  Study hours this week
+                </p>
+              </div>
+              <div
+                className="h-8 w-8 rounded-xl grid place-items-center"
+                style={{
+                  background: "linear-gradient(135deg, rgba(107,71,255,0.25), rgba(59,123,255,0.15))",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                }}
+              >
+                <Paintbrush className="h-3.5 w-3.5 text-primary/70" />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Profile ─────────────────────────────────────────────────────── */}
         <section className="ring-gradient glass rounded-2xl p-6 space-y-4 relative overflow-hidden">
           <div

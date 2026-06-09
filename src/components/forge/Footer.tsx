@@ -18,17 +18,41 @@ export function Footer() {
         <div>
           <div className="text-foreground font-medium">Product</div>
           <ul className="mt-3 space-y-2 text-muted-foreground">
-            <li><a href="#features" className="hover:text-foreground">Features</a></li>
-            <li><a href="#pricing" className="hover:text-foreground">Pricing</a></li>
-            <li><a href="#faq" className="hover:text-foreground">FAQ</a></li>
+            <li>
+              <a href="#features" className="hover:text-foreground">
+                Features
+              </a>
+            </li>
+            <li>
+              <a href="#pricing" className="hover:text-foreground">
+                Pricing
+              </a>
+            </li>
+            <li>
+              <a href="#faq" className="hover:text-foreground">
+                FAQ
+              </a>
+            </li>
           </ul>
         </div>
         <div>
           <div className="text-foreground font-medium">Company</div>
           <ul className="mt-3 space-y-2 text-muted-foreground">
-            <li><a href="#" className="hover:text-foreground">About</a></li>
-            <li><a href="#" className="hover:text-foreground">Careers</a></li>
-            <li><a href="#" className="hover:text-foreground">Contact</a></li>
+            <li>
+              <a href="#" className="hover:text-foreground">
+                About
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-foreground">
+                Careers
+              </a>
+            </li>
+            <li>
+              <a href="#" className="hover:text-foreground">
+                Contact
+              </a>
+            </li>
           </ul>
         </div>
       </div>

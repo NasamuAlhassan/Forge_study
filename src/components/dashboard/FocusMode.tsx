@@ -328,12 +328,12 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
   if (!open) return null;
 
   // ── Theme-derived colors ────────────────────────────────────────────────────
-  const overlayBg = isDark ? "oklch(0.10 0.03 275 / 0.97)" : "oklch(0.97 0.01 280 / 0.98)";
+  const overlayBg = isDark ? "rgba(4, 4, 16, 0.92)" : "rgba(240, 238, 255, 0.94)";
 
   const iconBtnStyle: React.CSSProperties = {
-    background: isDark ? "oklch(1 0 0 / 0.05)" : "oklch(0 0 0 / 0.05)",
-    border: `1px solid ${isDark ? "oklch(1 0 0 / 0.08)" : "oklch(0 0 0 / 0.08)"}`,
-    boxShadow: isDark ? "0 1px 0 oklch(1 0 0 / 0.1) inset" : "0 1px 0 oklch(1 0 0 / 0.6) inset",
+    background:  "var(--glass-bg-dark)",
+    border:      "1px solid var(--glass-border-dark)",
+    boxShadow:   "0 1px 0 rgba(255,255,255,0.08) inset",
   };
 
   const iconBtnCls = [
@@ -345,12 +345,10 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
   ].join(" ");
 
   const statCardStyle: React.CSSProperties = {
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: `1px solid ${isDark ? "oklch(1 0 0 / 0.08)" : "oklch(0 0 0 / 0.08)"}`,
-    boxShadow: isDark
-      ? "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 8px 24px -8px oklch(0.06 0.02 275 / 0.45)"
-      : "0 1px 0 oklch(1 0 0 / 0.6) inset, 0 8px 24px -8px oklch(0.5 0.05 275 / 0.12)",
+    backdropFilter:        "blur(var(--glass-blur))",
+    WebkitBackdropFilter:  "blur(var(--glass-blur))",
+    border:                "1px solid var(--glass-border-dark)",
+    boxShadow:             "0 1px 0 rgba(255,255,255,0.08) inset, 0 8px 24px -8px rgba(0,0,0,0.35)",
   };
 
   return (
@@ -421,16 +419,7 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
       {/* ── Settings panel ── */}
       {showSettings && (
         <div
-          className="absolute top-[72px] left-5 z-20 flex flex-col gap-4 p-5 rounded-2xl"
-          style={{
-            background: isDark ? "oklch(0.13 0.03 275 / 0.92)" : "oklch(0.97 0.01 280 / 0.94)",
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
-            border: `1px solid ${isDark ? "oklch(1 0 0 / 0.1)" : "oklch(0 0 0 / 0.08)"}`,
-            boxShadow: isDark
-              ? "0 1px 0 oklch(1 0 0 / 0.1) inset, 0 16px 40px -8px oklch(0.06 0.02 275 / 0.6)"
-              : "0 1px 0 oklch(1 0 0 / 0.7) inset, 0 16px 40px -8px oklch(0.5 0.05 275 / 0.12)",
-          }}
+          className="glass-panel absolute top-[72px] left-5 z-20 flex flex-col gap-4 p-5 rounded-2xl"
         >
           <p
             className="text-[11px] uppercase tracking-widest text-center"

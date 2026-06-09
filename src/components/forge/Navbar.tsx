@@ -13,10 +13,18 @@ export function Navbar() {
           <span className="font-display text-lg font-semibold tracking-tight">Forge</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-          <a href="#how" className="hover:text-foreground transition-colors">How it works</a>
-          <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+          <a href="#features" className="hover:text-foreground transition-colors">
+            Features
+          </a>
+          <a href="#how" className="hover:text-foreground transition-colors">
+            How it works
+          </a>
+          <a href="#pricing" className="hover:text-foreground transition-colors">
+            Pricing
+          </a>
+          <a href="#faq" className="hover:text-foreground transition-colors">
+            FAQ
+          </a>
         </nav>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>

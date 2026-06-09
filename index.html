@@ -9,13 +9,33 @@
     <meta property="og:description" content="Your AI-powered academic operating system." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
+    <!-- Satoshi font via Fontshare CDN -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400,300&display=swap" rel="stylesheet" />
     <script>
+      // ── Theme + Glass Intensity — applied before first paint to avoid flash ──
       try {
         var t = localStorage.getItem('forge-theme');
         document.documentElement.classList.add(t === 'light' ? 'light' : 'dark');
       } catch(e) {
         document.documentElement.classList.add('dark');
       }
+      try {
+        var gi = localStorage.getItem('forgeGlassIntensity');
+        var n = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
+        var blur   = (Math.max(5,    40   - n * 0.25 )).toFixed(1) + 'px';
+        var dbAlpha = (Math.max(0.08, 0.45  - n * 0.003)).toFixed(3);
+        var lbAlpha = (Math.max(0.05, 0.28  - n * 0.002)).toFixed(3);
+        var deBd   = (Math.max(0.05, 0.18  - n * 0.001)).toFixed(3);
+        var leBd   = (Math.max(0.15, 0.55  - n * 0.003)).toFixed(3);
+        var root = document.documentElement;
+        root.style.setProperty('--glass-intensity',    String(n));
+        root.style.setProperty('--glass-blur',         blur);
+        root.style.setProperty('--glass-bg-dark',      'rgba(8,8,24,'      + dbAlpha + ')');
+        root.style.setProperty('--glass-bg-light',     'rgba(255,255,255,' + lbAlpha + ')');
+        root.style.setProperty('--glass-border-dark',  'rgba(255,255,255,' + deBd   + ')');
+        root.style.setProperty('--glass-border-light', 'rgba(255,255,255,' + leBd   + ')');
+      } catch(e) {}
     </script>
   </head>
   <body>

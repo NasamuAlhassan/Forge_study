@@ -84,16 +84,7 @@ function VoicePage() {
       `}</style>
       <Topbar title="Voice scheduling" subtitle="Speak naturally. Forge structures it for you." />
       <main className="p-4 sm:p-6">
-        <div
-          className="max-w-3xl mx-auto text-center rounded-3xl p-10 relative overflow-hidden"
-          style={{
-            background: "color-mix(in oklch, var(--card) 93%, transparent)",
-            backdropFilter: "blur(40px) saturate(200%) brightness(1.05)",
-            border: "1px solid var(--border)",
-            boxShadow:
-              "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 32px 80px oklch(0 0 0 / 0.35), 0 0 0 1px oklch(0 0 0 / 0.15)",
-          }}
-        >
+        <div className="max-w-[480px] mx-auto text-center glass-panel rounded-3xl p-10 relative overflow-hidden">
           {/* Top-left light hit */}
           <div
             className="absolute inset-0 rounded-3xl pointer-events-none"
@@ -177,14 +168,11 @@ function VoicePage() {
 
           {/* Transcript panel */}
           <div
-            className="mt-7 rounded-2xl p-5 text-left relative overflow-hidden"
+            className="mt-7 glass-panel rounded-2xl p-5 text-left relative overflow-hidden"
             style={{
-              background: "color-mix(in oklch, var(--foreground) 4%, transparent)",
-              border: "1px solid color-mix(in oklch, var(--foreground) 8%, transparent)",
-              boxShadow: "0 1px 0 oklch(1 0 0 / 0.07) inset",
               minHeight: "8rem",
               transition: "border-color 0.3s ease",
-              ...(listening ? { borderColor: "oklch(0.62 0.21 285 / 0.3)" } : {}),
+              ...(listening ? { borderColor: "rgba(107, 71, 255, 0.45)" } : {}),
             }}
           >
             <div className="flex items-center gap-2 mb-3">
@@ -222,20 +210,8 @@ function VoicePage() {
 
           {/* Convert button */}
           {transcript && !listening && (
-            <button
-              className="mt-5 relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm text-white overflow-hidden transition-all duration-150 hover:brightness-110 active:scale-[0.97]"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.72 0.2 285), oklch(0.55 0.23 250))",
-                boxShadow:
-                  "0 4px 20px oklch(0.62 0.21 285 / 0.35), 0 1px 0 oklch(1 0 0 / 0.2) inset",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              <span className="absolute inset-0 bg-gradient-to-br from-white/18 to-transparent pointer-events-none rounded-xl" />
-              <Wand2
-                className="h-4 w-4 relative z-10"
-                style={{ filter: "drop-shadow(0 1px 2px oklch(0 0 0 / 0.25))" }}
-              />
+            <button className="btn-primary mt-5 px-6 py-2.5 text-sm">
+              <Wand2 className="h-4 w-4 relative z-10" />
               <span className="relative z-10">Convert to schedule</span>
             </button>
           )}

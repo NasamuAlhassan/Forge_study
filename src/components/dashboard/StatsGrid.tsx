@@ -587,33 +587,26 @@ export function StatsGrid() {
               }}
             />
 
-            <div className="flex items-center justify-between relative">
-              <div
-                className={cn(
-                  "h-9 w-9 rounded-xl bg-gradient-to-br grid place-items-center relative overflow-hidden shadow-glow",
-                  cfg.accent,
-                )}
-              >
-                <cfg.icon className="h-[15px] w-[15px] text-white" aria-hidden="true" />
-                {/* Icon specular */}
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/25 to-transparent" />
-              </div>
+            <div className="flex items-start justify-between relative">
+              <cfg.icon
+                className="h-4 w-4 text-muted-foreground/60 shrink-0 mt-0.5"
+                aria-hidden="true"
+              />
               <ArrowUpRight
-                className="h-[13px] w-[13px] text-muted-foreground/50 group-hover:text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                className="h-[13px] w-[13px] text-muted-foreground/40 group-hover:text-muted-foreground transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                 aria-hidden="true"
               />
             </div>
 
             <div
-              className="mt-4 text-[22px] sm:text-[26px] font-semibold font-display relative"
-              style={{ letterSpacing: "-0.03em" }}
+              className="mt-3 font-display relative"
+              style={{ fontSize: "clamp(20px,2.5vw,28px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1 }}
             >
               {cards[i].value}
             </div>
-            <div className="text-[11px] text-muted-foreground mt-0.5 relative">{cfg.label}</div>
+            <div className="text-[11px] text-muted-foreground mt-1.5 relative">{cfg.label}</div>
             <div
-              className="mt-1 text-[11px] font-medium relative"
-              style={{ color: "oklch(0.74 0.19 295 / 0.8)" }}
+              className="mt-0.5 text-[11px] font-medium relative opacity-60"
             >
               {cards[i].delta}
             </div>
@@ -626,14 +619,8 @@ export function StatsGrid() {
           <DialogContent className="max-w-lg border-0 p-6" style={DIALOG_STYLE}>
             <DialogHeader className="mb-4">
               <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    "h-9 w-9 rounded-xl bg-gradient-to-br grid place-items-center shadow-glow relative overflow-hidden",
-                    activeConfig.accent,
-                  )}
-                >
-                  <activeConfig.icon className="h-[15px] w-[15px] text-white" />
-                  <span className="absolute inset-0 rounded-xl bg-gradient-to-br from-white/25 to-transparent pointer-events-none" />
+                <div className="h-9 w-9 rounded-xl glass-panel grid place-items-center shrink-0">
+                  <activeConfig.icon className="h-[15px] w-[15px] text-primary" />
                 </div>
                 <div>
                   <DialogTitle

@@ -156,20 +156,10 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
             onNavigate?.();
             onFocus?.();
           }}
-          className={[
-            "w-full flex items-center gap-2.5 px-3 py-2.5 min-h-[44px]",
-            "rounded-xl text-sm font-semibold text-primary-foreground",
-            "bg-gradient-primary shadow-glow",
-            "transition-all duration-200",
-            "hover:brightness-110 hover:shadow-[0_0_28px_-4px_oklch(0.62_0.21_285/0.6)]",
-            "active:scale-[0.97] active:brightness-95",
-            "relative overflow-hidden",
-          ].join(" ")}
+          className="btn-primary btn-primary-full flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-sm"
         >
-          <TimerReset className="h-4 w-4 shrink-0" />
-          <span>Focus mode</span>
-          {/* Specular sheen */}
-          <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none rounded-xl" />
+          <TimerReset className="h-4 w-4 shrink-0 relative z-10" />
+          <span className="relative z-10">Focus mode</span>
         </button>
 
         {/* Settings link */}
@@ -205,7 +195,7 @@ export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-[240px] shrink-0 h-screen sticky top-0 glass-sidebar">
+      <aside className="hidden lg:flex flex-col w-[240px] shrink-0 h-screen sticky top-0 glass-sidebar" style={{ borderRadius: "0 16px 16px 0" }}>
         <SidebarNav onFocus={onFocus} />
       </aside>
 
@@ -214,6 +204,7 @@ export function DashboardSidebar({ onFocus }: { onFocus?: () => void }) {
         <SheetContent
           side="left"
           className="p-0 flex flex-col w-[260px] border-r-0 bg-transparent glass-sidebar"
+          style={{ borderRadius: "0 16px 16px 0" }}
         >
           <SidebarNav onNavigate={() => setOpen(false)} onFocus={onFocus} />
         </SheetContent>

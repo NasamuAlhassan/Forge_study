@@ -548,6 +548,7 @@ export function ForgeAssistant() {
       )}
 
       <div
+        className="glass-panel fixed z-50 flex flex-col overflow-hidden"
         style={
           isMobile
             ? {
@@ -555,29 +556,16 @@ export function ForgeAssistant() {
                 left: 0,
                 right: 0,
                 height: "min(85svh, 580px)",
-                background: "color-mix(in oklch, var(--card) 96%, transparent)",
-                backdropFilter: "blur(40px) saturate(180%)",
-                WebkitBackdropFilter: "blur(40px) saturate(180%)",
-                border: "1px solid var(--border)",
                 borderBottom: "none",
-                boxShadow:
-                  "0 -8px 40px -8px oklch(0.04 0.02 275 / 0.4), 0 1px 0 oklch(1 0 0 / 0.1) inset",
                 borderRadius: "24px 24px 0 0",
               }
             : {
                 ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
                 width: PANEL_W,
                 height: PANEL_H,
-                background: "color-mix(in oklch, var(--card) 96%, transparent)",
-                backdropFilter: "blur(40px) saturate(180%)",
-                WebkitBackdropFilter: "blur(40px) saturate(180%)",
-                border: "1px solid var(--border)",
-                boxShadow:
-                  "0 1px 0 oklch(1 0 0 / 0.12) inset, 0 -1px 0 oklch(0 0 0 / 0.06) inset, 0 32px 80px -16px oklch(0.04 0.02 275 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.08)",
                 borderRadius: "24px",
               }
         }
-        className="fixed z-50 flex flex-col overflow-hidden"
       >
         {/* Specular highlight — top-left light hit */}
         <div

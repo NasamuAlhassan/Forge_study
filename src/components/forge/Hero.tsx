@@ -8,7 +8,10 @@ export function Hero() {
     <section className="relative pt-36 pb-24 overflow-hidden bg-hero">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[640px] w-[640px] rounded-full bg-primary/30 blur-3xl animate-glow-pulse" />
-      <div className="pointer-events-none absolute top-40 right-10 h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-glow-pulse" style={{ animationDelay: "1.5s" }} />
+      <div
+        className="pointer-events-none absolute top-40 right-10 h-72 w-72 rounded-full bg-accent/30 blur-3xl animate-glow-pulse"
+        style={{ animationDelay: "1.5s" }}
+      />
       <div className="absolute inset-0 grid-bg opacity-40 [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
 
       <div className="relative mx-auto max-w-6xl px-4 text-center">
@@ -17,17 +20,26 @@ export function Hero() {
           AI academic operating system · for students
         </div>
 
-        <h1 className="mt-6 font-display text-4xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05] animate-fade-up" style={{ animationDelay: "0.1s" }}>
+        <h1
+          className="mt-6 font-display text-4xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05] animate-fade-up"
+          style={{ animationDelay: "0.1s" }}
+        >
           Turn chaotic schedules into{" "}
           <span className="text-gradient">structured study systems.</span>
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground animate-fade-up" style={{ animationDelay: "0.2s" }}>
-          Forge uses AI to transform screenshots, PDFs, and routines into personalized
-          academic plans students can actually follow.
+        <p
+          className="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-muted-foreground animate-fade-up"
+          style={{ animationDelay: "0.2s" }}
+        >
+          Forge uses AI to transform screenshots, PDFs, and routines into personalized academic
+          plans students can actually follow.
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 animate-fade-up" style={{ animationDelay: "0.3s" }}>
+        <div
+          className="mt-8 flex flex-wrap items-center justify-center gap-3 animate-fade-up"
+          style={{ animationDelay: "0.3s" }}
+        >
           <Button size="lg" className="bg-gradient-primary hover:opacity-90 shadow-glow" asChild>
             <Link to="/dashboard">
               Start forging — it's free
@@ -39,10 +51,19 @@ export function Hero() {
           </Button>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground animate-fade-up" style={{ animationDelay: "0.4s" }}>
-          <span className="flex items-center gap-1.5"><Upload className="h-3.5 w-3.5" /> Upload timetables</span>
-          <span className="flex items-center gap-1.5"><Mic className="h-3.5 w-3.5" /> Speak your routine</span>
-          <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> AI-generated study plans</span>
+        <div
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground animate-fade-up"
+          style={{ animationDelay: "0.4s" }}
+        >
+          <span className="flex items-center gap-1.5">
+            <Upload className="h-3.5 w-3.5" /> Upload timetables
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Mic className="h-3.5 w-3.5" /> Speak your routine
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5" /> AI-generated study plans
+          </span>
         </div>
 
         {/* Dashboard preview */}
@@ -61,14 +82,21 @@ export function Hero() {
 
           {/* Floating badges */}
           <div className="hidden md:flex absolute -left-6 top-1/3 glass-strong rounded-xl px-4 py-3 items-center gap-3 animate-float shadow-elegant">
-            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center"><Upload className="h-4 w-4 text-primary-foreground" /></div>
+            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center">
+              <Upload className="h-4 w-4 text-primary-foreground" />
+            </div>
             <div className="text-left">
               <div className="text-xs text-muted-foreground">Imported timetable</div>
               <div className="text-sm font-medium">12 classes detected</div>
             </div>
           </div>
-          <div className="hidden md:flex absolute -right-6 bottom-1/4 glass-strong rounded-xl px-4 py-3 items-center gap-3 animate-float shadow-elegant" style={{ animationDelay: "1.2s" }}>
-            <div className="h-9 w-9 rounded-lg bg-accent grid place-items-center"><Calendar className="h-4 w-4 text-accent-foreground" /></div>
+          <div
+            className="hidden md:flex absolute -right-6 bottom-1/4 glass-strong rounded-xl px-4 py-3 items-center gap-3 animate-float shadow-elegant"
+            style={{ animationDelay: "1.2s" }}
+          >
+            <div className="h-9 w-9 rounded-lg bg-accent grid place-items-center">
+              <Calendar className="h-4 w-4 text-accent-foreground" />
+            </div>
             <div className="text-left">
               <div className="text-xs text-muted-foreground">Generated plan</div>
               <div className="text-sm font-medium">18h deep focus / week</div>

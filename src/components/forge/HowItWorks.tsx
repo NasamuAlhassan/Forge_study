@@ -39,7 +39,9 @@ export function HowItWorks() {
               <div className="mx-auto h-14 w-14 rounded-2xl bg-gradient-primary grid place-items-center shadow-glow relative z-10">
                 <s.icon className="h-6 w-6 text-primary-foreground" />
               </div>
-              <div className="mt-4 text-xs tracking-widest text-muted-foreground">STEP {s.step}</div>
+              <div className="mt-4 text-xs tracking-widest text-muted-foreground">
+                STEP {s.step}
+              </div>
               <h3 className="mt-1 text-xl font-semibold">{s.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
             </div>

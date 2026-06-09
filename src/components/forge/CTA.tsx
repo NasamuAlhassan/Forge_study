@@ -13,7 +13,8 @@ export function CTA() {
               Build a semester you can <span className="text-gradient">actually keep up with.</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Join thousands of students using Forge to organize life, reduce stress, and study smarter.
+              Join thousands of students using Forge to organize life, reduce stress, and study
+              smarter.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button size="lg" className="bg-gradient-primary hover:opacity-90 shadow-glow">

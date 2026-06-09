@@ -1,11 +1,13 @@
 const quotes = [
   {
-    quote: "I uploaded a blurry photo of my timetable and Forge built my whole semester in a minute. Wild.",
+    quote:
+      "I uploaded a blurry photo of my timetable and Forge built my whole semester in a minute. Wild.",
     name: "Amara O.",
     role: "CS undergrad, 2nd year",
   },
   {
-    quote: "Finally a planner that actually understands students. The AI study plan literally saved my finals.",
+    quote:
+      "Finally a planner that actually understands students. The AI study plan literally saved my finals.",
     name: "Daniel K.",
     role: "Med school, year 3",
   },

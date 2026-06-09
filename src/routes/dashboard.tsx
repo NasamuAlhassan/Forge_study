@@ -33,7 +33,7 @@ function DashboardLayout() {
   if (loading || !session) {
     return (
       <div
-        className="min-h-screen grid place-items-center bg-background"
+        className="min-h-screen grid place-items-center"
         aria-label="Loading workspace"
         role="status"
       >
@@ -71,7 +71,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className="min-h-screen flex text-foreground">
       <DashboardSidebar onFocus={() => setFocusOpen(true)} />
       <div className="flex-1 min-w-0 flex flex-col">
         <Outlet />
