@@ -282,7 +282,7 @@ export function StudyPlanGenerator() {
               boxShadow:           "0 1px 0 rgba(255,255,255,0.10) inset",
             }}
           >
-            <Brain className="h-[14px] w-[14px] text-white/80 relative z-10" />
+            <Brain className="h-[14px] w-[14px] opacity-80 relative z-10" style={{ color: "var(--foreground)" }} />
           </div>
           <div className="flex-1 min-w-0">
             <h3
@@ -591,7 +591,7 @@ export function StudyPlanGenerator() {
                       style={{ background: "oklch(0 0 0 / 0.3)", backdropFilter: "blur(8px)" }}
                       aria-label="Edit session"
                     >
-                      <Pencil className="h-3 w-3 text-white/80" />
+                      <Pencil className="h-3 w-3 opacity-80" style={{ color: "var(--foreground)" }} />
                     </button>
                   )}
                   <button

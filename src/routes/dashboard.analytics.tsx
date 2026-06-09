@@ -181,7 +181,7 @@ function AnalyticsPage() {
                     boxShadow:  "0 1px 0 rgba(255,255,255,0.08) inset",
                   }}
                 >
-                  <Icon className="h-4 w-4 text-white/70" aria-hidden="true" />
+                  <Icon className="h-4 w-4 opacity-70" aria-hidden="true" style={{ color: "var(--foreground)" }} />
                 </div>
                 <div className="relative">
                   <div

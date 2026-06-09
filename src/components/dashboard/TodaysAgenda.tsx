@@ -31,12 +31,12 @@ const typeIcon: Record<EventBlock["type"], React.ElementType> = {
   exam: AlertTriangle,
 };
 
-// All type badges: neutral glass pill
+// All type badges: neutral glass pill — text uses CSS var so it works in both modes
 const typeBadge: Record<EventBlock["type"], { bg: string; text: string }> = {
-  class: { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
-  study: { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
-  break: { bg: "var(--glass-bg-dark)",     text: "rgba(255,255,255,0.55)" },
-  exam:  { bg: "var(--glass-bg-btn-dark)", text: "rgba(255,255,255,0.80)" },
+  class: { bg: "var(--glass-bg-btn-dark)", text: "var(--foreground)" },
+  study: { bg: "var(--glass-bg-btn-dark)", text: "var(--foreground)" },
+  break: { bg: "var(--glass-bg-dark)",     text: "var(--muted-foreground)" },
+  exam:  { bg: "var(--glass-bg-btn-dark)", text: "var(--foreground)" },
 };
 
 function AgendaItem({ e, subjectById }: { e: EventBlock; subjectById: (id: string) => Subject }) {
@@ -209,7 +209,7 @@ function AgendaDetail({
                     s.color,
                   )}
                 >
-                  <TypeIcon className="h-3.5 w-3.5 text-white" />
+                  <TypeIcon className="h-3.5 w-3.5" style={{ color: "var(--foreground)", opacity: 0.85 }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

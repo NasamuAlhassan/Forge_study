@@ -284,7 +284,7 @@ function SettingsPage() {
                 border:     "1px solid var(--glass-border-dark)",
               }}
             >
-              <Paintbrush className="h-[14px] w-[14px] text-white/70" />
+              <Paintbrush className="h-[14px] w-[14px] opacity-70" style={{ color: "var(--foreground)" }} />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Appearance
@@ -300,7 +300,7 @@ function SettingsPage() {
                 style={{
                   background: "var(--glass-bg-btn-dark)",
                   border:     "1px solid var(--glass-border-dark)",
-                  color:      "rgba(255,255,255,0.80)",
+                  color:      "var(--foreground)",
                 }}
               >
                 {intensity}
@@ -367,7 +367,7 @@ function SettingsPage() {
                   border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Paintbrush className="h-3.5 w-3.5 text-white/60" />
+                <Paintbrush className="h-3.5 w-3.5 opacity-60" style={{ color: "var(--foreground)" }} />
               </div>
             </div>
           </div>
@@ -390,7 +390,7 @@ function SettingsPage() {
                 border:     "1px solid var(--glass-border-dark)",
               }}
             >
-              <User className="h-[14px] w-[14px] text-white/70" />
+              <User className="h-[14px] w-[14px] opacity-70" style={{ color: "var(--foreground)" }} />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Profile

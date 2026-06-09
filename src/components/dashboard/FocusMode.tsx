@@ -613,9 +613,9 @@ export function FocusMode({ open, onClose }: FocusModeProps) {
           }}
         >
           {running ? (
-            <Pause className="h-6 w-6 text-white/80" />
+            <Pause className="h-6 w-6 opacity-80" style={{ color: "var(--foreground)" }} />
           ) : (
-            <Play className="h-6 w-6 text-white/90 ml-0.5" />
+            <Play className="h-6 w-6 opacity-90 ml-0.5" style={{ color: "var(--foreground)" }} />
           )}
           <span className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-white/15 to-transparent pointer-events-none" />
         </button>

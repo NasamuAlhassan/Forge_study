@@ -184,7 +184,7 @@ function VoicePage() {
                   border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Sparkles className="h-3 w-3 text-white/70" />
+                <Sparkles className="h-3 w-3 opacity-70" style={{ color: "var(--foreground)" }} />
               </div>
               <span className="text-xs font-medium text-muted-foreground">
                 Live transcript

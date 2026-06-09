@@ -172,7 +172,7 @@ export function MonthView({
                           style={{
                             background:   "var(--glass-bg-btn-dark)",
                             border:       "1px solid var(--glass-border-dark)",
-                            color:        "rgba(255,255,255,0.88)",
+                            color:        "var(--foreground)",
                           }}
                         >
                           <span className="relative">{e.title}</span>

@@ -68,7 +68,7 @@ export function DayView({
                   WebkitBackdropFilter:"blur(var(--glass-blur))",
                   border:              "1px solid var(--glass-border-dark)",
                   boxShadow:           "0 1px 0 rgba(255,255,255,0.14) inset",
-                  color:               "rgba(255,255,255,0.92)",
+                  color:               "var(--foreground)",
                 }
               : {
                   background: "var(--glass-bg-dark)",

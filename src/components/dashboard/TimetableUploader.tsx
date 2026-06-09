@@ -143,7 +143,7 @@ export function TimetableUploader() {
                 animation:           "float 3s ease-in-out infinite",
               }}
             >
-              <Upload className="h-7 w-7 text-white/80 relative z-10" />
+              <Upload className="h-7 w-7 opacity-80 relative z-10" style={{ color: "var(--foreground)" }} />
             </div>
 
             <h3 className="mt-5 text-[17px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
@@ -286,7 +286,7 @@ export function TimetableUploader() {
                   background:   "var(--glass-bg-btn-dark)",
                   border:       "1px solid var(--glass-border-dark)",
                   letterSpacing:"-0.01em",
-                  color:        "rgba(255,255,255,0.88)",
+                  color:        "var(--foreground)",
                 }}
               >
                 {DAY_ABBR[e.day] ?? e.day.slice(0, 2)}
@@ -305,7 +305,7 @@ export function TimetableUploader() {
                       style={{
                         background: "var(--glass-bg-btn-dark)",
                         border:     "1px solid var(--glass-border-dark)",
-                        color:      "rgba(255,255,255,0.75)",
+                        color:      "var(--muted-foreground)",
                       }}
                     >
                       {e.code}

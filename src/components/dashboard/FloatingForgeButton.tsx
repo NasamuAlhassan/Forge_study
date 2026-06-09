@@ -67,7 +67,7 @@ export function FloatingForgeButton() {
         alignItems:          "center",
         justifyContent:      "center",
         gap:                 8,
-        color:               "rgba(255,255,255,0.90)",
+        color:               "var(--foreground)",
         fontSize:            13,
         fontWeight:          600,
         letterSpacing:       "-0.01em",

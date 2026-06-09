@@ -158,7 +158,7 @@
   --secondary-foreground: oklch(0.97 0.01 280);
 
   --muted: oklch(0.24 0.04 275);
-  --muted-foreground: oklch(0.68 0.03 280);
+  --muted-foreground: oklch(0.80 0.01 280); /* brightened — more readable over wallpaper */
 
   --accent: oklch(0.62 0.18 250);
   --accent-foreground: oklch(0.99 0.005 280);

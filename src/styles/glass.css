@@ -181,7 +181,7 @@ html.light .glass-input:focus {
   border:                  1px solid rgba(255, 255, 255, 0.30);
   border-radius:           100px;
   padding:                 10px 22px;
-  color:                   rgba(255, 255, 255, 0.92);
+  color:                   var(--foreground);
   font-family:             var(--font-satoshi);
   font-weight:             600;
   font-size:               14px;
@@ -226,8 +226,8 @@ html.light .glass-input:focus {
 
 html.light .btn-primary {
   background:   var(--glass-bg-btn-light);
-  border-color: rgba(255, 255, 255, 0.65);
-  color:        rgba(20, 20, 40, 0.88);
+  border-color: rgba(0, 0, 0, 0.18);
+  color:        var(--foreground);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.75) inset,
     var(--glass-shadow);

@@ -218,7 +218,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
             backdropFilter:       "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             border:               "1px solid rgba(255,255,255,0.50)",
-            color:                "rgba(255,255,255,0.95)",
+            color:                isDark ? "rgba(255,255,255,0.95)" : "rgba(10,10,20,0.88)",
             boxShadow:            "0 1px 0 rgba(255,255,255,0.30) inset",
           }}
         >
@@ -235,7 +235,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
             backdropFilter:       "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             border:               "1px solid rgba(255,255,255,0.50)",
-            color:                "rgba(255,255,255,0.95)",
+            color:                isDark ? "rgba(255,255,255,0.95)" : "rgba(10,10,20,0.88)",
             boxShadow:            "0 1px 0 rgba(255,255,255,0.30) inset",
           }}
         >
@@ -254,7 +254,7 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
                 WebkitBackdropFilter:    "blur(var(--glass-blur))",
                 border:                  "1px solid var(--glass-border-dark)",
                 boxShadow:               "0 1px 0 rgba(255,255,255,0.12) inset",
-                color:                   "rgba(255,255,255,0.90)",
+                color:                   isDark ? "rgba(255,255,255,0.90)" : "rgba(10,10,20,0.88)",
               }}
             >
               {initial}

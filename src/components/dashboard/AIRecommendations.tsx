@@ -173,7 +173,7 @@ export function AIRecommendations() {
             boxShadow:  "0 1px 0 rgba(255,255,255,0.10) inset",
           }}
         >
-          <Sparkles className="h-[14px] w-[14px] text-white/80" aria-hidden="true" />
+          <Sparkles className="h-[14px] w-[14px] opacity-80" aria-hidden="true" style={{ color: "var(--foreground)" }} />
         </div>
         <div className="min-w-0">
           <h3
@@ -212,7 +212,7 @@ export function AIRecommendations() {
                 boxShadow:  "0 1px 0 rgba(255,255,255,0.08) inset",
               }}
             >
-              <r.icon className="h-[14px] w-[14px] text-white/80" aria-hidden="true" />
+              <r.icon className="h-[14px] w-[14px] opacity-80" aria-hidden="true" style={{ color: "var(--foreground)" }} />
             </div>
 
             <div className="min-w-0">

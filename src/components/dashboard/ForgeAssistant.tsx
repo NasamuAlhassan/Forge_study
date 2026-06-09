@@ -650,7 +650,7 @@ export function ForgeAssistant() {
                     border:     "1px solid var(--glass-border-dark)",
                   }}
                 >
-                  <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
+                  <Sparkles className="h-[9px] w-[9px] opacity-70" style={{ color: "var(--foreground)" }} aria-hidden="true" />
                 </div>
               )}
               <div
@@ -666,7 +666,7 @@ export function ForgeAssistant() {
                         WebkitBackdropFilter:"blur(var(--glass-blur))",
                         border:              "1px solid var(--glass-border-dark)",
                         boxShadow:           "0 1px 0 rgba(255,255,255,0.12) inset",
-                        color:               "rgba(255,255,255,0.92)",
+                        color:               "var(--foreground)",
                       }
                     : {
                         background:          "var(--glass-bg-dark)",
@@ -853,7 +853,7 @@ export function ForgeAssistant() {
               {transcribing ? (
                 <Loader2 className="h-3.5 w-3.5 text-muted-foreground animate-spin" />
               ) : listening ? (
-                <MicOff className="h-3.5 w-3.5 text-white" />
+                <MicOff className="h-3.5 w-3.5" style={{ color: "var(--foreground)" }} />
               ) : (
                 <Mic className="h-3.5 w-3.5 text-muted-foreground" />
               )}
@@ -876,7 +876,7 @@ export function ForgeAssistant() {
               }}
               aria-label="Send message"
             >
-              <Send className="h-3.5 w-3.5 text-white relative z-10" />
+              <Send className="h-3.5 w-3.5 relative z-10" style={{ color: "var(--foreground)" }} />
             </button>
           </div>
 
