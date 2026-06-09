@@ -24,31 +24,40 @@ export function applyGlassIntensity(intensity: number): void {
   const n = Math.max(0, Math.min(100, intensity));
   const root = document.documentElement;
 
-  // ── Blur: 56 px (frosted) → 4 px (crystal) ──────────────────────────────
-  const blur = (Math.max(4, 56 - n * 0.52)).toFixed(1) + "px";
+  // ── Three-point design ──────────────────────────────────────────────────
+  //   n=0   FROST   — heavy blur, milky white panel, thick border
+  //   n=50  NEUTRAL — balanced mix, moderate blur & opacity
+  //   n=100 GLASS   — minimal blur, nearly invisible, thin border
+  //
+  // All values interpolate linearly between frost (0) and glass (100).
 
-  // ── Standard panel background opacity ─────────────────────────────────
-  // n=0  (frost):  dark 0.28, light 0.62  — visible milky panel
-  // n=50 (default):dark 0.15, light 0.34  — clear glass
-  // n=100 (liquid): dark 0.02, light 0.05  — almost invisible
-  const bgDark  = Math.max(0.02, 0.28 - n * 0.0026);
-  const bgLight = Math.max(0.05, 0.62 - n * 0.0057);
+  // Blur:   40 px  →  20 px  →  4 px
+  const blur = (Math.max(4, 40 - n * 0.36)).toFixed(1) + "px";
 
-  // ── Button tier — ~1.8× standard ─────────────────────────────────────
-  const bgBtnDark  = Math.min(0.52, bgDark  * 1.8);
-  const bgBtnLight = Math.min(0.82, bgLight * 1.4);
+  // Panel background opacity (dark mode white tint)
+  // Frost 0.30  →  Neutral 0.15  →  Glass 0.03
+  const bgDark  = Math.max(0.03, 0.30 - n * 0.0027);
 
-  // ── Active / hover tier — ~2.5× standard ────────────────────────────
-  const bgActiveDark  = Math.min(0.65, bgDark  * 2.5);
-  const bgActiveLight = Math.min(0.90, bgLight * 1.6);
+  // Panel background opacity (light mode white tint)
+  // Frost 0.60  →  Neutral 0.34  →  Glass 0.06
+  const bgLight = Math.max(0.06, 0.60 - n * 0.0054);
+
+  // ── Button tier  ≈ 1.7× panel ────────────────────────────────────────
+  const bgBtnDark  = Math.min(0.50, bgDark  * 1.7);
+  const bgBtnLight = Math.min(0.80, bgLight * 1.4);
+
+  // ── Active / hover tier  ≈ 2.4× panel ───────────────────────────────
+  const bgActiveDark  = Math.min(0.60, bgDark  * 2.4);
+  const bgActiveLight = Math.min(0.88, bgLight * 1.6);
 
   // ── Borders ───────────────────────────────────────────────────────────
-  // dark mode: white borders   light mode: dark borders (more visible on light bg)
-  const borderDark  = Math.max(0.12, 0.36 - n * 0.0024);  // 0.36 → 0.12
-  const borderLight = Math.max(0.12, 0.28 - n * 0.0016);  // dark border for light mode
+  // dark:  white border  Frost 0.38 → Neutral 0.22 → Glass 0.10
+  const borderDark  = Math.max(0.10, 0.38 - n * 0.0028);
+  // light: dark border   Frost 0.22 → Neutral 0.14 → Glass 0.08
+  const borderLight = Math.max(0.08, 0.22 - n * 0.0014);
 
   // ── Drop shadow ───────────────────────────────────────────────────────
-  const shadowA = (Math.max(0.06, 0.24 - n * 0.0018)).toFixed(3);
+  const shadowA = (Math.max(0.05, 0.22 - n * 0.0017)).toFixed(3);
   const shadow  = `0 8px 32px rgba(0,0,0,${shadowA}), 0 2px 8px rgba(0,0,0,${(Number(shadowA)*0.55).toFixed(3)})`;
 
   const f = (v: number) => v.toFixed(3);

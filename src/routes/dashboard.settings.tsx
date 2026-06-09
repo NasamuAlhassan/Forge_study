@@ -307,7 +307,7 @@ function SettingsPage() {
               </span>
             </div>
 
-            {/* Slider */}
+            {/* Slider with 3 snap points */}
             <input
               type="range"
               min={0}
@@ -316,21 +316,40 @@ function SettingsPage() {
               value={intensity}
               onChange={(e) => updateIntensity(Number(e.target.value))}
               className="glass-intensity-slider"
-              aria-label="Glass intensity — 0 is frost, 100 is liquid"
+              aria-label="Glass style — 0 frost, 50 neutral, 100 glass"
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground select-none">
-              <span>❄️ Frost</span>
-              <span>💧 Glass</span>
+            {/* Three-point labels */}
+            <div className="grid grid-cols-3 text-[11px] text-muted-foreground select-none mt-0.5">
+              <span className="text-left">❄️ Frost</span>
+              <span className="text-center opacity-70">◈ Neutral</span>
+              <span className="text-right">💧 Glass</span>
+            </div>
+
+            {/* Tick marks under the slider */}
+            <div className="relative h-1 -mt-1 mx-[10px]">
+              {[0, 50, 100].map((pos) => (
+                <span
+                  key={pos}
+                  className="absolute top-0 w-px h-1.5 rounded-full opacity-30"
+                  style={{
+                    left:       `${pos}%`,
+                    transform:  "translateX(-50%)",
+                    background: "var(--glass-border-dark)",
+                  }}
+                />
+              ))}
             </div>
 
             {/* Live preview card */}
             <div
-              className="glass-panel rounded-xl p-4 mt-1 flex items-center justify-between"
+              className="glass-panel rounded-xl p-4 mt-2 flex items-center justify-between"
               aria-label="Glass style preview"
             >
               <div>
-                <p className="text-[11px] text-muted-foreground mb-0.5">Preview</p>
+                <p className="text-[11px] text-muted-foreground mb-0.5">
+                  {intensity === 0 ? "Frost" : intensity === 100 ? "Glass" : intensity < 50 ? "Frosted glass" : intensity > 50 ? "Clear glass" : "Neutral"}
+                </p>
                 <p
                   className="font-display font-bold"
                   style={{ fontSize: 22, letterSpacing: "-0.03em", lineHeight: 1 }}
