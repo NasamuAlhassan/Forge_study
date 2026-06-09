@@ -24,28 +24,29 @@
         // Mirror of applyGlassIntensity() in use-glass-intensity.tsx
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
-        var blur        = (Math.max(8,   64   - n * 0.56  )).toFixed(1) + 'px';
-        var bgD  = Math.max(0.04, 0.45 - n * 0.0041);
-        var bgL  = Math.max(0.12, 0.80 - n * 0.0068);
-        var bgBD = Math.min(0.58, bgD  * 1.4);
-        var bgBL = Math.min(0.90, bgL  * 1.2);
-        var bgAD = Math.min(0.68, bgD  * 2.0);
-        var bgAL = Math.min(0.95, bgL  * 1.4);
-        var boD  = Math.max(0.10, 0.40 - n * 0.003);
-        var boL  = Math.max(0.20, 0.70 - n * 0.005);
-        var shA  = Math.max(0.08, 0.30 - n * 0.0022);
-        function w(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
+        var blur = (Math.max(4, 56 - n * 0.52)).toFixed(1) + 'px';
+        var bgD  = Math.max(0.02, 0.28 - n * 0.0026);
+        var bgL  = Math.max(0.05, 0.62 - n * 0.0057);
+        var bgBD = Math.min(0.52, bgD  * 1.8);
+        var bgBL = Math.min(0.82, bgL  * 1.4);
+        var bgAD = Math.min(0.65, bgD  * 2.5);
+        var bgAL = Math.min(0.90, bgL  * 1.6);
+        var boD  = Math.max(0.12, 0.36 - n * 0.0024);
+        var boL  = Math.max(0.12, 0.28 - n * 0.0016); // dark border for light mode
+        var shA  = Math.max(0.06, 0.24 - n * 0.0018);
+        function wh(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
+        function dk(a){return 'rgba(0,0,0,'+a.toFixed(3)+')';}
         var r = document.documentElement;
-        r.style.setProperty('--glass-intensity',       String(n));
-        r.style.setProperty('--glass-blur',            blur);
-        r.style.setProperty('--glass-bg-dark',         w(bgD));
-        r.style.setProperty('--glass-bg-light',        w(bgL));
-        r.style.setProperty('--glass-bg-btn-dark',     w(bgBD));
-        r.style.setProperty('--glass-bg-btn-light',    w(bgBL));
-        r.style.setProperty('--glass-bg-active-dark',  w(bgAD));
-        r.style.setProperty('--glass-bg-active-light', w(bgAL));
-        r.style.setProperty('--glass-border-dark',     w(boD));
-        r.style.setProperty('--glass-border-light',    w(boL));
+        r.style.setProperty('--glass-intensity',        String(n));
+        r.style.setProperty('--glass-blur',             blur);
+        r.style.setProperty('--glass-bg-dark',          wh(bgD));
+        r.style.setProperty('--glass-bg-btn-dark',      wh(bgBD));
+        r.style.setProperty('--glass-bg-active-dark',   wh(bgAD));
+        r.style.setProperty('--glass-border-dark',      wh(boD));
+        r.style.setProperty('--glass-bg-light',         wh(bgL));
+        r.style.setProperty('--glass-bg-btn-light',     wh(bgBL));
+        r.style.setProperty('--glass-bg-active-light',  wh(bgAL));
+        r.style.setProperty('--glass-border-light',     dk(boL));
         r.style.setProperty('--glass-shadow',
           '0 8px 32px rgba(0,0,0,'+shA.toFixed(3)+'), 0 2px 8px rgba(0,0,0,'+(shA*0.55).toFixed(3)+')');
       } catch(e) {}

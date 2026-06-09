@@ -24,18 +24,19 @@
 :root {
   /* Defaults match n=50 — overridden before first paint by index.html + useGlassIntensity */
   --glass-intensity:       50;
-  --glass-blur:            36px;   /* 64 - 50×0.56 */
+  --glass-blur:            30px;   /* 56 - 50×0.52 */
 
-  /* ── Neutral white tints (n=50 midpoint) ─────────────────────────────── */
-  --glass-bg-dark:         rgba(255, 255, 255, 0.24);
-  --glass-bg-light:        rgba(255, 255, 255, 0.46);
-  --glass-bg-btn-dark:     rgba(255, 255, 255, 0.34);
-  --glass-bg-btn-light:    rgba(255, 255, 255, 0.55);
-  --glass-bg-active-dark:  rgba(255, 255, 255, 0.48);
-  --glass-bg-active-light: rgba(255, 255, 255, 0.65);
-
-  --glass-border-dark:     rgba(255, 255, 255, 0.25);
-  --glass-border-light:    rgba(255, 255, 255, 0.45);
+  /* ── Tints (n=50 midpoint) ────────────────────────────────────────────── */
+  /* dark mode: white tint */
+  --glass-bg-dark:         rgba(255, 255, 255, 0.15);  /* 0.28 - 50×0.0026 */
+  --glass-bg-btn-dark:     rgba(255, 255, 255, 0.27);
+  --glass-bg-active-dark:  rgba(255, 255, 255, 0.38);
+  --glass-border-dark:     rgba(255, 255, 255, 0.24);  /* white border */
+  /* light mode: white bg tint, dark border for visibility */
+  --glass-bg-light:        rgba(255, 255, 255, 0.34);  /* 0.62 - 50×0.0057 */
+  --glass-bg-btn-light:    rgba(255, 255, 255, 0.48);
+  --glass-bg-active-light: rgba(255, 255, 255, 0.54);
+  --glass-border-light:    rgba(0,   0,   0,   0.14);  /* dark border — visible on light bg */
 
   --glass-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
@@ -61,9 +62,10 @@
 }
 html.light .glass-panel {
   background:   var(--glass-bg-light);
-  border-color: var(--glass-border-light);
+  border-color: var(--glass-border-light); /* dark: rgba(0,0,0,0.14) */
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.70) inset,
+    0 1px 0 rgba(255, 255, 255, 0.80) inset,
+    0 2px 8px rgba(0, 0, 0, 0.06),
     var(--glass-shadow);
 }
 
@@ -113,15 +115,13 @@ html.light .glass-sidebar-new {
   backdrop-filter:         blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border-bottom:           1px solid var(--glass-border-dark);
-  border-radius:           25px;
-  box-shadow:              0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  border-radius:           0;
+  box-shadow:              0 1px 0 rgba(255, 255, 255, 0.10) inset;
 }
 html.light .glass-topbar-new {
-  background:   var(--glass-bg-light);
-  border-color: var(--glass-border-light);
-  box-shadow:
-    0 1px 0 rgba(0, 0, 0, 0.262) inset,
-    0 2px 12px rgba(0, 0, 0, 0.04);
+  background:    var(--glass-bg-light);
+  border-bottom: 1px solid var(--glass-border-light); /* dark: rgba(0,0,0,0.14) */
+  box-shadow:    0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* ── Calendar event tile ──────────────────────────────────────────────────── */

@@ -59,16 +59,18 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
     .charAt(0)
     .toUpperCase();
 
-  // More opaque so the dropdown reads clearly over the wallpaper.
-  // NO saturate() — that was amplifying the orange background.
+  // Uses glass CSS variables so it follows the intensity slider.
+  // No saturate() — that was amplifying the wallpaper colour.
   const dropdownStyle = {
-    background:           "rgba(255,255,255,0.28)",
-    backdropFilter:       "blur(40px)",
-    WebkitBackdropFilter: "blur(40px)",
-    border:               "1px solid rgba(255,255,255,0.30)",
-    boxShadow:            "0 1px 0 rgba(255,255,255,0.25) inset, 0 16px 48px rgba(0,0,0,0.25)",
+    background:           isDark ? "var(--glass-bg-btn-dark)" : "var(--glass-bg-btn-light)",
+    backdropFilter:       "blur(var(--glass-blur))",
+    WebkitBackdropFilter: "blur(var(--glass-blur))",
+    border:               isDark
+      ? "1px solid var(--glass-border-dark)"
+      : "1px solid var(--glass-border-light)",
+    boxShadow:            "0 1px 0 rgba(255,255,255,0.18) inset, var(--glass-shadow)",
     borderRadius:         "16px",
-    color:                isDark ? "white" : "rgba(10,10,20,0.90)",
+    color:                isDark ? "rgba(255,255,255,0.92)" : "rgba(10,10,20,0.88)",
   };
 
   const iconBtn = [
