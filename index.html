@@ -21,19 +21,19 @@
         document.documentElement.classList.add('dark');
       }
       try {
-        // Mirror of applyGlassIntensity() — 3-point: Frost(0) Neutral(50) Glass(100)
+        // Mirror of applyGlassIntensity() — Frost(0) Neutral(50) Glass(100)
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
-        var blur = (Math.max(4, 40 - n * 0.36)).toFixed(1) + 'px';
-        var bgD  = Math.max(0.03, 0.30 - n * 0.0027);
-        var bgL  = Math.max(0.06, 0.60 - n * 0.0054);
-        var bgBD = Math.min(0.50, bgD  * 1.7);
-        var bgBL = Math.min(0.80, bgL  * 1.4);
-        var bgAD = Math.min(0.60, bgD  * 2.4);
-        var bgAL = Math.min(0.88, bgL  * 1.6);
-        var boD  = Math.max(0.10, 0.38 - n * 0.0028);
-        var boL  = Math.max(0.08, 0.22 - n * 0.0014);
-        var shA  = Math.max(0.05, 0.22 - n * 0.0017);
+        var blur = (Math.max(2,     22    - n * 0.20   )).toFixed(1) + 'px';
+        var bgD  = Math.max(0.01, 0.165 - n * 0.00155);
+        var bgL  = Math.max(0.03, 0.33  - n * 0.003);
+        var bgBD = Math.min(0.35, bgD   * 1.8);
+        var bgBL = Math.min(0.55, bgL   * 1.7);
+        var bgAD = Math.min(0.45, bgD   * 2.5);
+        var bgAL = Math.min(0.65, bgL   * 2.0);
+        var boD  = Math.max(0.06, 0.24  - n * 0.0018);
+        var boL  = Math.max(0.04, 0.14  - n * 0.001);
+        var shA  = Math.max(0.03, 0.16  - n * 0.0013);
         function wh(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
         function dk(a){return 'rgba(0,0,0,'+a.toFixed(3)+')';}
         var r = document.documentElement;

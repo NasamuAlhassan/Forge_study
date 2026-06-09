@@ -25,39 +25,37 @@ export function applyGlassIntensity(intensity: number): void {
   const root = document.documentElement;
 
   // ── Three-point design ──────────────────────────────────────────────────
-  //   n=0   FROST   — heavy blur, milky white panel, thick border
-  //   n=50  NEUTRAL — balanced mix, moderate blur & opacity
-  //   n=100 GLASS   — minimal blur, nearly invisible, thin border
+  //   n=0   FROST   — blur 22px, dark 0.165, light 0.33  (old neutral)
+  //   n=50  NEUTRAL — blend of frost & glass
+  //   n=100 GLASS   — blur 2px,  dark 0.01,  light 0.03  (crystal clear)
   //
-  // All values interpolate linearly between frost (0) and glass (100).
+  // All values interpolate linearly.
 
-  // Blur:   40 px  →  20 px  →  4 px
-  const blur = (Math.max(4, 40 - n * 0.36)).toFixed(1) + "px";
+  // Blur:   22 px → 12 px → 2 px
+  const blur = (Math.max(2, 22 - n * 0.20)).toFixed(1) + "px";
 
-  // Panel background opacity (dark mode white tint)
-  // Frost 0.30  →  Neutral 0.15  →  Glass 0.03
-  const bgDark  = Math.max(0.03, 0.30 - n * 0.0027);
+  // Dark panel bg:  0.165 → 0.088 → 0.01
+  const bgDark  = Math.max(0.01, 0.165 - n * 0.00155);
 
-  // Panel background opacity (light mode white tint)
-  // Frost 0.60  →  Neutral 0.34  →  Glass 0.06
-  const bgLight = Math.max(0.06, 0.60 - n * 0.0054);
+  // Light panel bg: 0.33 → 0.18 → 0.03
+  const bgLight = Math.max(0.03, 0.33 - n * 0.003);
 
-  // ── Button tier  ≈ 1.7× panel ────────────────────────────────────────
-  const bgBtnDark  = Math.min(0.50, bgDark  * 1.7);
-  const bgBtnLight = Math.min(0.80, bgLight * 1.4);
+  // ── Button tier  ≈ 1.8× panel ────────────────────────────────────────
+  const bgBtnDark  = Math.min(0.35, bgDark  * 1.8);
+  const bgBtnLight = Math.min(0.55, bgLight * 1.7);
 
-  // ── Active / hover tier  ≈ 2.4× panel ───────────────────────────────
-  const bgActiveDark  = Math.min(0.60, bgDark  * 2.4);
-  const bgActiveLight = Math.min(0.88, bgLight * 1.6);
+  // ── Active / hover tier  ≈ 2.5× panel ───────────────────────────────
+  const bgActiveDark  = Math.min(0.45, bgDark  * 2.5);
+  const bgActiveLight = Math.min(0.65, bgLight * 2.0);
 
   // ── Borders ───────────────────────────────────────────────────────────
-  // dark:  white border  Frost 0.38 → Neutral 0.22 → Glass 0.10
-  const borderDark  = Math.max(0.10, 0.38 - n * 0.0028);
-  // light: dark border   Frost 0.22 → Neutral 0.14 → Glass 0.08
-  const borderLight = Math.max(0.08, 0.22 - n * 0.0014);
+  // dark white:  0.24 → 0.14 → 0.06
+  const borderDark  = Math.max(0.06, 0.24 - n * 0.0018);
+  // light dark:  0.14 → 0.09 → 0.04
+  const borderLight = Math.max(0.04, 0.14 - n * 0.001);
 
   // ── Drop shadow ───────────────────────────────────────────────────────
-  const shadowA = (Math.max(0.05, 0.22 - n * 0.0017)).toFixed(3);
+  const shadowA = (Math.max(0.03, 0.16 - n * 0.0013)).toFixed(3);
   const shadow  = `0 8px 32px rgba(0,0,0,${shadowA}), 0 2px 8px rgba(0,0,0,${(Number(shadowA)*0.55).toFixed(3)})`;
 
   const f = (v: number) => v.toFixed(3);

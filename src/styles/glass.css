@@ -24,19 +24,19 @@
 :root {
   /* Defaults = n=50 NEUTRAL — overridden before first paint by index.html + hook */
   --glass-intensity:       50;
-  --glass-blur:            22px;   /* 40 - 50×0.36 */
+  --glass-blur:            12px;   /* 22 - 50×0.20 */
 
   /* ── n=50 NEUTRAL midpoint ────────────────────────────────────────────── */
-  /* dark:  Frost 0.30 → Neutral 0.165 → Glass 0.03 */
-  --glass-bg-dark:         rgba(255, 255, 255, 0.165);
-  --glass-bg-btn-dark:     rgba(255, 255, 255, 0.28);
-  --glass-bg-active-dark:  rgba(255, 255, 255, 0.40);
-  --glass-border-dark:     rgba(255, 255, 255, 0.24);
-  /* light: Frost 0.60 → Neutral 0.33 → Glass 0.06 */
-  --glass-bg-light:        rgba(255, 255, 255, 0.33);
-  --glass-bg-btn-light:    rgba(255, 255, 255, 0.46);
-  --glass-bg-active-light: rgba(255, 255, 255, 0.53);
-  --glass-border-light:    rgba(0,   0,   0,   0.14);  /* dark — visible on light bg */
+  /* dark:  Frost 0.165 → Neutral 0.088 → Glass 0.01 */
+  --glass-bg-dark:         rgba(255, 255, 255, 0.088);
+  --glass-bg-btn-dark:     rgba(255, 255, 255, 0.16);
+  --glass-bg-active-dark:  rgba(255, 255, 255, 0.22);
+  --glass-border-dark:     rgba(255, 255, 255, 0.15);
+  /* light: Frost 0.33 → Neutral 0.18 → Glass 0.03 */
+  --glass-bg-light:        rgba(255, 255, 255, 0.18);
+  --glass-bg-btn-light:    rgba(255, 255, 255, 0.31);
+  --glass-bg-active-light: rgba(255, 255, 255, 0.36);
+  --glass-border-light:    rgba(0,   0,   0,   0.09);  /* dark — visible on light bg */
 
   --glass-shadow:
     0 8px 32px rgba(0, 0, 0, 0.15),
