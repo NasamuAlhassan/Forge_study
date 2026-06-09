@@ -214,12 +214,23 @@
     -webkit-text-size-adjust: 100%;
   }
 
-  body {
-    background-color: var(--background);
+  /* ── True fixed background — works on iOS Safari too ── */
+  html::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background-image: url('./assets/dark-bg.png');
     background-size: cover;
-    background-attachment: fixed;
     background-position: center;
+    background-repeat: no-repeat;
+  }
+  html.light::before {
+    background-image: url('./assets/light-bg.jpg');
+  }
+
+  body {
+    background-color: transparent;
     color: var(--foreground);
     font-family: var(--font-sans);
     font-feature-settings:
@@ -360,10 +371,7 @@ html.light {
   --sidebar-ring: oklch(0.52 0.22 285);
 }
 
-html.light body {
-  background-image: url('./assets/light-bg.jpg');
-  background-color: var(--background);
-}
+/* light-bg is handled by html.light::before above */
 
 @layer utilities {
   /* ── Text gradient ── */
