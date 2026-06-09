@@ -7,6 +7,8 @@ import {
   MicOff,
   Send,
   Sparkles,
+  Volume2,
+  VolumeX,
   X,
   XCircle,
 } from "lucide-react";
@@ -27,6 +29,22 @@ import {
 } from "@/lib/forge-ai-actions";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventBlock, Subject } from "@/lib/demo-data";
+
+// ─── Web Speech API minimal typings ──────────────────────────────────────────
+interface SRResult { readonly transcript: string; readonly isFinal: boolean; }
+interface SRResultList { readonly length: number; [i: number]: { readonly length: number; [j: number]: SRResult; readonly isFinal: boolean }; }
+interface SREvent extends Event { readonly results: SRResultList; readonly resultIndex: number; }
+interface SRErrorEvent extends Event { readonly error: string; }
+interface SR {
+  continuous: boolean; interimResults: boolean; lang: string;
+  onresult:  (e: SREvent) => void;
+  onend:     () => void;
+  onerror:   (e: SRErrorEvent) => void;
+  start():   void;
+  stop():    void;
+  abort():   void;
+}
+type SRCtor = new () => SR;
 
 const PANEL_W = 360;
 const PANEL_H = 520;
@@ -144,11 +162,23 @@ export function ForgeAssistant() {
   // Mobile detection — bottom-sheet vs floating panel
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
 
-  // Voice input via MediaRecorder + Gemini transcription
+  // Voice input via MediaRecorder + Gemini transcription (existing)
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  // ── Speech-to-speech voice mode (NEW) ───────────────────────────────────────
+  const [voiceMode, setVoiceMode]           = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [speaking, setSpeaking]             = useState(false);
+  const srRef            = useRef<SR | null>(null);
+  const voiceModeRef     = useRef(false);   // stale-closure-safe copy
+  const loadingRef       = useRef(false);   // stale-closure-safe copy
+  // forward refs so callbacks can call each other without circular deps
+  const startListeningRef = useRef<() => void>(() => {});
+  const sendVoiceRef      = useRef<(text: string) => void>(() => {});
 
   const toggleVoice = useCallback(async () => {
     // Stop if already recording
@@ -196,6 +226,155 @@ export function ForgeAssistant() {
       toast.error("Microphone access denied");
     }
   }, [listening]);
+
+  // Keep stale-closure-safe refs up to date
+  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
+  useEffect(() => { loadingRef.current   = loading;   }, [loading]);
+
+  // ── Text-to-speech ─────────────────────────────────────────────────────────
+  const speakText = useCallback((text: string) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+
+    // Strip markdown + action blocks so speech sounds natural
+    const clean = text
+      .replace(/\[FORGE_ACTION[\s\S]*?\]/g, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/`[^`]+`/g, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/\n{2,}/g, ". ")
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!clean) return;
+
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.rate  = 1.08;
+    utter.pitch = 1.0;
+    utter.volume = 1.0;
+
+    // Pick the most natural-sounding English voice available
+    const loadVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const voice  =
+        voices.find((v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("google")) ||
+        voices.find((v) => v.lang === "en-US" && !v.localService)  ||
+        voices.find((v) => v.lang.startsWith("en-US"))              ||
+        voices.find((v) => v.lang.startsWith("en"));
+      if (voice) utter.voice = voice;
+    };
+    loadVoice();
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener("voiceschanged", loadVoice, { once: true });
+    }
+
+    utter.onstart = () => setSpeaking(true);
+    utter.onend   = () => {
+      setSpeaking(false);
+      // Auto-restart listening after Forge finishes speaking (if still in voice mode)
+      if (voiceModeRef.current && !loadingRef.current) {
+        startListeningRef.current();
+      }
+    };
+    utter.onerror = () => setSpeaking(false);
+
+    window.speechSynthesis.speak(utter);
+  }, []);
+
+  // ── SpeechRecognition ──────────────────────────────────────────────────────
+  const startListening = useCallback(() => {
+    const SRCtor = (
+      (window as unknown as { SpeechRecognition?: SRCtor }).SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition?: SRCtor }).webkitSpeechRecognition
+    );
+    if (!SRCtor) {
+      toast.error("Voice recognition isn't supported in this browser");
+      return;
+    }
+
+    // Don't start if already listening or AI is loading/speaking
+    if (loadingRef.current) return;
+
+    const sr = new SRCtor();
+    sr.continuous     = false;  // stop after a natural pause
+    sr.interimResults = true;
+    sr.lang           = "en-US";
+
+    let finalText = "";
+
+    sr.onresult = (e) => {
+      let interim = "";
+      finalText = "";
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          finalText += e.results[i][0].transcript;
+        } else {
+          interim += e.results[i][0].transcript;
+        }
+      }
+      setVoiceTranscript((finalText + interim).trim());
+    };
+
+    sr.onend = () => {
+      setVoiceListening(false);
+      const said = finalText.trim();
+      if (said && voiceModeRef.current) {
+        setVoiceTranscript("");
+        sendVoiceRef.current(said);
+      }
+    };
+
+    sr.onerror = (e) => {
+      if (e.error !== "no-speech" && e.error !== "aborted") {
+        console.warn("SpeechRecognition error:", e.error);
+      }
+      setVoiceListening(false);
+    };
+
+    srRef.current = sr;
+    try {
+      sr.start();
+      setVoiceListening(true);
+      setVoiceTranscript("");
+    } catch {
+      /* already started or not permitted */
+    }
+  }, []);
+
+  // Keep forward refs in sync
+  useEffect(() => { startListeningRef.current = startListening; }, [startListening]);
+
+  // ── Toggle voice mode ──────────────────────────────────────────────────────
+  const toggleVoiceMode = useCallback(() => {
+    if (voiceMode) {
+      // --- turn OFF ---
+      srRef.current?.abort();
+      window.speechSynthesis?.cancel();
+      setVoiceMode(false);
+      setVoiceListening(false);
+      setVoiceTranscript("");
+      setSpeaking(false);
+    } else {
+      // --- turn ON ---
+      setVoiceMode(true);
+      // Small delay so voiceModeRef updates before recognition starts
+      setTimeout(() => startListeningRef.current(), 120);
+    }
+  }, [voiceMode]);
+
+  // Stop TTS + recognition when panel closes
+  useEffect(() => {
+    if (!open) {
+      srRef.current?.abort();
+      window.speechSynthesis?.cancel();
+      setVoiceMode(false);
+      setVoiceListening(false);
+      setVoiceTranscript("");
+      setSpeaking(false);
+    }
+  }, [open]);
 
   const { events, subjects, refetch } = useSchedule();
   const { user } = useAuth();
@@ -312,12 +491,11 @@ export function ForgeAssistant() {
 
   const scheduleContext = useMemo(() => formatSchedule(events, subjects), [events, subjects]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
-    setInput("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
-
+  /**
+   * Core message handler — shared by text input and voice mode.
+   * speakReply: if true, reads the AI response aloud (voice mode).
+   */
+  const processMessage = async (text: string, speakReply: boolean) => {
     const userMsg: Message = { id: Date.now(), role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
@@ -330,9 +508,15 @@ export function ForgeAssistant() {
           parts: m.content,
         }));
 
+      // When in voice mode, nudge towards short conversational replies
+      const ctx = speakReply
+        ? scheduleContext +
+          "\n\n[Voice mode active: reply conversationally and keep it brief — like a smart friend talking, not writing. Short sentences read better aloud.]"
+        : scheduleContext;
+
       const raw = await sendForgeMessage(
         history,
-        scheduleContext,
+        ctx,
         buildAssistantDateContext(new Date()),
       );
 
@@ -342,6 +526,9 @@ export function ForgeAssistant() {
       const clean = raw.replace(/\[FORGE_ACTION:\s*\{[\s\S]*?\}\s*\]/g, "").trim();
 
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: clean }]);
+
+      // ── Speak the reply in voice mode ───────────────────────────────────
+      if (speakReply && voiceModeRef.current) speakText(clean);
 
       if (allMatches.length > 0) {
         const parsed: ForgeAction[] = [];
@@ -354,10 +541,7 @@ export function ForgeAssistant() {
         }
 
         if (parsed.length > 0) {
-          // Client-side conflict guard: if an add_event overlaps an existing
-          // event on the same day, surface it conversationally instead of
-          // silently queuing it. The system prompt already asks the AI to
-          // check, but this is a reliable safety net.
+          // Client-side conflict guard
           const confirmed: ForgeAction[] = [];
           const conflictNotes: string[] = [];
 
@@ -382,10 +566,12 @@ export function ForgeAssistant() {
           }
 
           if (conflictNotes.length > 0) {
+            const note = conflictNotes[0];
             setMessages((prev) => [
               ...prev,
-              { id: Date.now() + 1, role: "assistant", content: conflictNotes[0] },
+              { id: Date.now() + 1, role: "assistant", content: note },
             ]);
+            if (speakReply && voiceModeRef.current) speakText(note);
           }
           if (confirmed.length > 0) {
             setPendingActions(confirmed);
@@ -401,20 +587,37 @@ export function ForgeAssistant() {
           ? "API quota exceeded — check your Gemini plan"
           : "Forge AI is unavailable right now",
       );
+      const errContent = isQuota
+        ? "I've hit the API rate limit. Please wait a minute or check your Gemini API quota at aistudio.google.com."
+        : "Sorry, I ran into an issue. Please try again.";
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now(),
-          role: "assistant",
-          content: isQuota
-            ? "I've hit the API rate limit. Please wait a minute or check your Gemini API quota at aistudio.google.com."
-            : "Sorry, I ran into an issue. Please try again.",
-        },
+        { id: Date.now(), role: "assistant", content: errContent },
       ]);
+      if (speakReply && voiceModeRef.current) speakText(errContent);
     } finally {
       setLoading(false);
     }
   };
+
+  // Text-input send (unchanged behaviour)
+  const send = async () => {
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    await processMessage(text, false);
+  };
+
+  // Voice send — called from startListening's onend
+  const sendVoice = useCallback((text: string) => {
+    if (!text || loadingRef.current) return;
+    processMessage(text, true);
+  // processMessage is re-created each render, but that's fine —
+  // sendVoiceRef always points to the latest version.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => { sendVoiceRef.current = sendVoice; }, [sendVoice]);
 
   const applyAction = async () => {
     if (pendingActions.length === 0 || !user) return;
@@ -524,11 +727,23 @@ export function ForgeAssistant() {
 
   return (
     <>
-      {/* Keyframe for typing dots */}
+      {/* Keyframe for typing dots + voice animations */}
       <style>{`
         @keyframes forge-dot-bounce {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
           30% { transform: translateY(-4px); opacity: 1; }
+        }
+        @keyframes forge-voice-pulse {
+          0%, 100% { opacity: 1;   transform: scale(1);   }
+          50%       { opacity: 0.3; transform: scale(0.75); }
+        }
+        @keyframes forge-voice-ring {
+          0%   { opacity: 0.6; transform: scale(1);   }
+          100% { opacity: 0;   transform: scale(1.9); }
+        }
+        @keyframes forge-voice-bars {
+          0%, 100% { transform: scaleY(0.4); }
+          50%       { transform: scaleY(1.0); }
         }
       `}</style>
 
@@ -769,6 +984,97 @@ export function ForgeAssistant() {
           </div>
         )}
 
+        {/* ── Voice mode status strip ─────────────────────────────────────── */}
+        {voiceMode && (
+          <div
+            className="mx-3 mb-2 px-3 py-2.5 rounded-xl shrink-0"
+            style={{
+              background: "var(--glass-bg-dark)",
+              border:     "1px solid var(--glass-border-dark)",
+              backdropFilter: "blur(var(--glass-blur))",
+              WebkitBackdropFilter: "blur(var(--glass-blur))",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              {/* Animated status indicator */}
+              {voiceListening ? (
+                /* pulsing bars when listening */
+                <div className="flex items-center gap-[3px] shrink-0" aria-hidden="true">
+                  {[0, 1, 2, 3].map((i) => (
+                    <span
+                      key={i}
+                      className="w-[3px] rounded-full"
+                      style={{
+                        height: 14,
+                        background: "var(--foreground)",
+                        opacity: 0.7,
+                        animation: `forge-voice-bars 0.9s ease-in-out infinite`,
+                        animationDelay: `${i * 0.15}s`,
+                        transformOrigin: "center",
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : speaking ? (
+                /* sound wave when Forge is speaking */
+                <div className="flex items-center gap-[3px] shrink-0" aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span
+                      key={i}
+                      className="w-[3px] rounded-full"
+                      style={{
+                        height: 14,
+                        background: "var(--foreground)",
+                        opacity: 0.55,
+                        animation: `forge-voice-bars 0.7s ease-in-out infinite`,
+                        animationDelay: `${i * 0.1}s`,
+                        transformOrigin: "center",
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                /* idle dot */
+                <span
+                  className="h-2 w-2 rounded-full shrink-0"
+                  style={{ background: "var(--glass-border-dark)" }}
+                />
+              )}
+
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {loading
+                  ? "Thinking…"
+                  : speaking
+                  ? "Forge is speaking…"
+                  : voiceListening
+                  ? "Listening…"
+                  : "Tap the mic to speak"}
+              </span>
+
+              {/* Interrupt / stop speaking */}
+              {speaking && (
+                <button
+                  onClick={() => { window.speechSynthesis.cancel(); setSpeaking(false); }}
+                  className="ml-auto text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Stop speaking"
+                >
+                  stop
+                </button>
+              )}
+            </div>
+
+            {/* Live transcript */}
+            {voiceTranscript && (
+              <p
+                className="mt-1.5 text-[12px] leading-snug italic"
+                style={{ color: "var(--foreground)", opacity: 0.75 }}
+              >
+                "{voiceTranscript}"
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Input area */}
         <div
           className="p-3 shrink-0 relative"
@@ -862,6 +1168,60 @@ export function ForgeAssistant() {
               )}
             </button>
 
+            {/* ── Voice conversation mode toggle ─────────────────────── */}
+            <button
+              onClick={toggleVoiceMode}
+              className="h-9 w-9 rounded-xl grid place-items-center transition-all duration-200 shrink-0 relative"
+              style={
+                voiceMode
+                  ? {
+                      background:           "var(--glass-bg-active-dark)",
+                      backdropFilter:       "blur(var(--glass-blur))",
+                      WebkitBackdropFilter: "blur(var(--glass-blur))",
+                      border:               "1px solid rgba(255,255,255,0.28)",
+                      boxShadow:            voiceListening
+                        ? "0 0 18px rgba(255,255,255,0.18), 0 1px 0 rgba(255,255,255,0.14) inset"
+                        : "0 1px 0 rgba(255,255,255,0.12) inset",
+                    }
+                  : {
+                      background:           "var(--glass-bg-dark)",
+                      backdropFilter:       "blur(var(--glass-blur))",
+                      WebkitBackdropFilter: "blur(var(--glass-blur))",
+                      border:               "1px solid var(--glass-border-dark)",
+                    }
+              }
+              aria-label={voiceMode ? "Stop voice conversation mode" : "Start voice conversation mode"}
+              title={voiceMode ? "Exit voice mode" : "Voice conversation mode"}
+            >
+              {/* Expanding ring while listening */}
+              {voiceMode && voiceListening && (
+                <span
+                  className="absolute inset-0 rounded-xl pointer-events-none"
+                  style={{
+                    animation: "forge-voice-ring 1.4s ease-out infinite",
+                    border:    "1px solid rgba(255,255,255,0.35)",
+                  }}
+                />
+              )}
+              {voiceMode && speaking ? (
+                <VolumeX
+                  className="h-3.5 w-3.5"
+                  style={{ color: "var(--foreground)", opacity: 0.85 }}
+                />
+              ) : voiceMode ? (
+                <Mic
+                  className="h-3.5 w-3.5"
+                  style={{
+                    color:     "var(--foreground)",
+                    opacity:   0.9,
+                    animation: voiceListening ? "forge-voice-pulse 1.2s ease-in-out infinite" : "none",
+                  }}
+                />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </button>
+
             {/* Send button */}
             <button
               onClick={send}
@@ -881,7 +1241,7 @@ export function ForgeAssistant() {
           </div>
 
           <p className="mt-2 text-[10px] text-muted-foreground/35 text-center tracking-wide">
-            Enter to send · Shift+Enter for new line
+            {voiceMode ? "Voice mode on — tap 🎤 to speak · tap again to stop" : "Enter to send · Shift+Enter for new line · 🔊 for voice mode"}
           </p>
         </div>
       </div>
