@@ -212,6 +212,11 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Fallback colour so no white ever shows if the image is slow to load */
+    background-color: oklch(0.14 0.03 275);
+  }
+  html.light {
+    background-color: oklch(0.965 0.007 275);
   }
 
   /* ── True fixed background — works on iOS Safari too ── */
@@ -219,10 +224,12 @@
     content: '';
     position: fixed;
     inset: 0;
+    width: 100%;
+    height: 100%;
     z-index: -1;
     background-image: url('./assets/dark-bg.png');
     background-size: cover;
-    background-position: center;
+    background-position: center center;
     background-repeat: no-repeat;
   }
   html.light::before {
