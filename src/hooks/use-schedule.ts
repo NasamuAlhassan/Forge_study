@@ -107,9 +107,11 @@ export function useSchedule() {
       code: s.code ?? "",
       color: s.color,
       lecturer: s.instructor ?? undefined,
+      // localStorage is the primary store for difficulty (user's explicit choice).
+      // Fall back to the DB value only when localStorage has nothing for this subject.
       difficulty:
-        (((s as Record<string, unknown>).difficulty as Subject["difficulty"]) || undefined) ??
         (savedDiffs[s.id] as Subject["difficulty"] | undefined) ??
+        (((s as Record<string, unknown>).difficulty as Subject["difficulty"]) || undefined) ??
         undefined,
     }));
     const mappedEvts: EventBlock[] = (evts ?? []).map((e) => ({
