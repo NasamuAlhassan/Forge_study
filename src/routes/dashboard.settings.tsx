@@ -133,10 +133,10 @@ function SettingsPage() {
             name: s.name,
             code: s.code ?? "",
             instructor: s.instructor ?? "",
-            // DB value wins if present; otherwise fall back to localStorage, then "medium"
+            // localStorage is the primary store (user's explicit choice wins over DB default).
             difficulty:
-              (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
               (saved[s.id] as Difficulty | undefined) ??
+              (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
               "medium",
             color: s.color,
           })),
@@ -146,7 +146,16 @@ function SettingsPage() {
   }, [user]);
 
   const updateSubject = (id: string, field: keyof SubjectRow, value: string) => {
-    setSubjects((prev) => prev.map((s) => (s.id === id ? { ...s, [field]: value } : s)));
+    setSubjects((prev) => {
+      const updated = prev.map((s) => (s.id === id ? { ...s, [field]: value } : s));
+      // Persist difficulty changes to localStorage immediately so they survive
+      // navigation even if the user hasn't clicked Save yet.
+      if (field === "difficulty" && user) {
+        const diffMap = Object.fromEntries(updated.map((s) => [s.id, s.difficulty]));
+        saveDiffs(user.id, diffMap);
+      }
+      return updated;
+    });
   };
 
   const addSubject = () => {
@@ -240,9 +249,10 @@ function SettingsPage() {
           name: s.name,
           code: s.code ?? "",
           instructor: s.instructor ?? "",
+          // localStorage wins — we just wrote it above, so it always has the correct value.
           difficulty:
-            (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
             (saved[s.id] as Difficulty | undefined) ??
+            (((s as Record<string, unknown>).difficulty as Difficulty) || null) ??
             "medium",
           color: s.color,
         })),
@@ -266,7 +276,6 @@ function SettingsPage() {
     <>
       <Topbar title="Settings" subtitle="Manage your profile and subjects." />
       <main className="p-4 sm:p-6 max-w-2xl mx-auto space-y-6">
-
         {/* ── Appearance ──────────────────────────────────────────────────── */}
         <section className="ring-gradient glass rounded-2xl p-6 space-y-5 relative overflow-hidden">
           <div
@@ -281,10 +290,13 @@ function SettingsPage() {
               className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
               style={{
                 background: "var(--glass-bg-btn-dark)",
-                border:     "1px solid var(--glass-border-dark)",
+                border: "1px solid var(--glass-border-dark)",
               }}
             >
-              <Paintbrush className="h-[14px] w-[14px] opacity-70" style={{ color: "var(--foreground)" }} />
+              <Paintbrush
+                className="h-[14px] w-[14px] opacity-70"
+                style={{ color: "var(--foreground)" }}
+              />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Appearance
@@ -299,8 +311,8 @@ function SettingsPage() {
                 className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
                 style={{
                   background: "var(--glass-bg-btn-dark)",
-                  border:     "1px solid var(--glass-border-dark)",
-                  color:      "var(--foreground)",
+                  border: "1px solid var(--glass-border-dark)",
+                  color: "var(--foreground)",
                 }}
               >
                 {intensity}
@@ -333,8 +345,8 @@ function SettingsPage() {
                   key={pos}
                   className="absolute top-0 w-px h-1.5 rounded-full opacity-30"
                   style={{
-                    left:       `${pos}%`,
-                    transform:  "translateX(-50%)",
+                    left: `${pos}%`,
+                    transform: "translateX(-50%)",
                     background: "var(--glass-border-dark)",
                   }}
                 />
@@ -348,7 +360,15 @@ function SettingsPage() {
             >
               <div>
                 <p className="text-[11px] text-muted-foreground mb-0.5">
-                  {intensity === 0 ? "Frost" : intensity === 100 ? "Glass" : intensity < 50 ? "Frosted glass" : intensity > 50 ? "Clear glass" : "Neutral"}
+                  {intensity === 0
+                    ? "Frost"
+                    : intensity === 100
+                      ? "Glass"
+                      : intensity < 50
+                        ? "Frosted glass"
+                        : intensity > 50
+                          ? "Clear glass"
+                          : "Neutral"}
                 </p>
                 <p
                   className="font-display font-bold"
@@ -364,10 +384,13 @@ function SettingsPage() {
                 className="h-8 w-8 rounded-xl grid place-items-center"
                 style={{
                   background: "var(--glass-bg-btn-dark)",
-                  border:     "1px solid var(--glass-border-dark)",
+                  border: "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Paintbrush className="h-3.5 w-3.5 opacity-60" style={{ color: "var(--foreground)" }} />
+                <Paintbrush
+                  className="h-3.5 w-3.5 opacity-60"
+                  style={{ color: "var(--foreground)" }}
+                />
               </div>
             </div>
           </div>
@@ -387,10 +410,13 @@ function SettingsPage() {
               className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
               style={{
                 background: "var(--glass-bg-btn-dark)",
-                border:     "1px solid var(--glass-border-dark)",
+                border: "1px solid var(--glass-border-dark)",
               }}
             >
-              <User className="h-[14px] w-[14px] opacity-70" style={{ color: "var(--foreground)" }} />
+              <User
+                className="h-[14px] w-[14px] opacity-70"
+                style={{ color: "var(--foreground)" }}
+              />
             </div>
             <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Profile
@@ -408,7 +434,11 @@ function SettingsPage() {
                 style={inputStyle}
                 onKeyDown={(e) => e.key === "Enter" && saveProfile()}
               />
-              <button onClick={saveProfile} disabled={savingProfile || !displayName.trim()} className="btn-primary h-9 px-4 rounded-xl text-[12px] shrink-0">
+              <button
+                onClick={saveProfile}
+                disabled={savingProfile || !displayName.trim()}
+                className="btn-primary h-9 px-4 rounded-xl text-[12px] shrink-0"
+              >
                 <Save className="h-3.5 w-3.5 relative z-10" />
                 <span className="relative z-10">Save</span>
               </button>
