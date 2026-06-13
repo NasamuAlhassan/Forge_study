@@ -21,34 +21,42 @@
         document.documentElement.classList.add('dark');
       }
       try {
-        // Mirror of applyGlassIntensity() — Frost(0) Neutral(50) Glass(100)
+        // Mirror of applyGlassIntensity() — blue-tinted dark glass + white light glass
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
-        var blur = (Math.max(2,     22    - n * 0.20   )).toFixed(1) + 'px';
-        var bgD  = Math.max(0.01, 0.165 - n * 0.00155);
+        var blur = (Math.max(2, 22 - n * 0.20)).toFixed(1) + 'px';
+        // Dark: blue glass  n=0→0.35  n=50→0.22  n=100→0.08
+        var bgD  = Math.max(0.08, 0.35  - n * 0.0027);
         var bgL  = Math.max(0.03, 0.33  - n * 0.003);
-        var bgBD = Math.min(0.35, bgD   * 1.8);
+        var bgBD = Math.min(0.55, bgD   * 1.7);
         var bgBL = Math.min(0.55, bgL   * 1.7);
-        var bgAD = Math.min(0.45, bgD   * 2.5);
+        var bgAD = Math.min(0.72, bgD   * 2.5);
         var bgAL = Math.min(0.65, bgL   * 2.0);
-        var boD  = Math.max(0.06, 0.24  - n * 0.0018);
+        var boD  = Math.max(0.10, 0.32  - n * 0.0022);
         var boL  = Math.max(0.04, 0.14  - n * 0.001);
-        var shA  = Math.max(0.03, 0.16  - n * 0.0013);
-        function wh(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
-        function dk(a){return 'rgba(0,0,0,'+a.toFixed(3)+')';}
+        var shA  = Math.max(0.14, 0.32  - n * 0.0018);
+        // Dark mode — blue glass helpers
+        function gl(a) {return 'rgba(25,65,185,'+a.toFixed(3)+')';}
+        function glB(a){return 'rgba(30,75,200,'+a.toFixed(3)+')';}
+        function glA(a){return 'rgba(45,110,245,'+a.toFixed(3)+')';}
+        function brd(a){return 'rgba(140,180,255,'+a.toFixed(3)+')';}
+        // Light mode — white frost + soft-blue border/active
+        function wh(a) {return 'rgba(255,255,255,'+a.toFixed(3)+')';}
+        function brdL(a){return 'rgba(80,130,220,'+a.toFixed(3)+')';}
+        function glAL(a){var v=Math.min(0.18,a*0.45);return 'rgba(50,100,210,'+v.toFixed(3)+')';}
         var r = document.documentElement;
         r.style.setProperty('--glass-intensity',        String(n));
         r.style.setProperty('--glass-blur',             blur);
-        r.style.setProperty('--glass-bg-dark',          wh(bgD));
-        r.style.setProperty('--glass-bg-btn-dark',      wh(bgBD));
-        r.style.setProperty('--glass-bg-active-dark',   wh(bgAD));
-        r.style.setProperty('--glass-border-dark',      wh(boD));
+        r.style.setProperty('--glass-bg-dark',          gl(bgD));
+        r.style.setProperty('--glass-bg-btn-dark',      glB(bgBD));
+        r.style.setProperty('--glass-bg-active-dark',   glA(bgAD));
+        r.style.setProperty('--glass-border-dark',      brd(boD));
         r.style.setProperty('--glass-bg-light',         wh(bgL));
         r.style.setProperty('--glass-bg-btn-light',     wh(bgBL));
-        r.style.setProperty('--glass-bg-active-light',  wh(bgAL));
-        r.style.setProperty('--glass-border-light',     dk(boL));
+        r.style.setProperty('--glass-bg-active-light',  glAL(bgAL));
+        r.style.setProperty('--glass-border-light',     brdL(boL));
         r.style.setProperty('--glass-shadow',
-          '0 8px 32px rgba(0,0,0,'+shA.toFixed(3)+'), 0 2px 8px rgba(0,0,0,'+(shA*0.55).toFixed(3)+')');
+          '0 8px 32px rgba(4,8,45,'+shA.toFixed(3)+'), 0 2px 8px rgba(4,8,45,'+(shA*0.55).toFixed(3)+')');
       } catch(e) {}
     </script>
   </head>

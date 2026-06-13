@@ -1,5 +1,19 @@
 const DAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
+/**
+ * Strips the "id:" prefix and surrounding brackets that free models sometimes
+ * copy verbatim from the schedule format "[id:UUID]" into action fields.
+ * Input "id:abc-123" → "abc-123", "[id:abc-123]" → "abc-123", "abc-123" → "abc-123"
+ */
+function sanitizeId(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  return raw
+    .trim()
+    .replace(/^\[/, "").replace(/\]$/, "")  // strip surrounding brackets
+    .replace(/^id:\s*/i, "")                // strip "id:" prefix
+    .trim() || undefined;
+}
+
 export type ForgeEventType = "class" | "study" | "break" | "exam";
 
 export interface ForgeEventInput {
@@ -16,7 +30,8 @@ export interface ForgeEventInput {
 export interface NormalizedForgeEvent {
   title: string;
   type: ForgeEventType;
-  date: string;
+  /** undefined = recurring (stored with NULL event_date, appears every matching weekday) */
+  date?: string;
   day: number;
   startTime: string;
   endTime: string;
@@ -159,7 +174,9 @@ export function buildAssistantDateContext(now = new Date()): string {
 }
 
 export function normalizeForgeAction(raw: RawForgeAction, now = new Date()): ForgeAction {
-  if (raw.action === "delete_event") return raw;
+  if (raw.action === "delete_event") {
+    return { action: "delete_event", eventId: sanitizeId(raw.eventId) ?? raw.eventId };
+  }
 
   if (raw.action === "edit_event") {
     const patch: EditEventAction["patch"] = {};
@@ -175,15 +192,34 @@ export function normalizeForgeAction(raw: RawForgeAction, now = new Date()): For
       patch.startTime = parseTimeString(raw.patch.startTime, "startTime");
     if (raw.patch.endTime !== undefined)
       patch.endTime = parseTimeString(raw.patch.endTime, "endTime");
-    return { action: "edit_event", eventId: raw.eventId, patch };
+    return { action: "edit_event", eventId: sanitizeId(raw.eventId) ?? raw.eventId, patch };
   }
 
-  const date = resolveDate(raw.event.date, now);
   const startTime = parseTimeString(raw.event.startTime, "startTime");
   const endTime =
     raw.event.endTime === undefined
       ? addOneHour(startTime)
       : parseTimeString(raw.event.endTime, "endTime");
+
+  // Recurring weekly event — AI supplied a day index instead of a specific date.
+  // Store with NULL event_date so the calendar shows it every matching weekday.
+  if (typeof raw.event.day === "number" && raw.event.date === undefined) {
+    return {
+      action: "add_event",
+      event: {
+        title: raw.event.title,
+        type: raw.event.type,
+        day: Math.max(0, Math.min(6, raw.event.day)),
+        startTime,
+        endTime,
+        subjectId: sanitizeId(raw.event.subjectId),
+        venue: raw.event.venue,
+      },
+    };
+  }
+
+  // One-time event — resolve the specific date and derive the day from it.
+  const date = resolveDate(raw.event.date, now);
   const eventDate = new Date(`${date}T00:00:00`);
 
   assertValidLocalDateTime(date, startTime, "startTime");
@@ -198,15 +234,19 @@ export function normalizeForgeAction(raw: RawForgeAction, now = new Date()): For
       day: dayIndexForDate(eventDate),
       startTime,
       endTime,
-      subjectId: raw.event.subjectId,
+      subjectId: sanitizeId(raw.event.subjectId),
       venue: raw.event.venue,
     },
   };
 }
 
 export function buildEventInsert(event: NormalizedForgeEvent, userId: string) {
-  assertValidLocalDateTime(event.date, event.startTime, "startTime");
-  assertValidLocalDateTime(event.date, event.endTime, "endTime");
+  // Only validate full datetime when we have a specific date (one-time events).
+  // Recurring events have no date — just validate the time strings are parseable.
+  if (event.date) {
+    assertValidLocalDateTime(event.date, event.startTime, "startTime");
+    assertValidLocalDateTime(event.date, event.endTime, "endTime");
+  }
 
   return {
     user_id: userId,
@@ -216,7 +256,7 @@ export function buildEventInsert(event: NormalizedForgeEvent, userId: string) {
     day_of_week: event.day,
     start_minute: timeStringToMinutes(event.startTime),
     end_minute: timeStringToMinutes(event.endTime),
-    event_date: event.date,
+    event_date: event.date ?? null, // null = recurring weekly; string = one-time
     venue: event.venue ?? null,
   };
 }

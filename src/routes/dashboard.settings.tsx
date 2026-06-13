@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, User, Paintbrush } from "lucide-react";
+import { Plus, Trash2, Save, User, Paintbrush, AudioLines } from "lucide-react";
 import { Topbar } from "@/components/dashboard/Topbar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { useSchedule } from "@/hooks/use-schedule";
 import type { Difficulty } from "@/lib/demo-data";
 import { broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useGlassIntensity } from "@/hooks/use-glass-intensity";
+import { useVoicePersonality } from "@/hooks/use-voice-personality";
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
@@ -83,6 +84,7 @@ function SettingsPage() {
   const { user } = useAuth();
   const { refetch } = useSchedule();
   const { intensity, update: updateIntensity } = useGlassIntensity();
+  const { personality, update: updatePersonality } = useVoicePersonality();
 
   // ── Profile ─────────────────────────────────────────────────────────────────
   const [displayName, setDisplayName] = useState(
@@ -391,6 +393,165 @@ function SettingsPage() {
                   className="h-3.5 w-3.5 opacity-60"
                   style={{ color: "var(--foreground)" }}
                 />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Forge AI Voice ──────────────────────────────────────────────── */}
+        <section className="ring-gradient glass rounded-2xl p-6 space-y-5 relative overflow-hidden">
+          <div
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse 70% 35% at 80% 0%, oklch(0.65 0.22 285 / 0.07) 0%, transparent 60%)",
+            }}
+          />
+          <div className="flex items-center gap-3 relative">
+            <div
+              className="h-8 w-8 rounded-xl grid place-items-center shrink-0"
+              style={{
+                background: "var(--glass-bg-btn-dark)",
+                border: "1px solid var(--glass-border-dark)",
+              }}
+            >
+              <AudioLines
+                className="h-[14px] w-[14px] opacity-70"
+                style={{ color: "var(--foreground)" }}
+              />
+            </div>
+            <div>
+              <h3 className="text-[14px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
+                Forge AI Voice
+              </h3>
+              <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                Tune how Forge sounds in voice conversation mode
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-5 relative">
+            {/* Tone */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px] font-medium">Tone</Label>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                  style={{
+                    background: "var(--glass-bg-btn-dark)",
+                    border: "1px solid var(--glass-border-dark)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {personality.tone < 33 ? "Casual" : personality.tone < 66 ? "Friendly" : "Professional"}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={personality.tone}
+                onChange={(e) => updatePersonality("tone", Number(e.target.value))}
+                className="glass-intensity-slider"
+                aria-label="Tone — 0 casual, 100 professional"
+              />
+              <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
+                <span className="text-left">😎 Casual</span>
+                <span className="text-right">💼 Professional</span>
+              </div>
+            </div>
+
+            {/* Expressiveness */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px] font-medium">Expressiveness</Label>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                  style={{
+                    background: "var(--glass-bg-btn-dark)",
+                    border: "1px solid var(--glass-border-dark)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {personality.expressiveness < 33 ? "Calm" : personality.expressiveness < 66 ? "Natural" : "Animated"}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={personality.expressiveness}
+                onChange={(e) => updatePersonality("expressiveness", Number(e.target.value))}
+                className="glass-intensity-slider"
+                aria-label="Expressiveness — 0 calm, 100 animated"
+              />
+              <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
+                <span className="text-left">🧊 Chill</span>
+                <span className="text-right">🎉 Animated</span>
+              </div>
+            </div>
+
+            {/* Reply Length */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px] font-medium">Reply Length</Label>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                  style={{
+                    background: "var(--glass-bg-btn-dark)",
+                    border: "1px solid var(--glass-border-dark)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {personality.replyLength < 33 ? "Ultra-brief" : personality.replyLength < 66 ? "Brief" : "Detailed"}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={personality.replyLength}
+                onChange={(e) => updatePersonality("replyLength", Number(e.target.value))}
+                className="glass-intensity-slider"
+                aria-label="Reply length — 0 brief, 100 detailed"
+              />
+              <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
+                <span className="text-left">⚡ Ultra-brief</span>
+                <span className="text-right">📖 Detailed</span>
+              </div>
+            </div>
+
+            {/* Speech Speed */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px] font-medium">Speech Speed</Label>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-md"
+                  style={{
+                    background: "var(--glass-bg-btn-dark)",
+                    border: "1px solid var(--glass-border-dark)",
+                    color: "var(--foreground)",
+                  }}
+                >
+                  {personality.speechSpeed < 33 ? "Slow" : personality.speechSpeed < 66 ? "Normal" : "Fast"}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={personality.speechSpeed}
+                onChange={(e) => updatePersonality("speechSpeed", Number(e.target.value))}
+                className="glass-intensity-slider"
+                aria-label="Speech speed — 0 slow, 100 fast"
+              />
+              <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
+                <span className="text-left">🐢 Slow</span>
+                <span className="text-right">⚡ Fast</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AudioLines,
   Check,
   GripHorizontal,
   Loader2,
@@ -7,15 +8,14 @@ import {
   MicOff,
   Send,
   Sparkles,
-  Volume2,
-  VolumeX,
   X,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useSchedule } from "@/hooks/use-schedule";
+import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
+import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
 import { sendForgeMessage, transcribeAudio } from "@/lib/forge-ai";
 import type { ChatMessage } from "@/lib/forge-ai";
 import {
@@ -70,22 +70,61 @@ function fmt(mins: number) {
 function formatSchedule(events: EventBlock[], subjects: Subject[]): string {
   if (events.length === 0) return "No events scheduled yet.";
 
+  const now = new Date();
+  const p2 = (n: number) => n.toString().padStart(2, "0");
+  const todayStr = `${now.getFullYear()}-${p2(now.getMonth() + 1)}-${p2(now.getDate())}`;
+
   const lines: string[] = [
-    `Subjects: ${subjects.map((s) => `${s.name} (code:${s.code}, id:${s.id}${s.difficulty ? `, difficulty:${s.difficulty}` : ""})`).join(" | ")}`,
+    `Subjects: ${subjects.map((s) =>
+      `${s.name} (code:${s.code}, id:${s.id}${s.difficulty ? `, difficulty:${s.difficulty}` : ""})`
+    ).join(" | ")}`,
     "",
   ];
 
+  // ── Recurring events grouped by weekday ───────────────────────────────────
+  const recurring = events.filter((e) => !e.date);
   for (let d = 0; d < 7; d++) {
-    const day = events.filter((e) => e.day === d).sort((a, b) => a.start - b.start);
+    const day = recurring.filter((e) => e.day === d).sort((a, b) => a.start - b.start);
     if (!day.length) continue;
     lines.push(`${DAYS[d]}:`);
     for (const e of day) {
       const subj = subjects.find((s) => s.id === e.subjectId);
       lines.push(
-        `  [id:${e.id}] ${e.title} (${e.type}) ${fmt(e.start)}-${fmt(e.end)}${e.date ? ` on ${e.date}` : ""}${e.venue ? ` @${e.venue}` : ""}${subj ? ` [${subj.code}]` : ""}`,
+        `  [id:${e.id}] ${e.title} (${e.type}) ${fmt(e.start)}-${fmt(e.end)}${e.venue ? ` @${e.venue}` : ""}${subj ? ` [${subj.code}]` : ""}`,
       );
     }
   }
+
+  // ── Upcoming one-time events sorted chronologically ───────────────────────
+  const upcoming = events
+    .filter((e) => e.date && e.date >= todayStr)
+    .sort((a, b) => (a.date! > b.date! ? 1 : -1));
+  if (upcoming.length > 0) {
+    lines.push("", "Upcoming one-time events:");
+    for (const e of upcoming) {
+      const subj = subjects.find((s) => s.id === e.subjectId);
+      lines.push(
+        `  [id:${e.id}] ${e.title} (${e.type}) on ${e.date} ${fmt(e.start)}-${fmt(e.end)}${e.venue ? ` @${e.venue}` : ""}${subj ? ` [${subj.code}]` : ""}`,
+      );
+    }
+  }
+
+  // ── Weekly academic hours per subject (workload awareness) ────────────────
+  const subjectMins: Record<string, number> = {};
+  for (const e of recurring) {
+    if (e.type !== "study" && e.type !== "class") continue;
+    const subj = subjects.find((s) => s.id === e.subjectId);
+    if (!subj) continue;
+    subjectMins[subj.name] = (subjectMins[subj.name] ?? 0) + (e.end - e.start);
+  }
+  const entries = Object.entries(subjectMins).sort((a, b) => b[1] - a[1]);
+  if (entries.length > 0) {
+    lines.push("", "Weekly academic hours per subject:");
+    for (const [name, mins] of entries) {
+      lines.push(`  ${name}: ${(mins / 60).toFixed(1)}h/week`);
+    }
+  }
+
   return lines.join("\n");
 }
 
@@ -162,6 +201,16 @@ export function ForgeAssistant() {
   // Mobile detection — bottom-sheet vs floating panel
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
 
+  // User identity — needed by callbacks below
+  const { user } = useAuth();
+  const userName =
+    (user?.user_metadata?.full_name as string)?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "there";
+
+  // Voice personality settings (tone, expressiveness, reply length, speech speed)
+  const { personality } = useVoicePersonality();
+
   // Voice input via MediaRecorder + Gemini transcription (existing)
   const [listening, setListening] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
@@ -176,6 +225,7 @@ export function ForgeAssistant() {
   const srRef            = useRef<SR | null>(null);
   const voiceModeRef     = useRef(false);   // stale-closure-safe copy
   const loadingRef       = useRef(false);   // stale-closure-safe copy
+  const speakingRef      = useRef(false);   // stale-closure-safe copy — prevents restart while TTS is playing
   // forward refs so callbacks can call each other without circular deps
   const startListeningRef = useRef<() => void>(() => {});
   const sendVoiceRef      = useRef<(text: string) => void>(() => {});
@@ -228,8 +278,9 @@ export function ForgeAssistant() {
   }, [listening]);
 
   // Keep stale-closure-safe refs up to date
-  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
-  useEffect(() => { loadingRef.current   = loading;   }, [loading]);
+  useEffect(() => { voiceModeRef.current  = voiceMode; }, [voiceMode]);
+  useEffect(() => { loadingRef.current    = loading;   }, [loading]);
+  useEffect(() => { speakingRef.current   = speaking;  }, [speaking]);
 
   // ── Text-to-speech ─────────────────────────────────────────────────────────
   const speakText = useCallback((text: string) => {
@@ -251,7 +302,7 @@ export function ForgeAssistant() {
     if (!clean) return;
 
     const utter = new SpeechSynthesisUtterance(clean);
-    utter.rate  = 1.08;
+    utter.rate  = speedToRate(personality.speechSpeed);
     utter.pitch = 1.0;
     utter.volume = 1.0;
 
@@ -281,7 +332,7 @@ export function ForgeAssistant() {
     utter.onerror = () => setSpeaking(false);
 
     window.speechSynthesis.speak(utter);
-  }, []);
+  }, [personality.speechSpeed]);
 
   // ── SpeechRecognition ──────────────────────────────────────────────────────
   const startListening = useCallback(() => {
@@ -323,6 +374,9 @@ export function ForgeAssistant() {
       if (said && voiceModeRef.current) {
         setVoiceTranscript("");
         sendVoiceRef.current(said);
+      } else if (voiceModeRef.current && !loadingRef.current && !speakingRef.current) {
+        // Nothing heard — restart listening automatically to keep the loop going
+        setTimeout(() => startListeningRef.current(), 300);
       }
     };
 
@@ -331,6 +385,10 @@ export function ForgeAssistant() {
         console.warn("SpeechRecognition error:", e.error);
       }
       setVoiceListening(false);
+      // Auto-restart on no-speech so the user doesn't have to tap again
+      if (voiceModeRef.current && !loadingRef.current && !speakingRef.current) {
+        setTimeout(() => startListeningRef.current(), 300);
+      }
     };
 
     srRef.current = sr;
@@ -359,10 +417,11 @@ export function ForgeAssistant() {
     } else {
       // --- turn ON ---
       setVoiceMode(true);
-      // Small delay so voiceModeRef updates before recognition starts
-      setTimeout(() => startListeningRef.current(), 120);
+      // Small delay so voiceModeRef updates, then greet by name.
+      // speakText's onend auto-starts listening when done.
+      setTimeout(() => speakText(`Hey ${userName}, what's on your mind?`), 120);
     }
-  }, [voiceMode]);
+  }, [voiceMode, userName, speakText]);
 
   // Stop TTS + recognition when panel closes
   useEffect(() => {
@@ -377,7 +436,6 @@ export function ForgeAssistant() {
   }, [open]);
 
   const { events, subjects, refetch } = useSchedule();
-  const { user } = useAuth();
 
   // Initialise panel position bottom-right on first open
   useEffect(() => {
@@ -491,6 +549,20 @@ export function ForgeAssistant() {
 
   const scheduleContext = useMemo(() => formatSchedule(events, subjects), [events, subjects]);
 
+  // ── Persistent memory ────────────────────────────────────────────────────────
+  const memoryKey = `forge_memory_${user?.id ?? "anon"}`;
+  const [forgeMemory, setForgeMemory] = useState<string>(() => {
+    try { return localStorage.getItem(`forge_memory_${user?.id ?? "anon"}`) ?? ""; } catch { return ""; }
+  });
+  // Reload memory if user ID resolves after mount
+  useEffect(() => {
+    try { setForgeMemory(localStorage.getItem(memoryKey) ?? ""); } catch { /* ignore */ }
+  }, [memoryKey]);
+  const saveMemory = useCallback((text: string) => {
+    try { localStorage.setItem(memoryKey, text); } catch { /* ignore */ }
+    setForgeMemory(text);
+  }, [memoryKey]);
+
   /**
    * Core message handler — shared by text input and voice mode.
    * speakReply: if true, reads the AI response aloud (voice mode).
@@ -508,35 +580,44 @@ export function ForgeAssistant() {
           parts: m.content,
         }));
 
-      // When in voice mode, nudge towards short conversational replies
+      // When in voice mode, inject personality-driven instructions
       const ctx = speakReply
-        ? scheduleContext +
-          "\n\n[Voice mode active: reply conversationally and keep it brief — like a smart friend talking, not writing. Short sentences read better aloud.]"
+        ? scheduleContext + "\n\n" + buildVoiceContext(personality, userName)
         : scheduleContext;
 
-      const raw = await sendForgeMessage(
+      const { text, rawActions } = await sendForgeMessage(
         history,
         ctx,
         buildAssistantDateContext(new Date()),
+        forgeMemory || undefined,
       );
 
-      // Strip ALL action blocks before displaying; collect them all
-      const ACTION_RE = /\[FORGE_ACTION:\s*(\{[\s\S]*?\})\s*\]/g;
-      const allMatches = Array.from(raw.matchAll(ACTION_RE));
-      const clean = raw.replace(/\[FORGE_ACTION:\s*\{[\s\S]*?\}\s*\]/g, "").trim();
+      // Extract and save any memory update before displaying
+      const MEMORY_RE = /\[FORGE_MEMORY:\s*([\s\S]*?)\s*\]/;
+      const memMatch = text.match(MEMORY_RE);
+      if (memMatch) saveMemory(memMatch[1].trim());
+
+      // Strip [FORGE_ACTION:…] blocks (text-fallback models) and memory from display
+      const clean = text
+        .replace(/\[FORGE_ACTION:[\s\S]*?\]/g, "")
+        .replace(MEMORY_RE, "")
+        .trim();
 
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: clean }]);
 
       // ── Speak the reply in voice mode ───────────────────────────────────
       if (speakReply && voiceModeRef.current) speakText(clean);
 
-      if (allMatches.length > 0) {
+      if (rawActions.length > 0) {
         const parsed: ForgeAction[] = [];
-        for (const match of allMatches) {
+        for (const rawAction of rawActions) {
           try {
-            parsed.push(normalizeForgeAction(JSON.parse(match[1]), new Date()));
+            parsed.push(normalizeForgeAction(
+              rawAction as Parameters<typeof normalizeForgeAction>[0],
+              new Date(),
+            ));
           } catch {
-            // skip malformed individual blocks
+            // skip malformed actions
           }
         }
 
@@ -580,15 +661,11 @@ export function ForgeAssistant() {
         }
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      const isQuota = msg.includes("429") || msg.includes("quota");
-      toast.error(
-        isQuota
-          ? "API quota exceeded — check your Gemini plan"
-          : "Forge AI is unavailable right now",
-      );
+      const msg = err instanceof Error ? err.message : String(err);
+      const isQuota = msg.includes("429") || msg.includes("quota") || msg.includes("rate") || msg.includes("busy");
+      toast.error(isQuota ? "All models are busy — try again in a moment" : "Forge AI is unavailable right now");
       const errContent = isQuota
-        ? "I've hit the API rate limit. Please wait a minute or check your Gemini API quota at aistudio.google.com."
+        ? "Hmm, all models are a bit busy right now — give me a second and try again."
         : "Sorry, I ran into an issue. Please try again.";
       setMessages((prev) => [
         ...prev,
@@ -606,7 +683,7 @@ export function ForgeAssistant() {
     if (!text || loading) return;
     setInput("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
-    await processMessage(text, false);
+    await processMessage(text, voiceMode);
   };
 
   // Voice send — called from startListening's onend
@@ -639,13 +716,15 @@ export function ForgeAssistant() {
           ...(p.title !== undefined && { title: p.title }),
           ...(p.venue !== undefined && { venue: p.venue }),
         };
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("events")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .update(patch as any)
           .eq("id", action.eventId)
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .select("id");
         if (error) throw error;
+        if (!data || data.length === 0) throw new Error(`Event not found: ${action.eventId}`);
       } else {
         const { error } = await supabase
           .from("events")
@@ -654,7 +733,11 @@ export function ForgeAssistant() {
           .eq("user_id", user.id);
         if (error) throw error;
       }
+
+      // Refresh the schedule in this panel and broadcast to all mounted calendar views
+      broadcastScheduleUpdate();
       await refetch();
+
       setPendingActions((prev) => prev.slice(1));
       if (remaining === 0) {
         toast.success("Schedule updated");
@@ -667,7 +750,7 @@ export function ForgeAssistant() {
       }
     } catch (err) {
       console.error("Forge schedule update failed:", err);
-      const message = "Sorry, I couldn't add that to your schedule. Try again?";
+      const message = "Sorry, I couldn't update that. Try asking again?";
       toast.error(message);
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: message }]);
       setPendingActions((prev) => prev.slice(1));
@@ -772,12 +855,16 @@ export function ForgeAssistant() {
                 height: "min(85svh, 580px)",
                 borderBottom: "none",
                 borderRadius: "24px 24px 0 0",
+                backdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
+                WebkitBackdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
               }
             : {
                 ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
                 width: PANEL_W,
                 height: PANEL_H,
                 borderRadius: "24px",
+                backdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
+                WebkitBackdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
               }
         }
       >
@@ -808,7 +895,7 @@ export function ForgeAssistant() {
           )}
           style={{
             borderBottom: "1px solid var(--glass-border-dark)",
-            background:   "var(--glass-bg-active-dark)",
+            background:   "var(--glass-bg-btn-dark)",
           }}
         >
           <div className="flex items-center gap-2.5">
@@ -851,7 +938,7 @@ export function ForgeAssistant() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0" style={{ background: "transparent" }}>
           {messages.map((m) => (
             <div
               key={m.id}
@@ -888,6 +975,7 @@ export function ForgeAssistant() {
                         backdropFilter:      "blur(var(--glass-blur))",
                         WebkitBackdropFilter:"blur(var(--glass-blur))",
                         border:              "1px solid var(--glass-border-dark)",
+                        color:               "var(--foreground)",
                       }
                 }
               >
@@ -913,8 +1001,10 @@ export function ForgeAssistant() {
               <div
                 className="rounded-2xl rounded-tl-sm px-3 py-2.5"
                 style={{
-                  background: "var(--muted)",
-                  border: "1px solid var(--border)",
+                  background:          "var(--glass-bg-dark)",
+                  backdropFilter:      "blur(var(--glass-blur))",
+                  WebkitBackdropFilter:"blur(var(--glass-blur))",
+                  border:              "1px solid var(--glass-border-dark)",
                 }}
               >
                 <TypingDots />
@@ -1190,8 +1280,8 @@ export function ForgeAssistant() {
                       border:               "1px solid var(--glass-border-dark)",
                     }
               }
-              aria-label={voiceMode ? "Stop voice conversation mode" : "Start voice conversation mode"}
-              title={voiceMode ? "Exit voice mode" : "Voice conversation mode"}
+              aria-label={voiceMode ? "End voice conversation" : "Start voice conversation"}
+              title={voiceMode ? "End conversation" : "Talk to Forge"}
             >
               {/* Expanding ring while listening */}
               {voiceMode && voiceListening && (
@@ -1203,23 +1293,16 @@ export function ForgeAssistant() {
                   }}
                 />
               )}
-              {voiceMode && speaking ? (
-                <VolumeX
-                  className="h-3.5 w-3.5"
-                  style={{ color: "var(--foreground)", opacity: 0.85 }}
-                />
-              ) : voiceMode ? (
-                <Mic
-                  className="h-3.5 w-3.5"
-                  style={{
-                    color:     "var(--foreground)",
-                    opacity:   0.9,
-                    animation: voiceListening ? "forge-voice-pulse 1.2s ease-in-out infinite" : "none",
-                  }}
-                />
-              ) : (
-                <Volume2 className="h-3.5 w-3.5 text-muted-foreground" />
-              )}
+              <AudioLines
+                className="h-3.5 w-3.5"
+                style={{
+                  color:     voiceMode ? "var(--foreground)" : undefined,
+                  opacity:   voiceMode ? 0.9 : undefined,
+                  animation: voiceMode && (voiceListening || speaking)
+                    ? "forge-voice-bars 0.8s ease-in-out infinite"
+                    : "none",
+                }}
+              />
             </button>
 
             {/* Send button */}
@@ -1241,7 +1324,7 @@ export function ForgeAssistant() {
           </div>
 
           <p className="mt-2 text-[10px] text-muted-foreground/35 text-center tracking-wide">
-            {voiceMode ? "Voice mode on — tap 🎤 to speak · tap again to stop" : "Enter to send · Shift+Enter for new line · 🔊 for voice mode"}
+            {voiceMode ? "Listening for your voice · tap the waveform to end" : "Enter to send · Shift+Enter for new line · tap waveform to talk"}
           </p>
         </div>
       </div>
