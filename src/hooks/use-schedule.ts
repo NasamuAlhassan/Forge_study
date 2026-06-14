@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { EventBlock, Subject } from "@/lib/demo-data";
+import { DEMO_MODE, SUBJECTS, EVENTS, type EventBlock, type Subject } from "@/lib/demo-data";
 
 const DAY_MAP: Record<string, number> = {
   Mon: 0,
@@ -63,11 +63,13 @@ export async function updateEvent(
     venue?: string | null;
   },
 ) {
+  if (DEMO_MODE) return;
   const { error } = await supabase.from("events").update(patch).eq("id", id);
   if (error) throw error;
 }
 
 export async function deleteEvent(id: string) {
+  if (DEMO_MODE) return;
   const { error } = await supabase.from("events").delete().eq("id", id);
   if (error) throw error;
 }
@@ -81,11 +83,12 @@ export function broadcastScheduleUpdate() {
 
 export function useSchedule() {
   const { user } = useAuth();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [events, setEvents] = useState<EventBlock[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [subjects, setSubjects] = useState<Subject[]>(DEMO_MODE ? SUBJECTS : []);
+  const [events, setEvents] = useState<EventBlock[]>(DEMO_MODE ? EVENTS : []);
+  const [loading, setLoading] = useState(!DEMO_MODE);
 
   const doFetch = useCallback(async () => {
+    if (DEMO_MODE) return;
     if (!user) return;
     setLoading(true);
     const [{ data: subs }, { data: evts }] = await Promise.all([
@@ -163,6 +166,7 @@ export async function persistTimetableEntries(
     end: string;
   }>,
 ) {
+  if (DEMO_MODE) return;
   const courseMap = new Map<string, { name: string; code?: string; lecturer?: string }>();
   for (const e of entries) {
     const key = `${e.course}|${e.code ?? ""}`;
@@ -219,6 +223,7 @@ export async function persistStudySessions(
   }>,
   subjects: Subject[],
 ) {
+  if (DEMO_MODE) return;
   const findSub = (name: string) =>
     subjects.find(
       (s) =>

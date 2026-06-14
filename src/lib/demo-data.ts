@@ -1,5 +1,8 @@
 // Shared types and demo data for the Forge dashboard
 
+// Set to true on the demo-bypass branch to skip auth and inject placeholder data.
+export const DEMO_MODE = true;
+
 export type Difficulty = "easy" | "medium" | "hard" | "very_hard";
 
 export type Subject = {

@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useSchedule } from "@/hooks/use-schedule";
+import { DEMO_MODE, SUBJECTS as DEMO_SUBJECTS } from "@/lib/demo-data";
 import type { Difficulty } from "@/lib/demo-data";
 import { broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useGlassIntensity } from "@/hooks/use-glass-intensity";
@@ -101,6 +102,7 @@ function SettingsPage() {
 
   const saveProfile = async () => {
     if (!user) return;
+    if (DEMO_MODE) { toast.success("Demo mode — profile changes aren't saved"); return; }
     setSavingProfile(true);
     try {
       const { error } = await supabase.auth.updateUser({
@@ -122,6 +124,20 @@ function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
+    if (DEMO_MODE) {
+      setSubjects(
+        DEMO_SUBJECTS.map((s) => ({
+          id: s.id,
+          name: s.name,
+          code: s.code,
+          instructor: s.lecturer ?? "",
+          difficulty: (s.difficulty ?? "medium") as Difficulty,
+          color: s.color,
+        })),
+      );
+      setLoadingSubjects(false);
+      return;
+    }
     setLoadingSubjects(true);
     supabase
       .from("subjects")
@@ -184,6 +200,7 @@ function SettingsPage() {
       setSubjects((prev) => prev.filter((s) => s.id !== id));
       return;
     }
+    if (DEMO_MODE) { toast.success("Demo mode — changes aren't saved"); return; }
     try {
       // Delete subject's events first, then the subject
       await supabase.from("events").delete().eq("subject_id", id);
@@ -199,6 +216,7 @@ function SettingsPage() {
 
   const saveSubjects = async () => {
     if (!user) return;
+    if (DEMO_MODE) { toast.success("Demo mode — changes aren't saved"); return; }
     setSavingSubjects(true);
     try {
       for (const s of subjects) {
