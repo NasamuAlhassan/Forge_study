@@ -216,8 +216,8 @@
     background-color: oklch(0.05 0.01 240);
   }
   html.light {
-    /* Fallback while image loads — matches the light bg image background colour */
-    background-color: oklch(0.88 0.07 55);
+    /* Fallback while image loads — muted warm cream so glass contrast is immediate */
+    background-color: oklch(0.97 0.012 60);
   }
 
   /* ── True fixed background — works on iOS Safari too ── */
@@ -234,10 +234,13 @@
     background-color: oklch(0.05 0.01 240);
   }
   html.light::before {
-    background-image: url('./assets/light-bg.jpg');
+    /* 84% cream overlay calms the orange blob image — glass is now readable at any intensity */
+    background-image:
+      linear-gradient(oklch(0.97 0.012 60 / 0.84), oklch(0.97 0.012 60 / 0.84)),
+      url('./assets/light-bg.jpg');
     background-size: cover;
     background-position: center;
-    background-color: oklch(0.88 0.07 55);
+    background-color: oklch(0.97 0.012 60);
   }
 
   body {
@@ -326,6 +329,10 @@
 
 /* ─── Light mode overrides ────────────────────────────────────────────────── */
 html.light {
+  /* Auto-switch panel variables — used by components that can't use a CSS class */
+  --glass-bg-panel:     var(--glass-bg-light);
+  --glass-border-panel: var(--glass-border-light);
+
   --background: oklch(0.985 0.008 80);
   --foreground: oklch(0.13 0.06 255);
 

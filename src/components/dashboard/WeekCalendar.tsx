@@ -94,8 +94,8 @@ export function WeekCalendar({
         <div
           className="sticky top-0 z-10 grid grid-cols-[60px_repeat(7,1fr)] min-w-[520px]"
           style={{
-            borderBottom: "1px solid var(--glass-border-dark)",
-            background:   "var(--glass-bg-dark)",
+            borderBottom: "1px solid var(--glass-border-panel)",
+            background:   "var(--glass-bg-panel)",
             backdropFilter:        "blur(12px)",
             WebkitBackdropFilter:  "blur(12px)",
           }}
@@ -205,23 +205,36 @@ export function WeekCalendar({
                         onEventClick?.(e);
                       }}
                       style={{ top, height, position: "absolute", left: "3px", right: "3px" }}
-                      className="glass-event-tile p-1.5 group"
+                      className="glass-event-tile group"
                     >
+                      {/* Per-subject / per-type colour accent bar */}
+                      <div
+                        className={cn(
+                          "absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[7px]",
+                          isExam
+                            ? "bg-gradient-to-b from-rose-500 to-orange-400"
+                            : isBreak
+                            ? "bg-gradient-to-b from-slate-400/50 to-slate-300/20"
+                            : `bg-gradient-to-b ${subj?.color ?? "from-primary/70 to-primary/40"}`
+                        )}
+                      />
                       {/* Specular overlay */}
                       <span className="absolute inset-0 rounded-[8px] bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-                      <div
-                        className="font-semibold truncate text-[11px] relative leading-tight"
-                        style={{ letterSpacing: "-0.01em" }}
-                      >
-                        {e.title}
-                      </div>
-                      {height > 24 && (
-                        <div className="truncate text-[10px] relative opacity-60 mt-0.5">
-                          {Math.floor(e.start / 60).toString().padStart(2, "0")}
-                          :{(e.start % 60).toString().padStart(2, "0")}
-                          {e.venue ? ` · ${e.venue}` : ""}
+                      <div className="pl-2.5 pt-1.5 pr-1.5 pb-1 h-full flex flex-col justify-start">
+                        <div
+                          className="font-semibold truncate text-[11px] relative leading-tight"
+                          style={{ letterSpacing: "-0.01em" }}
+                        >
+                          {e.title}
                         </div>
-                      )}
+                        {height > 24 && (
+                          <div className="truncate text-[10px] relative opacity-60 mt-0.5">
+                            {Math.floor(e.start / 60).toString().padStart(2, "0")}
+                            :{(e.start % 60).toString().padStart(2, "0")}
+                            {e.venue ? ` · ${e.venue}` : ""}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

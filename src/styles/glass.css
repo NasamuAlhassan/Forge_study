@@ -32,11 +32,15 @@
   --glass-bg-btn-dark:     rgba(30, 75, 200, 0.38);
   --glass-bg-active-dark:  rgba(45, 110, 245, 0.55);
   --glass-border-dark:     rgba(140, 180, 255, 0.22);
-  /* light: white frost (unchanged — works on light-bg) */
-  --glass-bg-light:        rgba(255, 255, 255, 0.18);
-  --glass-bg-btn-light:    rgba(255, 255, 255, 0.31);
-  --glass-bg-active-light: rgba(255, 255, 255, 0.36);
-  --glass-border-light:    rgba(0,   0,   0,   0.09);
+  /* light: opaque white frost — readable over muted cream background */
+  --glass-bg-light:        rgba(255, 255, 255, 0.62);
+  --glass-bg-btn-light:    rgba(255, 255, 255, 0.80);
+  --glass-bg-active-light: rgba(255, 255, 255, 0.92);
+  --glass-border-light:    rgba(80, 130, 220, 0.19);
+
+  /* ── Auto-switching panel alias (dark default; html.light overrides) ── */
+  --glass-bg-panel:        var(--glass-bg-dark);
+  --glass-border-panel:    var(--glass-border-dark);
 
   --glass-shadow:
     0 8px 32px rgba(4, 8, 45, 0.28),
@@ -168,8 +172,8 @@ html.light .glass-input {
   box-shadow:   0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 html.light .glass-input:focus {
-  border-color: rgba(255, 255, 255, 0.75);
-  box-shadow:   0 0 0 3px rgba(255, 255, 255, 0.25);
+  border-color: rgba(50, 100, 210, 0.55);
+  box-shadow:   0 0 0 3px rgba(50, 100, 210, 0.12);
 }
 
 /* ── Primary button — glass pill with white border ───────────────────────── */
@@ -225,15 +229,18 @@ html.light .glass-input:focus {
 }
 
 html.light .btn-primary {
-  background:   var(--glass-bg-btn-light);
-  border-color: rgba(0, 0, 0, 0.18);
-  color:        var(--foreground);
+  background:   linear-gradient(135deg, rgba(50,100,210,0.16), rgba(40,80,190,0.12));
+  border-color: rgba(50, 100, 210, 0.32);
+  color:        oklch(0.26 0.18 255);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.75) inset,
-    var(--glass-shadow);
+    0 1px 0 rgba(255, 255, 255, 0.70) inset,
+    0 2px 8px rgba(50, 100, 210, 0.14);
 }
 html.light .btn-primary:hover:not(:disabled) {
-  background: var(--glass-bg-active-light);
+  background: linear-gradient(135deg, rgba(50,100,210,0.24), rgba(40,80,190,0.18));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.70) inset,
+    0 4px 12px rgba(50, 100, 210, 0.22);
 }
 
 /* Full-width variant */

@@ -31,22 +31,22 @@ export function applyGlassIntensity(intensity: number): void {
   // ── Dark panel bg (blue tint): n=0 → 0.35, n=50 → 0.22, n=100 → 0.08 ─
   const bgDark  = Math.max(0.08, 0.35 - n * 0.0027);
 
-  // Light panel bg (white): 0.33 → 0.18 → 0.03 (unchanged)
-  const bgLight = Math.max(0.03, 0.33 - n * 0.003);
+  // Light panel bg (white): n=0→0.80, n=50→0.625, n=100→0.45 — frosted glass over cream bg
+  const bgLight = Math.max(0.45, 0.80 - n * 0.0035);
 
-  // ── Button tier ≈ 1.7× panel ─────────────────────────────────────────
+  // ── Button tier ─────────────────────────────────────────────────────
   const bgBtnDark  = Math.min(0.55, bgDark  * 1.7);
-  const bgBtnLight = Math.min(0.55, bgLight * 1.7);
+  const bgBtnLight = Math.min(0.90, bgLight + 0.18);
 
-  // ── Active / hover tier ≈ 2.5× panel ─────────────────────────────────
+  // ── Active / hover tier ──────────────────────────────────────────────
   const bgActiveDark  = Math.min(0.72, bgDark  * 2.5);
-  const bgActiveLight = Math.min(0.65, bgLight * 2.0);
+  const bgActiveLight = Math.min(0.96, bgLight + 0.30);
 
   // ── Borders ──────────────────────────────────────────────────────────
   // dark (blue-white): n=0 → 0.32, n=50 → 0.22, n=100 → 0.10
   const borderDark  = Math.max(0.10, 0.32 - n * 0.0022);
-  // light (dark): 0.14 → 0.09 → 0.04
-  const borderLight = Math.max(0.04, 0.14 - n * 0.001);
+  // light (blue-tinted): n=0→0.24, n=50→0.19, n=100→0.14
+  const borderLight = Math.max(0.14, 0.24 - n * 0.001);
 
   // ── Drop shadow (navy-tinted) ─────────────────────────────────────────
   const shadowA = (Math.max(0.14, 0.32 - n * 0.0018)).toFixed(3);
@@ -61,7 +61,7 @@ export function applyGlassIntensity(intensity: number): void {
   // Light mode: white frost panels, soft-blue border + active
   const white   = (a: number) => `rgba(255,255,255,${f(a)})`;
   const bordL   = (a: number) => `rgba(80,130,220,${f(a)})`;  // blue border on light bg
-  const glassAL = (a: number) => `rgba(50,100,210,${f(Math.min(0.18, a * 0.45))})`;  // light blue active
+  const glassAL = (a: number) => `rgba(255,255,255,${f(a)})`;  // white frost — stands out vs panel in light mode
 
   root.style.setProperty("--glass-intensity",        String(n));
   root.style.setProperty("--glass-blur",             blur);
