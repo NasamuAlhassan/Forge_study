@@ -4,6 +4,7 @@ import { StatsGrid } from "@/components/dashboard/StatsGrid";
 import { TodaysAgenda } from "@/components/dashboard/TodaysAgenda";
 import { AIRecommendations } from "@/components/dashboard/AIRecommendations";
 import { WeekCalendar } from "@/components/dashboard/WeekCalendar";
+import { DailyCards } from "@/components/dashboard/DailyCards";
 import { useSchedule } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -33,6 +34,7 @@ function DashboardOverview() {
             <AIRecommendations />
           </div>
         </div>
+        <DailyCards />
       </main>
     </>
   );

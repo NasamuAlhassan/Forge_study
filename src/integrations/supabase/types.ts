@@ -100,6 +100,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      saved_items: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          content: string;
+          author: string | null;
+          saved_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          content: string;
+          author?: string | null;
+          saved_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          content?: string;
+          author?: string | null;
+          saved_at?: string;
+        };
+        Relationships: [];
+      };
       study_plans: {
         Row: {
           context: string | null;

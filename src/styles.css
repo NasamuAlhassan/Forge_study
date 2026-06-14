@@ -141,8 +141,8 @@
 :root {
   --radius: 0.875rem;
 
-  /* ── Forge dark-first palette — Deep Navy / Teal ── */
-  --background: oklch(0.10 0.10 255);
+  /* ── Forge dark-first palette — Ember / Charcoal ── */
+  --background: oklch(0.07 0.03 45);
   --foreground: oklch(0.97 0.01 220);
 
   --card: oklch(0.16 0.12 250);
@@ -212,11 +212,12 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    /* Fallback colour so nothing flashes if gradient is slow to render */
-    background-color: oklch(0.10 0.10 255);
+    /* Fallback while image loads — matches the dark bg image corner colour */
+    background-color: oklch(0.05 0.01 240);
   }
   html.light {
-    background-color: oklch(0.965 0.007 275);
+    /* Fallback while image loads — matches the light bg image background colour */
+    background-color: oklch(0.88 0.07 55);
   }
 
   /* ── True fixed background — works on iOS Safari too ── */
@@ -227,18 +228,16 @@
     width: 100%;
     height: 100%;
     z-index: -1;
-    /* Deep navy → teal radial (matches reference liquid glass aesthetic) */
-    background:
-      radial-gradient(ellipse 80% 80% at 100% 0%, oklch(0.78 0.18 205) 0%, oklch(0.42 0.24 225) 30%, transparent 62%),
-      radial-gradient(ellipse 55% 65% at 5% 100%, oklch(0.22 0.16 265 / 0.65) 0%, transparent 52%),
-      oklch(0.09 0.09 258);
+    background-image: url('./assets/dark-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-color: oklch(0.05 0.01 240);
   }
   html.light::before {
-    /* Soft sky-blue → white — light mirror of the dark navy/teal aesthetic */
-    background:
-      radial-gradient(ellipse 75% 70% at 100% 0%, oklch(0.80 0.14 208) 0%, oklch(0.88 0.08 222) 32%, transparent 62%),
-      radial-gradient(ellipse 55% 60% at 0% 100%, oklch(0.87 0.07 252 / 0.55) 0%, transparent 52%),
-      oklch(0.96 0.025 238);
+    background-image: url('./assets/light-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-color: oklch(0.88 0.07 55);
   }
 
   body {
@@ -326,7 +325,7 @@
 
 /* ─── Light mode overrides ────────────────────────────────────────────────── */
 html.light {
-  --background: oklch(0.96 0.025 238);
+  --background: oklch(0.985 0.008 80);
   --foreground: oklch(0.13 0.06 255);
 
   --card: oklch(1 0 0);
