@@ -25,32 +25,32 @@ export function applyGlassIntensity(intensity: number): void {
   const n = Math.max(0, Math.min(100, intensity));
   const root = document.documentElement;
 
-  // Blur: 22 px → 12 px → 2 px
-  const blur = (Math.max(2, 22 - n * 0.20)).toFixed(1) + "px";
+  // Blur: 36 px → 22 px → 8 px  (raised for stronger glass feel)
+  const blur = (Math.max(8, 36 - n * 0.28)).toFixed(1) + "px";
 
-  // ── Dark panel bg (blue tint): n=0 → 0.35, n=50 → 0.22, n=100 → 0.08 ─
-  const bgDark  = Math.max(0.08, 0.35 - n * 0.0027);
+  // ── Dark panel bg (blue tint): n=0 → 0.40, n=50 → 0.26, n=100 → 0.10 ─
+  const bgDark  = Math.max(0.10, 0.40 - n * 0.003);
 
   // Light panel bg (white): n=0→0.80, n=50→0.625, n=100→0.45 — frosted glass over cream bg
   const bgLight = Math.max(0.45, 0.80 - n * 0.0035);
 
   // ── Button tier ─────────────────────────────────────────────────────
-  const bgBtnDark  = Math.min(0.55, bgDark  * 1.7);
+  const bgBtnDark  = Math.min(0.60, bgDark  * 1.7);
   const bgBtnLight = Math.min(0.90, bgLight + 0.18);
 
   // ── Active / hover tier ──────────────────────────────────────────────
-  const bgActiveDark  = Math.min(0.72, bgDark  * 2.5);
+  const bgActiveDark  = Math.min(0.76, bgDark  * 2.5);
   const bgActiveLight = Math.min(0.96, bgLight + 0.30);
 
   // ── Borders ──────────────────────────────────────────────────────────
-  // dark (blue-white): n=0 → 0.32, n=50 → 0.22, n=100 → 0.10
-  const borderDark  = Math.max(0.10, 0.32 - n * 0.0022);
+  // dark (blue-white): n=0 → 0.40, n=50 → 0.28, n=100 → 0.14
+  const borderDark  = Math.max(0.14, 0.40 - n * 0.0026);
   // light (blue-tinted): n=0→0.24, n=50→0.19, n=100→0.14
   const borderLight = Math.max(0.14, 0.24 - n * 0.001);
 
   // ── Drop shadow (navy-tinted) ─────────────────────────────────────────
-  const shadowA = (Math.max(0.14, 0.32 - n * 0.0018)).toFixed(3);
-  const shadow  = `0 8px 32px rgba(4,8,45,${shadowA}), 0 2px 8px rgba(4,8,45,${(Number(shadowA)*0.55).toFixed(3)})`;
+  const shadowA = (Math.max(0.22, 0.44 - n * 0.0022)).toFixed(3);
+  const shadow  = `0 12px 48px rgba(4,8,45,${shadowA}), 0 3px 12px rgba(4,8,45,${(Number(shadowA)*0.55).toFixed(3)})`;
 
   const f = (v: number) => v.toFixed(3);
   // Blue glass tints for dark mode

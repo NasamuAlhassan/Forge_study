@@ -25,17 +25,17 @@
         // Mirror of applyGlassIntensity() — blue-tinted dark glass + white light glass
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 50;
-        var blur = (Math.max(2, 22 - n * 0.20)).toFixed(1) + 'px';
-        // Dark: blue glass  n=0→0.35  n=50→0.22  n=100→0.08
-        var bgD  = Math.max(0.08, 0.35  - n * 0.0027);
+        var blur = (Math.max(8, 36 - n * 0.28)).toFixed(1) + 'px';
+        // Dark: blue glass  n=0→0.40  n=50→0.25  n=100→0.10
+        var bgD  = Math.max(0.10, 0.40  - n * 0.003);
         var bgL  = Math.max(0.45, 0.80  - n * 0.0035);
-        var bgBD = Math.min(0.55, bgD   * 1.7);
+        var bgBD = Math.min(0.60, bgD   * 1.7);
         var bgBL = Math.min(0.90, bgL   + 0.18);
-        var bgAD = Math.min(0.72, bgD   * 2.5);
+        var bgAD = Math.min(0.76, bgD   * 2.5);
         var bgAL = Math.min(0.96, bgL   + 0.30);
-        var boD  = Math.max(0.10, 0.32  - n * 0.0022);
+        var boD  = Math.max(0.14, 0.40  - n * 0.0026);
         var boL  = Math.max(0.14, 0.24  - n * 0.001);
-        var shA  = Math.max(0.14, 0.32  - n * 0.0018);
+        var shA  = Math.max(0.22, 0.44  - n * 0.0022);
         // Dark mode — blue glass helpers
         function gl(a) {return 'rgba(25,65,185,'+a.toFixed(3)+')';}
         function glB(a){return 'rgba(30,75,200,'+a.toFixed(3)+')';}
@@ -57,7 +57,7 @@
         r.style.setProperty('--glass-bg-active-light',  glAL(bgAL));
         r.style.setProperty('--glass-border-light',     brdL(boL));
         r.style.setProperty('--glass-shadow',
-          '0 8px 32px rgba(4,8,45,'+shA.toFixed(3)+'), 0 2px 8px rgba(4,8,45,'+(shA*0.55).toFixed(3)+')');
+          '0 12px 48px rgba(4,8,45,'+shA.toFixed(3)+'), 0 3px 12px rgba(4,8,45,'+(shA*0.55).toFixed(3)+')');
       } catch(e) {}
     </script>
   </head>
