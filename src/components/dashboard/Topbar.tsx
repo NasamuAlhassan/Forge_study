@@ -120,8 +120,8 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
         <div
           className="hidden md:flex items-center gap-2 px-3 py-[7px] rounded-xl text-sm text-muted-foreground w-44 lg:w-60 transition-all duration-200 focus-within:ring-1 focus-within:ring-primary/25"
           style={{
-            background:  "var(--glass-bg-dark)",
-            border:      "1px solid var(--glass-border-dark)",
+            background:  "var(--glass-bg-panel)",
+            border:      "1px solid var(--glass-border-panel)",
           }}
         >
           <Search className="h-3.5 w-3.5 shrink-0 opacity-50" aria-hidden="true" />
@@ -249,10 +249,10 @@ export function Topbar({ title, subtitle }: { title: string; subtitle?: string }
               aria-label={`User menu for ${user?.email ?? "account"}`}
               className="h-9 w-9 rounded-full shrink-0 grid place-items-center text-[13px] font-bold active:scale-[0.93] transition-all duration-150"
               style={{
-                background:              "var(--glass-bg-btn-dark)",
+                background:              isDark ? "var(--glass-bg-btn-dark)" : "var(--glass-bg-btn-light)",
                 backdropFilter:          "blur(var(--glass-blur))",
                 WebkitBackdropFilter:    "blur(var(--glass-blur))",
-                border:                  "1px solid var(--glass-border-dark)",
+                border:                  isDark ? "1px solid var(--glass-border-dark)" : "1px solid var(--glass-border-light)",
                 boxShadow:               "0 1px 0 rgba(255,255,255,0.12) inset",
                 color:                   isDark ? "rgba(255,255,255,0.90)" : "rgba(10,10,20,0.88)",
               }}
