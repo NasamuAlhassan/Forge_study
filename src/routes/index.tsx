@@ -10,6 +10,7 @@ import { Pricing } from "@/components/forge/Pricing";
 import { FAQ } from "@/components/forge/FAQ";
 import { CTA } from "@/components/forge/CTA";
 import { Footer } from "@/components/forge/Footer";
+import { CookieBanner } from "@/components/forge/CookieBanner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -58,6 +59,7 @@ function Landing() {
         <CTA />
       </main>
       <Footer />
+      <CookieBanner />
     </div>
   );
 }
