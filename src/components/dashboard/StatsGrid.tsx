@@ -575,7 +575,7 @@ export function StatsGrid() {
           <button
             key={cfg.label}
             onClick={() => setOpen(i)}
-            aria-label={`View ${cfg.label} details`}
+            aria-label={`${cfg.label}: ${cards[i].value}. ${cards[i].delta}. View details.`}
             className="ring-gradient glass hover-lift rounded-2xl p-4 sm:p-5 text-left w-full group relative overflow-hidden active:scale-[0.97] transition-all duration-200"
           >
             {/* Specular highlight */}

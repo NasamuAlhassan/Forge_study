@@ -9,9 +9,10 @@
     <meta property="og:description" content="Your AI-powered academic operating system." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary" />
-    <!-- Satoshi font via Fontshare CDN -->
+    <!-- Satoshi font via Fontshare — async/non-blocking load -->
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400,300&display=swap" rel="stylesheet" />
+    <link rel="preload" href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400,300&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@700,600,500,400,300&display=swap" /></noscript>
     <script>
       // ── Theme + Glass Intensity — applied before first paint to avoid flash ──
       try {
@@ -27,13 +28,13 @@
         var blur = (Math.max(2, 22 - n * 0.20)).toFixed(1) + 'px';
         // Dark: blue glass  n=0→0.35  n=50→0.22  n=100→0.08
         var bgD  = Math.max(0.08, 0.35  - n * 0.0027);
-        var bgL  = Math.max(0.03, 0.33  - n * 0.003);
+        var bgL  = Math.max(0.45, 0.80  - n * 0.0035);
         var bgBD = Math.min(0.55, bgD   * 1.7);
-        var bgBL = Math.min(0.55, bgL   * 1.7);
+        var bgBL = Math.min(0.90, bgL   + 0.18);
         var bgAD = Math.min(0.72, bgD   * 2.5);
-        var bgAL = Math.min(0.65, bgL   * 2.0);
+        var bgAL = Math.min(0.96, bgL   + 0.30);
         var boD  = Math.max(0.10, 0.32  - n * 0.0022);
-        var boL  = Math.max(0.04, 0.14  - n * 0.001);
+        var boL  = Math.max(0.14, 0.24  - n * 0.001);
         var shA  = Math.max(0.14, 0.32  - n * 0.0018);
         // Dark mode — blue glass helpers
         function gl(a) {return 'rgba(25,65,185,'+a.toFixed(3)+')';}
@@ -43,7 +44,7 @@
         // Light mode — white frost + soft-blue border/active
         function wh(a) {return 'rgba(255,255,255,'+a.toFixed(3)+')';}
         function brdL(a){return 'rgba(80,130,220,'+a.toFixed(3)+')';}
-        function glAL(a){var v=Math.min(0.18,a*0.45);return 'rgba(50,100,210,'+v.toFixed(3)+')';}
+        function glAL(a){return 'rgba(255,255,255,'+a.toFixed(3)+')';}
         var r = document.documentElement;
         r.style.setProperty('--glass-intensity',        String(n));
         r.style.setProperty('--glass-blur',             blur);

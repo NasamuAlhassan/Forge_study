@@ -292,9 +292,9 @@ export function TodaysAgenda({
 
         <div className="flex items-center justify-between mb-4 relative">
           <div>
-            <h3 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
+            <h2 className="text-[15px] font-semibold" style={{ letterSpacing: "-0.02em" }}>
               Today's agenda
-            </h3>
+            </h2>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {dayName} · {today.length} block{today.length === 1 ? "" : "s"}
             </p>
@@ -308,7 +308,7 @@ export function TodaysAgenda({
               "hover:bg-white/[0.07] active:scale-[0.96]",
               "transition-all duration-150",
             ].join(" ")}
-            aria-label="Expand today's agenda"
+            aria-label="View all agenda items for today"
           >
             View all <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
           </button>

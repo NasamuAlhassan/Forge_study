@@ -176,12 +176,12 @@ export function AIRecommendations() {
           <Sparkles className="h-[14px] w-[14px] opacity-80" aria-hidden="true" style={{ color: "var(--foreground)" }} />
         </div>
         <div className="min-w-0">
-          <h3
+          <h2
             className="text-[14px] font-semibold leading-tight"
             style={{ letterSpacing: "-0.02em" }}
           >
             AI recommendations
-          </h3>
+          </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">
             Based on your schedule &amp; subjects
           </p>

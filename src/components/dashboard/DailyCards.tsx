@@ -128,12 +128,12 @@ function DailyContentCard({
             <Icon className="h-3.5 w-3.5" style={{ color: accentColor }} />
           </div>
           <div>
-            <h3
+            <h2
               className="text-[14px] font-semibold"
               style={{ letterSpacing: "-0.02em" }}
             >
               {title}
-            </h3>
+            </h2>
             <p className="text-[11px] text-muted-foreground">{todayLabel}</p>
           </div>
         </div>
@@ -197,12 +197,12 @@ function SavedSection({
           className="h-3.5 w-3.5 text-muted-foreground"
           aria-hidden
         />
-        <h3
+        <h2
           className="text-[13px] font-semibold text-muted-foreground"
           style={{ letterSpacing: "-0.01em" }}
         >
           Saved favorites
-        </h3>
+        </h2>
         <span
           className="ml-auto text-[11px] text-muted-foreground/60 tabular-nums"
         >

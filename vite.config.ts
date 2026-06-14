@@ -11,4 +11,15 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("recharts") || id.includes("d3-")) return "vendor-charts";
+          if (id.includes("@radix-ui")) return "vendor-radix";
+          if (id.includes("react-dom") || id.includes("@tanstack")) return "vendor-react";
+        },
+      },
+    },
+  },
 });
