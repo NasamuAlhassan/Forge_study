@@ -168,7 +168,7 @@
 
   --border: oklch(0.98 0 0 / 0.15);
   --input: oklch(0.22 0.12 255);
-  --ring: oklch(0.98 0 0 / 0.30);
+  --ring: oklch(0.68 0.18 245 / 0.90);
 
   /* ── Gradients & effects ── */
   --gradient-hero:
@@ -244,6 +244,7 @@
     background-color: transparent;
     color: var(--foreground);
     font-family: var(--font-sans);
+    line-height: 1.6;
     font-feature-settings:
       "ss01",
       "cv11",
@@ -264,14 +265,14 @@
     font-feature-settings: "ss01", "cv11";
   }
 
-  /* Keyboard focus ring — neutral white, no purple */
+  /* Keyboard focus ring — high-contrast blue, WCAG-compliant */
   :focus-visible {
-    outline: 2px solid rgba(255,255,255,0.60);
-    outline-offset: 2px;
+    outline: 2.5px solid oklch(0.70 0.18 245);
+    outline-offset: 3px;
     border-radius: 6px;
   }
   html.light :focus-visible {
-    outline-color: rgba(0,0,0,0.35);
+    outline-color: oklch(0.40 0.22 245);
   }
 
   /* Remove 300ms tap delay */
@@ -291,7 +292,7 @@
   }
 
   button {
-    min-height: 36px;
+    min-height: 44px;
   }
 
   /* Custom scrollbar */
@@ -351,7 +352,7 @@ html.light {
 
   --border: oklch(0.60 0.10 245 / 0.18);
   --input: oklch(0.91 0.03 238);
-  --ring: oklch(0.50 0.22 245 / 0.25);
+  --ring: oklch(0.50 0.22 245 / 0.80);
 
   --gradient-hero:
     radial-gradient(65% 75% at 90% 5%, oklch(0.78 0.12 208 / 0.45) 0%, transparent 62%),

@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 
 export function CTA() {
@@ -17,11 +18,11 @@ export function CTA() {
               smarter.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 shadow-glow">
-                Start free <ArrowRight className="ml-1 h-4 w-4" />
+              <Button size="lg" className="bg-gradient-primary hover:opacity-90 shadow-glow" asChild>
+                <Link to="/login">Start free <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
-              <Button size="lg" variant="outline" className="glass border-white/10">
-                Book a demo
+              <Button size="lg" variant="outline" className="glass border-white/10" asChild>
+                <Link to="/login">Book a demo</Link>
               </Button>
             </div>
           </div>

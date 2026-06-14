@@ -1,5 +1,9 @@
 import { Sparkles } from "lucide-react";
 
+function handleCookiePreferences() {
+  window.dispatchEvent(new Event("forge:show-cookie-consent"));
+}
+
 export function Footer() {
   return (
     <footer className="border-t border-white/5 mt-12">
@@ -7,7 +11,7 @@ export function Footer() {
         <div className="col-span-2">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-md bg-gradient-primary grid place-items-center">
-              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" />
+              <Sparkles className="h-3.5 w-3.5 text-primary-foreground" aria-hidden="true" />
             </div>
             <span className="font-display text-base font-semibold">Forge</span>
           </div>
@@ -18,40 +22,21 @@ export function Footer() {
         <div>
           <div className="text-foreground font-medium">Product</div>
           <ul className="mt-3 space-y-2 text-muted-foreground">
-            <li>
-              <a href="#features" className="hover:text-foreground">
-                Features
-              </a>
-            </li>
-            <li>
-              <a href="#pricing" className="hover:text-foreground">
-                Pricing
-              </a>
-            </li>
-            <li>
-              <a href="#faq" className="hover:text-foreground">
-                FAQ
-              </a>
-            </li>
+            <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+            <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
+            <li><a href="#faq" className="hover:text-foreground transition-colors">FAQ</a></li>
           </ul>
         </div>
         <div>
           <div className="text-foreground font-medium">Company</div>
           <ul className="mt-3 space-y-2 text-muted-foreground">
+            <li><a href="#" className="hover:text-foreground transition-colors">About</a></li>
+            <li><a href="#" className="hover:text-foreground transition-colors">Contact</a></li>
             <li>
-              <a href="#" className="hover:text-foreground">
-                About
-              </a>
+              <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
             </li>
             <li>
-              <a href="#" className="hover:text-foreground">
-                Careers
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-foreground">
-                Contact
-              </a>
+              <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
             </li>
           </ul>
         </div>
@@ -59,7 +44,16 @@ export function Footer() {
       <div className="border-t border-white/5">
         <div className="mx-auto max-w-6xl px-4 py-6 flex flex-col sm:flex-row justify-between gap-2 text-xs text-muted-foreground">
           <span>© {new Date().getFullYear()} Forge Labs. All rights reserved.</span>
-          <span>Made for students, with care.</span>
+          <div className="flex items-center gap-4">
+            <span>Made for students, with care.</span>
+            <button
+              onClick={handleCookiePreferences}
+              className="underline underline-offset-2 hover:text-foreground transition-colors"
+              aria-label="Manage cookie preferences"
+            >
+              Cookie preferences
+            </button>
+          </div>
         </div>
       </div>
     </footer>

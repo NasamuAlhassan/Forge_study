@@ -5,7 +5,7 @@ import dashboardPreview from "@/assets/dashboard-preview.jpg";
 
 export function Hero() {
   return (
-    <section className="relative pt-36 pb-24 overflow-hidden bg-hero">
+    <section id="main-content" className="relative pt-36 pb-24 overflow-hidden bg-hero">
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 h-[640px] w-[640px] rounded-full bg-primary/30 blur-3xl animate-glow-pulse" />
       <div
@@ -37,18 +37,23 @@ export function Hero() {
         </p>
 
         <div
-          className="mt-8 flex flex-wrap items-center justify-center gap-3 animate-fade-up"
+          className="mt-10 flex flex-col items-center gap-4 animate-fade-up"
           style={{ animationDelay: "0.3s" }}
         >
-          <Button size="lg" className="bg-gradient-primary hover:opacity-90 shadow-glow" asChild>
-            <Link to="/dashboard">
-              Start forging — it's free
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </Button>
-          <Button size="lg" variant="outline" className="glass border-white/10" asChild>
-            <Link to="/dashboard">Watch demo</Link>
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button size="xl" className="bg-gradient-primary hover:opacity-90 shadow-glow" asChild aria-label="Start forging your study plan for free">
+              <Link to="/dashboard">
+                Start forging — it's free
+                <ArrowRight className="ml-1 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="glass border-white/10" asChild>
+              <Link to="/dashboard">Watch demo</Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground/80">
+            <span className="font-semibold text-foreground/70">5,000+</span> students already forging · No credit card required
+          </p>
         </div>
 
         <div
