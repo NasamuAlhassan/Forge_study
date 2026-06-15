@@ -153,20 +153,20 @@ function describeAction(action: ForgeAction, subjects: Subject[], events: EventB
 function getFallbackReply(text: string): string {
   const t = text.toLowerCase();
   if (/(hi|hello|hey|good (morning|afternoon|evening))/i.test(t))
-    return "Hey! I'm Forge AI. I'm running without an API key right now, but I can still guide you. Try asking about study tips, scheduling, or your courses.";
+    return "Hey! I'm Forge AI, your study assistant. Ask me about your schedule, study tips, or anything on your mind.";
   if (/(schedule|timetable|calendar|class|lecture|event)/i.test(t))
-    return "Your schedule is visible on the dashboard. Head to the calendar view to see all your events, or go to Settings → Subjects to manage your courses.";
+    return "Your schedule is on the dashboard. Head to the calendar view to see all your events, or go to Settings → Subjects to manage your courses.";
   if (/(study|revision|exam|test|quiz)/i.test(t))
-    return "For exam prep, I'd suggest active recall and spaced repetition. Block 60–90 min sessions in the morning for hard subjects and review notes the same evening.";
+    return "For exam prep, active recall beats passive re-reading every time. Block 60–90 min sessions in the morning for hard subjects and review notes the same evening.";
   if (/(stress|overwhelm|tired|burnout|anxious)/i.test(t))
-    return "Take a short break — even 10 minutes helps. Pomodoro technique (25 min focus, 5 min break) works well when you're feeling overwhelmed.";
+    return "Take a short break — even 10 minutes helps reset focus. Pomodoro (25 min work, 5 min break) works well when you're feeling overwhelmed.";
   if (/(motivat|inspire|encour)/i.test(t))
     return "You're doing great by showing up every day. Consistency beats intensity — small daily progress compounds into big results by exam time.";
-  if (/(add|create|schedule|book|put)/i.test(t))
-    return "To add events, use the calendar on your dashboard. The AI scheduling feature needs a configured API key to work automatically.";
+  if (/(add|create|book|put)/i.test(t))
+    return "You can add events directly in the calendar on your dashboard. What would you like to schedule?";
   if (/(tip|advice|help|how)/i.test(t))
-    return "My top study tip: review your notes within 24 hours of a lecture — it improves retention by up to 80%. Want more specific advice?";
-  return "I'm Forge AI. I'm in limited mode right now (no API key configured), but I'm here to help with whatever I can. What's on your mind?";
+    return "Top tip: review your notes within 24 hours of a lecture — it boosts retention by up to 80%. Want more specific advice?";
+  return "I'm Forge AI, your study assistant. Ask me anything about your schedule, study strategies, or your courses.";
 }
 
 const GREETING: Message = {
