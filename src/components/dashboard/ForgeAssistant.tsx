@@ -2076,6 +2076,7 @@ export function ForgeAssistant() {
           topic={liveTutorTopic}
           webContent={liveTutorWebContent}
           memory={forgeMemory || undefined}
+          studentName={userName}
           onClose={() => setShowWhiteboard(false)}
         />
       )}
