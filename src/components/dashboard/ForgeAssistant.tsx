@@ -4,10 +4,14 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Download,
+  FileText,
   GripHorizontal,
+  ImageIcon,
   Loader2,
   Mic,
   MicOff,
+  Paperclip,
   Search,
   Send,
   Sparkles,
@@ -22,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent } from "@/lib/forge-ai";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent, generateImageUrl, analyzeWithVision } from "@/lib/forge-ai";
 import type { ChatMessage } from "@/lib/forge-ai";
 import {
   buildAssistantDateContext,
@@ -70,6 +74,9 @@ interface Message {
   role: Role;
   content: string;
   sources?: string[];
+  image?: { url: string; caption: string; source?: string };
+  downloadable?: { filename: string; format: "pdf" | "md" };
+  attachmentPreview?: { type: "image" | "file"; dataUrl?: string; filename: string };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -258,6 +265,161 @@ function TypingDots() {
   );
 }
 
+// ─── Inline image (Pollinations.ai) ─────────────────────────────────────────
+
+function ImageBlock({ image }: { image: NonNullable<Message["image"]> }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError]   = useState(false);
+  if (error) return null;
+  return (
+    <div className="mt-2">
+      {!loaded && (
+        <div
+          className="flex items-center gap-2 text-[11px] text-muted-foreground/60 rounded-xl px-3 py-3"
+          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          <ImageIcon className="h-3.5 w-3.5 shrink-0 animate-pulse" />
+          Generating image…
+        </div>
+      )}
+      <img
+        src={image.url}
+        alt={image.caption}
+        className={cn("w-full rounded-xl object-cover", !loaded && "hidden")}
+        style={{ maxHeight: 280 }}
+        onLoad={() => setLoaded(true)}
+        onError={() => setError(true)}
+      />
+      {loaded && (
+        <div className="flex items-center justify-between mt-1.5 px-0.5">
+          <span className="text-[10px] text-muted-foreground/50">{image.caption}</span>
+          {image.source && (
+            <a
+              href={image.source}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] transition-colors"
+              style={{ color: "oklch(0.65 0.16 255 / 0.60)" }}
+            >
+              Source ↗
+            </a>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Download button ─────────────────────────────────────────────────────────
+
+function DownloadButton({ content, filename, format }: { content: string; filename: string; format: "pdf" | "md" }) {
+  const [busy, setBusy] = useState(false);
+
+  const handle = async () => {
+    setBusy(true);
+    try {
+      if (format === "pdf") {
+        const { jsPDF } = await import("jspdf");
+        const doc  = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+        const W    = doc.internal.pageSize.getWidth();
+        const H    = doc.internal.pageSize.getHeight();
+        const mx   = 56;
+        const cw   = W - mx * 2;
+        let   y    = 64;
+
+        const addPage = () => { doc.addPage(); y = 64; };
+
+        for (const raw of content.split("\n")) {
+          if (y > H - 64) addPage();
+          const line = raw.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/`([^`]+)`/g, "$1");
+
+          if (raw.startsWith("# ")) {
+            doc.setFontSize(18); doc.setFont("helvetica", "bold");
+            const wrapped = doc.splitTextToSize(line.replace(/^# /, ""), cw);
+            if (y + wrapped.length * 22 > H - 64) addPage();
+            doc.text(wrapped, mx, y); y += wrapped.length * 22 + 6;
+          } else if (raw.startsWith("## ")) {
+            doc.setFontSize(14); doc.setFont("helvetica", "bold");
+            const wrapped = doc.splitTextToSize(line.replace(/^## /, ""), cw);
+            if (y + wrapped.length * 18 > H - 64) addPage();
+            doc.text(wrapped, mx, y); y += wrapped.length * 18 + 4;
+          } else if (raw.startsWith("### ")) {
+            doc.setFontSize(12); doc.setFont("helvetica", "bold");
+            const wrapped = doc.splitTextToSize(line.replace(/^### /, ""), cw);
+            if (y + wrapped.length * 16 > H - 64) addPage();
+            doc.text(wrapped, mx, y); y += wrapped.length * 16 + 4;
+          } else if (/^[-*•]\s/.test(raw)) {
+            doc.setFontSize(11); doc.setFont("helvetica", "normal");
+            const wrapped = doc.splitTextToSize("• " + line.replace(/^[-*•]\s/, ""), cw - 14);
+            if (y + wrapped.length * 14 > H - 64) addPage();
+            doc.text(wrapped, mx + 10, y); y += wrapped.length * 14 + 2;
+          } else if (raw.trim() === "") {
+            y += 6;
+          } else {
+            doc.setFontSize(11); doc.setFont("helvetica", "normal");
+            const wrapped = doc.splitTextToSize(line, cw);
+            if (y + wrapped.length * 14 > H - 64) addPage();
+            doc.text(wrapped, mx, y); y += wrapped.length * 14 + 2;
+          }
+        }
+        doc.save(`${filename}.pdf`);
+      } else {
+        const blob = new Blob([content], { type: "text/markdown" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href = url; a.download = `${filename}.md`; a.click();
+        URL.revokeObjectURL(url);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handle}
+      disabled={busy}
+      className="mt-2 inline-flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg transition-all duration-150 active:scale-[0.96]"
+      style={{
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        color: "var(--foreground)",
+        opacity: busy ? 0.6 : 1,
+      }}
+    >
+      {busy
+        ? <Loader2 className="h-3 w-3 animate-spin" />
+        : format === "pdf"
+          ? <FileText className="h-3 w-3" />
+          : <Download className="h-3 w-3" />}
+      {busy ? "Generating…" : `Download ${format.toUpperCase()}`}
+    </button>
+  );
+}
+
+// ─── PDF text extraction (lazy — only loaded when a PDF is uploaded) ──────────
+
+async function extractPdfText(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
+  // Use the bundled worker via Vite's asset handling
+  const workerUrl = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).href;
+  GlobalWorkerOptions.workerSrc = workerUrl;
+  const pdf   = await getDocument({ data: buffer }).promise;
+  const pages: string[] = [];
+  for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+    const page    = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(
+      content.items
+        .filter((it) => "str" in it)
+        .map((it) => (it as unknown as { str: string }).str)
+        .join(" "),
+    );
+  }
+  return pages.join("\n\n");
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ForgeAssistant() {
@@ -291,7 +453,17 @@ export function ForgeAssistant() {
   const bubbleDidDrag = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef    = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef   = useRef<HTMLInputElement>(null);
+
+  // Pending file/image attachment
+  const [attachment, setAttachment] = useState<{
+    type: "image" | "pdf" | "text";
+    filename: string;
+    data: string;       // base64 for images, extracted text for pdf/txt
+    mimeType: string;
+    previewUrl?: string; // object URL for image thumbnail
+  } | null>(null);
 
   // Mobile detection — bottom-sheet vs floating panel
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
@@ -657,6 +829,38 @@ export function ForgeAssistant() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  // ── File / image attachment handler ─────────────────────────────────────────
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const isImage = file.type.startsWith("image/");
+    const isPdf   = file.type === "application/pdf";
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        const base64  = dataUrl.split(",")[1];
+        setAttachment({ type: "image", filename: file.name, data: base64, mimeType: file.type, previewUrl: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    } else if (isPdf) {
+      try {
+        const text = await extractPdfText(file);
+        setAttachment({ type: "pdf", filename: file.name, data: text, mimeType: "text/plain" });
+      } catch {
+        toast.error("Couldn't read that PDF — try a different file.");
+      }
+    } else {
+      // Plain text / markdown / other
+      const text = await file.text();
+      setAttachment({ type: "text", filename: file.name, data: text, mimeType: "text/plain" });
+    }
+  };
+
   // ── Chat logic ───────────────────────────────────────────────────────────────
 
   const scheduleContext = useMemo(() => formatSchedule(events, subjects), [events, subjects]);
@@ -680,9 +884,49 @@ export function ForgeAssistant() {
    * speakReply: if true, reads the AI response aloud (voice mode).
    */
   const processMessage = async (text: string, speakReply: boolean) => {
-    const userMsg: Message = { id: Date.now(), role: "user", content: text };
+    // Snapshot and clear attachment before async work to avoid stale state
+    const currentAttachment = attachment;
+    setAttachment(null);
+
+    const userMsg: Message = {
+      id: Date.now(),
+      role: "user",
+      content: text,
+      attachmentPreview: currentAttachment
+        ? {
+            type: currentAttachment.type === "image" ? "image" : "file",
+            filename: currentAttachment.filename,
+            dataUrl: currentAttachment.previewUrl,
+          }
+        : undefined,
+    };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+
+    // ── Image attachment → vision pipeline ────────────────────────────────────
+    if (currentAttachment?.type === "image") {
+      try {
+        const history: ChatMessage[] = [...messages, userMsg]
+          .filter((m) => m.id !== 0)
+          .map((m) => ({ role: m.role === "user" ? ("user" as const) : ("model" as const), parts: m.content }));
+        const reply = await analyzeWithVision(
+          currentAttachment.data,
+          currentAttachment.mimeType,
+          text,
+          history,
+          buildAssistantDateContext(new Date()),
+          forgeMemory || undefined,
+        );
+        setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
+        if (speakReply && voiceModeRef.current) speakText(reply);
+      } catch {
+        const err = "I couldn't analyse that image — try again.";
+        setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: err }]);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     if (!isForgeConfigured()) {
       await new Promise<void>((r) => setTimeout(r, 700));
@@ -754,10 +998,16 @@ export function ForgeAssistant() {
           parts: m.content,
         }));
 
+      // Inject uploaded PDF/text as extra context
+      // At this point image attachments have already been handled via early return above
+      const fileCtx = currentAttachment
+        ? `\n\n=== UPLOADED FILE: ${currentAttachment.filename} ===\n${currentAttachment.data.slice(0, 6000)}\n=== END FILE ===`
+        : "";
+
       // When in voice mode, inject personality-driven instructions
       const ctx = speakReply
-        ? scheduleContext + "\n\n" + buildVoiceContext(personality, userName)
-        : scheduleContext;
+        ? scheduleContext + fileCtx + "\n\n" + buildVoiceContext(personality, userName)
+        : scheduleContext + fileCtx;
 
       const { text, rawActions } = await sendForgeMessage(
         history,
@@ -771,13 +1021,47 @@ export function ForgeAssistant() {
       const memMatch = text.match(MEMORY_RE);
       if (memMatch) saveMemory(memMatch[1].trim());
 
-      // Strip [FORGE_ACTION:…] blocks (text-fallback models) and memory from display
+      // Parse [FORGE_IMAGE:{...}] — inline generated image
+      const IMAGE_BLOCK_RE = /\[FORGE_IMAGE:\s*(\{[\s\S]*?\})\s*\]/g;
+      let imageData: Message["image"] | undefined;
+      for (const m of text.matchAll(IMAGE_BLOCK_RE)) {
+        try {
+          const parsed = JSON.parse(m[1]) as { prompt: string; caption: string; source?: string };
+          imageData = { url: generateImageUrl(parsed.prompt), caption: parsed.caption, source: parsed.source };
+        } catch { /* skip malformed */ }
+        break; // one image per message
+      }
+
+      // Parse [FORGE_DOWNLOAD:{...}] — downloadable file offer
+      const DOWNLOAD_BLOCK_RE = /\[FORGE_DOWNLOAD:\s*(\{[\s\S]*?\})\s*\]/g;
+      let downloadData: Message["downloadable"] | undefined;
+      for (const m of text.matchAll(DOWNLOAD_BLOCK_RE)) {
+        try {
+          const parsed = JSON.parse(m[1]) as { filename: string; format: "pdf" | "md" };
+          downloadData = { filename: parsed.filename, format: parsed.format };
+        } catch { /* skip malformed */ }
+        break;
+      }
+
+      // Strip all action/media blocks and memory from display text
       const clean = text
         .replace(/\[FORGE_ACTION:[\s\S]*?\]/g, "")
+        .replace(/\[APP_ACTION:[\s\S]*?\]/g, "")
+        .replace(/\[FORGE_IMAGE:[\s\S]*?\]/g, "")
+        .replace(/\[FORGE_DOWNLOAD:[\s\S]*?\]/g, "")
         .replace(MEMORY_RE, "")
         .trim();
 
-      setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: clean }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "assistant",
+          content: clean,
+          image: imageData,
+          downloadable: downloadData,
+        },
+      ]);
 
       // ── Speak the reply in voice mode ───────────────────────────────────
       if (speakReply && voiceModeRef.current) speakText(clean);
@@ -1188,9 +1472,40 @@ export function ForgeAssistant() {
                   {m.role === "user" && (
                     <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none rounded-2xl" />
                   )}
+                  {/* Attachment preview inside user bubble */}
+                  {m.role === "user" && m.attachmentPreview && (
+                    <div className="mb-1.5 relative">
+                      {m.attachmentPreview.type === "image" && m.attachmentPreview.dataUrl ? (
+                        <img
+                          src={m.attachmentPreview.dataUrl}
+                          alt={m.attachmentPreview.filename}
+                          className="rounded-xl w-full object-cover"
+                          style={{ maxHeight: 180 }}
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-[11px] px-2 py-1.5 rounded-lg"
+                          style={{ background: "rgba(255,255,255,0.10)" }}>
+                          <FileText className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{m.attachmentPreview.filename}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <span className="relative">
                     {m.role === "assistant" ? <MessageContent content={m.content} /> : m.content}
                   </span>
+                  {/* Inline generated image */}
+                  {m.role === "assistant" && m.image && (
+                    <ImageBlock image={m.image} />
+                  )}
+                  {/* Download button */}
+                  {m.role === "assistant" && m.downloadable && (
+                    <DownloadButton
+                      content={m.content}
+                      filename={m.downloadable.filename}
+                      format={m.downloadable.format}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -1446,6 +1761,41 @@ export function ForgeAssistant() {
             background: "transparent",
           }}
         >
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,.pdf,.txt,.md,.csv"
+            onChange={handleFileSelect}
+          />
+
+          {/* Attachment chip — shown when a file is staged */}
+          {attachment && (
+            <div className="flex items-center gap-1.5 mb-2 px-1">
+              <div
+                className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg max-w-[80%]"
+                style={{
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  color: "var(--foreground)",
+                }}
+              >
+                {attachment.type === "image"
+                  ? <ImageIcon className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  : <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />}
+                <span className="truncate opacity-80">{attachment.filename}</span>
+              </div>
+              <button
+                onClick={() => setAttachment(null)}
+                className="h-5 w-5 rounded-full grid place-items-center text-muted-foreground/60 hover:text-foreground transition-colors"
+                aria-label="Remove attachment"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-2 items-end">
             <div className="flex-1 relative">
               <textarea
@@ -1488,6 +1838,27 @@ export function ForgeAssistant() {
                 />
               )}
             </div>
+
+            {/* Attach button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              className="h-9 w-9 rounded-xl grid place-items-center transition-all duration-150 shrink-0"
+              style={{
+                background: attachment ? "var(--glass-bg-btn-dark)" : "var(--glass-bg-dark)",
+                backdropFilter: "blur(var(--glass-blur))",
+                WebkitBackdropFilter: "blur(var(--glass-blur))",
+                border: attachment
+                  ? "1px solid rgba(255,255,255,0.25)"
+                  : "1px solid var(--glass-border-dark)",
+              }}
+              aria-label="Attach file or image"
+            >
+              <Paperclip
+                className="h-3.5 w-3.5"
+                style={{ color: attachment ? "var(--foreground)" : undefined, opacity: attachment ? 0.9 : undefined }}
+              />
+            </button>
 
             {/* Mic button */}
             <button

@@ -27,6 +27,7 @@ export interface ForgeRawAction {
   event?: Record<string, unknown>;
   eventId?: string;
   patch?: Record<string, unknown>;
+  itemId?: string;
 }
 
 export interface ForgeResponse {
@@ -85,6 +86,32 @@ const CALENDAR_TOOL = {
             endTime:   { type: "string" },
             venue:     { type: "string" },
           },
+        },
+      },
+      required: ["action"],
+    },
+  },
+};
+
+const APP_ACTION_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "app_action",
+    description:
+      "Save today's verse or quote to the user's saved collection, or remove a saved item by its ID.",
+    parameters: {
+      type: "object",
+      properties: {
+        action: {
+          type: "string",
+          enum: ["save_verse", "save_quote", "remove_saved"],
+          description:
+            "save_verse: save today's bible verse. save_quote: save today's motivational quote. remove_saved: remove an item from their saved collection.",
+        },
+        itemId: {
+          type: "string",
+          description:
+            "For remove_saved only — copy the exact UUID between [id: and ] from the saved items list.",
         },
       },
       required: ["action"],
@@ -168,6 +195,16 @@ Times: use strings like "9:00 AM", "7:00 PM", or "19:00".
 
 - Only use IDs that appear in the schedule above — never invent them.`;
 
+  const mediaSection = `
+IMAGES — include when a visual genuinely helps (diagrams, anatomy, geography, science, history):
+[FORGE_IMAGE:{"prompt":"detailed descriptive prompt for image generation","caption":"Short label","source":"https://en.wikipedia.org/wiki/TopicName"}]
+Place at the END of your message. Use a specific, descriptive prompt (colours, style, detail level). Pick a real Wikipedia URL for the topic.
+
+DOWNLOADABLE FILES — when user asks for notes, a study guide, or something to save:
+[FORGE_DOWNLOAD:{"filename":"Topic Name","format":"pdf"}]
+Use format "pdf" for formal study guides/notes, "md" for quick reference sheets.
+Place at the END of your message. Write your ENTIRE message as well-structured notes (# headers, bullet points) when you include this tag — the full message becomes the file.`.trim();
+
   return `You are Forge, a concise personal assistant inside a study planner — but you understand ALL of life, not just academics.
 ${dateContext}
 
@@ -218,7 +255,9 @@ When the user asks for study help or scheduling, apply this automatically withou
 
 ${actionSection}
 
-- If truly unclear, ask one short clarifying question.`.trim();
+- If truly unclear, ask one short clarifying question.
+
+${mediaSection}`.trim();
 }
 
 export async function sendForgeMessage(
@@ -420,6 +459,60 @@ export async function teachFromContent(
   }
 
   throw new Error("All models are busy right now — try again in a moment.");
+}
+
+// ── Image generation (Pollinations.ai — free, no key) ────────────────────────
+
+export function generateImageUrl(prompt: string, width = 900, height = 560): string {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=${width}&height=${height}&nologo=true&enhance=true`;
+}
+
+// ── Vision analysis (GPT-4o-mini via OpenRouter) ──────────────────────────────
+
+export async function analyzeWithVision(
+  imageBase64: string,
+  mimeType: string,
+  question: string,
+  history: ChatMessage[],
+  dateContext: string,
+  memory?: string,
+): Promise<string> {
+  const key = getORKey();
+
+  const system = [
+    `You are Forge, a smart study assistant and tutor. ${dateContext}`,
+    memory ? `User memory:\n${memory}` : "",
+    "Analyze the uploaded content carefully. If it's a document or notes, summarize key concepts. If it's a diagram or image, describe it and explain what it shows. Keep your response focused and educational.",
+  ].filter(Boolean).join("\n");
+
+  const recent = history.slice(-6).map((m) => ({
+    role: m.role === "user" ? "user" : "assistant",
+    content: m.parts,
+  }));
+
+  const res = await fetch(`${OR_BASE}/chat/completions`, {
+    method: "POST",
+    headers: orHeaders(key),
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      messages: [
+        { role: "system", content: system },
+        ...recent,
+        {
+          role: "user",
+          content: [
+            { type: "text", text: question || "What is this? Describe it and explain any key concepts." },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+          ],
+        },
+      ],
+      max_tokens: 600,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Vision API ${res.status}`);
+  const data = (await res.json()) as { choices: { message: { content: string } }[] };
+  return data.choices[0].message.content;
 }
 
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
