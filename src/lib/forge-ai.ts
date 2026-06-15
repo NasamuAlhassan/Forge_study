@@ -5,6 +5,10 @@ const OR_BASE = "https://openrouter.ai/api/v1";
 // Audio transcription — Groq Whisper (separate quota, very generous)
 const GROQ_BASE = "https://api.groq.com/openai/v1";
 
+export function isForgeConfigured(): boolean {
+  return !!(import.meta.env.VITE_OPENROUTER_API_KEY as string);
+}
+
 function getORKey(): string {
   const key = import.meta.env.VITE_OPENROUTER_API_KEY as string;
   if (!key) throw new Error("VITE_OPENROUTER_API_KEY is not set.");

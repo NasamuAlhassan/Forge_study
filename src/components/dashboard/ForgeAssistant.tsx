@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio } from "@/lib/forge-ai";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured } from "@/lib/forge-ai";
 import type { ChatMessage } from "@/lib/forge-ai";
 import {
   buildAssistantDateContext,
@@ -146,6 +146,27 @@ function describeAction(action: ForgeAction, subjects: Subject[], events: EventB
   }
   const target = events.find((e) => e.id === action.eventId);
   return `Remove "${target?.title ?? action.eventId}" from the schedule`;
+}
+
+// ─── Offline / unconfigured fallback ─────────────────────────────────────────
+
+function getFallbackReply(text: string): string {
+  const t = text.toLowerCase();
+  if (/(hi|hello|hey|good (morning|afternoon|evening))/i.test(t))
+    return "Hey! I'm Forge AI. I'm running without an API key right now, but I can still guide you. Try asking about study tips, scheduling, or your courses.";
+  if (/(schedule|timetable|calendar|class|lecture|event)/i.test(t))
+    return "Your schedule is visible on the dashboard. Head to the calendar view to see all your events, or go to Settings → Subjects to manage your courses.";
+  if (/(study|revision|exam|test|quiz)/i.test(t))
+    return "For exam prep, I'd suggest active recall and spaced repetition. Block 60–90 min sessions in the morning for hard subjects and review notes the same evening.";
+  if (/(stress|overwhelm|tired|burnout|anxious)/i.test(t))
+    return "Take a short break — even 10 minutes helps. Pomodoro technique (25 min focus, 5 min break) works well when you're feeling overwhelmed.";
+  if (/(motivat|inspire|encour)/i.test(t))
+    return "You're doing great by showing up every day. Consistency beats intensity — small daily progress compounds into big results by exam time.";
+  if (/(add|create|schedule|book|put)/i.test(t))
+    return "To add events, use the calendar on your dashboard. The AI scheduling feature needs a configured API key to work automatically.";
+  if (/(tip|advice|help|how)/i.test(t))
+    return "My top study tip: review your notes within 24 hours of a lecture — it improves retention by up to 80%. Want more specific advice?";
+  return "I'm Forge AI. I'm in limited mode right now (no API key configured), but I'm here to help with whatever I can. What's on your mind?";
 }
 
 const GREETING: Message = {
@@ -571,6 +592,15 @@ export function ForgeAssistant() {
     const userMsg: Message = { id: Date.now(), role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+
+    if (!isForgeConfigured()) {
+      await new Promise<void>((r) => setTimeout(r, 700));
+      const reply = getFallbackReply(text);
+      setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
+      if (speakReply && voiceModeRef.current) speakText(reply);
+      setLoading(false);
+      return;
+    }
 
     try {
       const history: ChatMessage[] = [...messages, userMsg]
