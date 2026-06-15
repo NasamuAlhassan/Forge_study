@@ -25,14 +25,14 @@ export function applyGlassIntensity(intensity: number): void {
   const n = Math.max(0, Math.min(100, intensity));
   const root = document.documentElement;
 
-  // Blur: 38 px → 30 px → 22 px — never drops below 22 for a strong glass feel
-  const blur = (Math.max(22, 38 - n * 0.16)).toFixed(1) + "px";
+  // Blur: n=0→38px (frost), n=75→12px (glass), n=100→4px (clear/transparent)
+  const blur = (Math.max(4, 38 - n * 0.34)).toFixed(1) + "px";
 
-  // ── Dark panel bg (blue tint): n=0 → 0.52, n=50 → 0.40, n=100 → 0.28 ─
-  const bgDark  = Math.max(0.28, 0.52 - n * 0.0024);
+  // ── Dark panel bg: n=0→0.52 (frost), n=75→0.17 (glass), n=100→0.06 (clear) ─
+  const bgDark  = Math.max(0.06, 0.52 - n * 0.0046);
 
-  // Light panel bg (white): n=0→0.85, n=50→0.72, n=100→0.60
-  const bgLight = Math.max(0.60, 0.85 - n * 0.0025);
+  // Light panel bg: n=0→0.85 (frost), n=75→0.29 (glass), n=100→0.10 (clear)
+  const bgLight = Math.max(0.10, 0.85 - n * 0.0075);
 
   // ── Button tier ─────────────────────────────────────────────────────
   const bgBtnDark  = Math.min(0.60, bgDark  * 1.7);

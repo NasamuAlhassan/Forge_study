@@ -25,10 +25,10 @@
         // Mirror of applyGlassIntensity() — blue-tinted dark glass + white light glass
         var gi = localStorage.getItem('forgeGlassIntensity');
         var n  = gi !== null ? Math.max(0, Math.min(100, Number(gi))) : 75;
-        var blur = (Math.max(22, 38 - n * 0.16)).toFixed(1) + 'px';
-        // Dark: blue glass  n=0→0.52  n=50→0.40  n=100→0.28
-        var bgD  = Math.max(0.28, 0.52  - n * 0.0024);
-        var bgL  = Math.max(0.60, 0.85  - n * 0.0025);
+        var blur = (Math.max(4, 38 - n * 0.34)).toFixed(1) + 'px';
+        // Dark: n=0→0.52 (frost)  n=75→0.17 (glass)  n=100→0.06 (clear)
+        var bgD  = Math.max(0.06, 0.52  - n * 0.0046);
+        var bgL  = Math.max(0.10, 0.85  - n * 0.0075);
         var bgBD = Math.min(0.60, bgD   * 1.7);
         var bgBL = Math.min(0.90, bgL   + 0.18);
         var bgAD = Math.min(0.76, bgD   * 2.5);
