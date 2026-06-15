@@ -515,6 +515,99 @@ export async function analyzeWithVision(
   return data.choices[0].message.content;
 }
 
+// ── Live whiteboard lesson generation ────────────────────────────────────────
+
+export interface LessonSection {
+  id: string;
+  title: string;
+  type: "text" | "math" | "diagram" | "code";
+  boardContent: string;
+  narration: string;
+  checkQuestion?: string | null;
+}
+
+export interface TutoringLesson {
+  topic: string;
+  intro: string;
+  sections: LessonSection[];
+  closingQuestion: string;
+}
+
+const LESSON_SYSTEM = `You are a master teacher. Generate a structured visual lesson as a JSON object.
+Return ONLY valid JSON — no markdown wrapper, no explanation, no code fences.
+
+Required structure:
+{
+  "topic": "Exact topic name",
+  "intro": "1–2 sentence spoken opening (warm, engaging, first-person)",
+  "sections": [
+    {
+      "id": "s1",
+      "title": "Section Title",
+      "type": "text",
+      "boardContent": "# Section Title\\n\\n**Key term** — clear definition.\\n\\n- Bullet 1\\n- Bullet 2\\n\\n> Important callout or real-world example",
+      "narration": "What you say while this appears — conversational, 2–3 sentences, NOT a re-read of the board. Add context, analogies, emphasis.",
+      "checkQuestion": "A comprehension question to test this section, or null"
+    }
+  ],
+  "closingQuestion": "One final question to test overall understanding."
+}
+
+SECTION TYPES:
+- "text"    → Rich markdown. # headings, **bold key terms**, - bullets, > blockquotes.
+- "math"    → LaTeX in $$...$$ (display) and $...$ (inline). Define all variables. Show derivation steps.
+- "diagram" → A valid Mermaid.js diagram inside a fenced \`\`\`mermaid block. Use flowchart LR, graph TD, sequenceDiagram, or classDiagram ONLY.
+- "code"    → Fenced code block with language tag. Real runnable example. Comment key lines.
+
+RULES:
+- 5–7 sections. Order: broad overview → core concepts → deep detail → worked example/application.
+- boardContent is the student's study reference — make it rich, structured, complete.
+- narration is your spoken commentary — friendly, never just repeating the board.
+- Add checkQuestion after every 2nd or 3rd section; use null for others.
+- JSON ONLY. Nothing else.`;
+
+function extractLessonJson(raw: string): TutoringLesson {
+  try { return JSON.parse(raw) as TutoringLesson; } catch { /* fall through */ }
+  const stripped = raw.replace(/^```(?:json)?\n?/m, "").replace(/\n?```\s*$/m, "");
+  try { return JSON.parse(stripped) as TutoringLesson; } catch { /* fall through */ }
+  const match = raw.match(/\{[\s\S]+\}/);
+  if (match) return JSON.parse(match[0]) as TutoringLesson;
+  throw new Error("Could not parse lesson JSON from model response");
+}
+
+export async function generateLesson(
+  topic: string,
+  webContent: string,
+  memory?: string,
+): Promise<TutoringLesson> {
+  const key = getORKey();
+
+  const sysParts = [
+    LESSON_SYSTEM,
+    webContent ? `\nSOURCE MATERIAL (use as primary reference):\n${webContent.slice(0, 3000)}` : "",
+    memory ? `\nSTUDENT CONTEXT:\n${memory}` : "",
+  ].filter(Boolean).join("\n");
+
+  const res = await fetch(`${OR_BASE}/chat/completions`, {
+    method: "POST",
+    headers: orHeaders(key),
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      messages: [
+        { role: "system", content: sysParts },
+        { role: "user", content: `Create a complete whiteboard lesson on: ${topic}` },
+      ],
+      temperature: 0.55,
+      max_tokens: 3000,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Lesson generation ${res.status}`);
+  const data = (await res.json()) as { choices: { message: { content: string } }[] };
+  return extractLessonJson(data.choices[0].message.content);
+}
+
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   const key = getGroqKey();
 

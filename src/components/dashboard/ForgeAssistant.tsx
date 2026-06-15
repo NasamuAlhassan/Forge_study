@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Download,
   FileText,
+  GraduationCap,
   GripHorizontal,
   ImageIcon,
   Loader2,
@@ -26,8 +27,9 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent, generateImageUrl, analyzeWithVision } from "@/lib/forge-ai";
-import type { ChatMessage } from "@/lib/forge-ai";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent, generateImageUrl, analyzeWithVision, generateLesson } from "@/lib/forge-ai";
+import type { ChatMessage, TutoringLesson } from "@/lib/forge-ai";
+import { ForgeWhiteboard } from "@/components/dashboard/ForgeWhiteboard";
 import {
   buildAssistantDateContext,
   buildEventInsert,
@@ -172,6 +174,7 @@ function describeAction(action: ForgeAction, subjects: Subject[], events: EventB
 
 const TEACH_RE = /^(teach me|explain|what is|what are|what's|what was|what were|how does|how do|how is|how are|help me understand|i don't understand|i dont understand|break down|walk me through|tell me about|describe|why is|why are|why does|why do)/i;
 const SCHEDULE_RE = /schedule|timetable|calendar|add event|remove event|delete event|move event|edit event|my class|my lecture|my exam/i;
+const WHITEBOARD_RE = /\b(whiteboard|visual\s+lesson|visual\s+explanation|full\s+lesson|live\s+lesson|interactive\s+lesson|teach.*visually|draw.*out|step.by.step\s+lesson|open\s+(the\s+)?board|start\s+a\s+lesson)\b/i;
 
 function extractTopic(text: string): string {
   return text
@@ -447,6 +450,12 @@ export function ForgeAssistant() {
 
   // Minimized — shows only the header bar
   const [minimized, setMinimized] = useState(false);
+
+  // Whiteboard lesson state
+  const [whiteboardLesson,  setWhiteboardLesson]  = useState<TutoringLesson | null>(null);
+  const [showWhiteboard,    setShowWhiteboard]    = useState(false);
+  const [pendingWhiteboard, setPendingWhiteboard] = useState(false);
+  const [wbLoading,         setWbLoading]         = useState(false);
 
   // Draggable position for the bubble button
   const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
@@ -943,6 +952,41 @@ export function ForgeAssistant() {
       return;
     }
 
+    // ── Whiteboard lesson pipeline ─────────────────────────────────────────
+    const isWhiteboardIntent = WHITEBOARD_RE.test(text) || pendingWhiteboard;
+    if (isWhiteboardIntent) {
+      setPendingWhiteboard(false);
+      const topic = extractTopic(text.replace(WHITEBOARD_RE, "").trim()) || text.replace(WHITEBOARD_RE, "").trim() || text;
+      const introId = Date.now() + 1;
+      setMessages((prev) => [...prev, {
+        id: introId,
+        role: "assistant",
+        content: `Opening whiteboard for **${topic}**… Searching and building your lesson — this takes a moment.`,
+      }]);
+      setWbLoading(true);
+      setLoading(false);
+      try {
+        const { content: webContent } = await searchWeb(topic).catch(() => ({ content: "", sources: [] }));
+        const lesson = await generateLesson(topic, webContent, forgeMemory || undefined);
+        setWhiteboardLesson(lesson);
+        setShowWhiteboard(true);
+        setMessages((prev) => prev.map((m) =>
+          m.id === introId
+            ? { ...m, content: `Lesson ready! The whiteboard is now open. Use the sidebar to navigate sections, Space to pause, and click any completed section to re-explain it.` }
+            : m,
+        ));
+      } catch {
+        setMessages((prev) => prev.map((m) =>
+          m.id === introId
+            ? { ...m, content: "Couldn't generate the lesson right now — try again in a moment." }
+            : m,
+        ));
+      } finally {
+        setWbLoading(false);
+      }
+      return;
+    }
+
     // ── Teaching pipeline ──────────────────────────────────────────────────
     const isTeachIntent = TEACH_RE.test(text.trim()) && !SCHEDULE_RE.test(text);
     if (isTeachIntent) {
@@ -1413,6 +1457,30 @@ export function ForgeAssistant() {
             {!isMobile && (
               <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />
             )}
+            {/* Whiteboard button */}
+            <button
+              onClick={() => {
+                if (showWhiteboard && whiteboardLesson) {
+                  // Re-open existing lesson
+                  setShowWhiteboard(true);
+                } else {
+                  // Enter pending-whiteboard mode — next send triggers lesson generation
+                  setPendingWhiteboard((p) => !p);
+                }
+              }}
+              className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
+              style={{
+                border:     pendingWhiteboard || showWhiteboard ? "1px solid rgba(240,194,127,0.45)" : "1px solid var(--border)",
+                background: pendingWhiteboard || showWhiteboard ? "rgba(240,194,127,0.08)" : undefined,
+              }}
+              aria-label="Open whiteboard lesson"
+              title={pendingWhiteboard ? "Whiteboard mode on — type a topic and send" : "Start whiteboard lesson"}
+            >
+              {wbLoading
+                ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: "#f0c27f" }} />
+                : <GraduationCap className="h-3.5 w-3.5" style={{ color: pendingWhiteboard || showWhiteboard ? "#f0c27f" : undefined }} />}
+            </button>
+
             <button
               onClick={() => setMinimized((m) => !m)}
               className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
@@ -1778,6 +1846,24 @@ export function ForgeAssistant() {
             onChange={handleFileSelect}
           />
 
+          {/* Whiteboard pending banner */}
+          {pendingWhiteboard && (
+            <div
+              className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-xl text-[11px]"
+              style={{
+                background: "rgba(240,194,127,0.07)",
+                border:     "1px solid rgba(240,194,127,0.22)",
+                color:      "#f0c27f",
+              }}
+            >
+              <GraduationCap className="h-3 w-3 shrink-0" />
+              <span className="flex-1">Whiteboard mode — type a topic and send to open a lesson</span>
+              <button onClick={() => setPendingWhiteboard(false)} className="opacity-50 hover:opacity-100 transition-opacity">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          )}
+
           {/* Attachment chip — shown when a file is staged */}
           {attachment && (
             <div className="flex items-center gap-1.5 mb-2 px-1">
@@ -1982,6 +2068,14 @@ export function ForgeAssistant() {
 
         </>}
       </div>
+
+      {/* Whiteboard overlay */}
+      {showWhiteboard && whiteboardLesson && (
+        <ForgeWhiteboard
+          lesson={whiteboardLesson}
+          onClose={() => setShowWhiteboard(false)}
+        />
+      )}
     </>
   );
 }
