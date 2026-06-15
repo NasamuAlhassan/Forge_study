@@ -347,7 +347,8 @@ Teaching rules:
 - Keep messages SHORT — never dump everything at once. One concept per message.
 - After all concepts are covered, offer: "Want a quick 3-question quiz to lock this in?"
 - Never start with "Great question!" or any filler. Jump straight in.
-- Write like you're texting a friend who wants to actually understand, not pass a test.`;
+- Write like you're texting a friend who wants to actually understand, not pass a test.
+- For any math expressions use $...$ for inline and $$...$$ for display — never \(...\) or \[...\].`;
 
 export interface SearchResult {
   content: string;

@@ -4,6 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { getRouter } from "./router";
 import "./styles/glass.css";
 import "./styles.css";
+import "katex/dist/katex.min.css";
 
 const router = getRouter();
 

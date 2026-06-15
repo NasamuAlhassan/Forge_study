@@ -13,6 +13,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
@@ -189,6 +192,46 @@ const GREETING: Message = {
   content:
     "Hi! I'm Forge AI. Ask me anything about your schedule, or tell me what you'd like to add or change.",
 };
+
+// ─── Math-aware message renderer ─────────────────────────────────────────────
+
+function normalizeMath(text: string): string {
+  // Convert LaTeX delimiters \(...\) and \[...\] to $ and $$ for remark-math
+  return text
+    .replace(/\\\(/g, "$")
+    .replace(/\\\)/g, "$")
+    .replace(/\\\[/g, "$$")
+    .replace(/\\\]/g, "$$");
+}
+
+function MessageContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        p: ({ children }) => <p className="mb-1.5 last:mb-0 leading-relaxed">{children}</p>,
+        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        em: ({ children }) => <em className="italic">{children}</em>,
+        ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-1.5 pl-1">{children}</ol>,
+        ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-1.5 pl-1">{children}</ul>,
+        li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+        code: ({ children }) => (
+          <code className="px-1 py-0.5 rounded text-[11px] font-mono" style={{ background: "rgba(255,255,255,0.10)" }}>
+            {children}
+          </code>
+        ),
+        pre: ({ children }) => (
+          <pre className="my-1.5 p-2 rounded-xl text-[11px] font-mono overflow-x-auto" style={{ background: "rgba(0,0,0,0.25)" }}>
+            {children}
+          </pre>
+        ),
+      }}
+    >
+      {normalizeMath(content)}
+    </ReactMarkdown>
+  );
+}
 
 // ─── Loading dots ─────────────────────────────────────────────────────────────
 
@@ -1055,8 +1098,8 @@ export function ForgeAssistant() {
                 )}
                 <div
                   className={cn(
-                    "max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap",
-                    m.role === "user" ? "rounded-tr-sm relative overflow-hidden" : "rounded-tl-sm",
+                    "max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed",
+                    m.role === "user" ? "rounded-tr-sm relative overflow-hidden whitespace-pre-wrap" : "rounded-tl-sm",
                   )}
                   style={
                     m.role === "user"
@@ -1080,7 +1123,9 @@ export function ForgeAssistant() {
                   {m.role === "user" && (
                     <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none rounded-2xl" />
                   )}
-                  <span className="relative">{m.content}</span>
+                  <span className="relative">
+                    {m.role === "assistant" ? <MessageContent content={m.content} /> : m.content}
+                  </span>
                 </div>
               </div>
 
