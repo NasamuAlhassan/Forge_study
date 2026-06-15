@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchAndTeach } from "@/lib/forge-ai";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent } from "@/lib/forge-ai";
 import type { ChatMessage } from "@/lib/forge-ai";
 import {
   buildAssistantDateContext,
@@ -60,6 +60,7 @@ interface Message {
   id: number;
   role: Role;
   content: string;
+  sources?: string[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -216,6 +217,8 @@ export function ForgeAssistant() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [searchStep, setSearchStep] = useState<"searching" | "composing" | null>(null);
+  const [searchTopic, setSearchTopic] = useState("");
   const [pendingActions, setPendingActions] = useState<ForgeAction[]>([]);
   const [pendingActionsTotal, setPendingActionsTotal] = useState(0);
 
@@ -621,6 +624,8 @@ export function ForgeAssistant() {
     if (isTeachIntent) {
       const topic = extractTopic(text) || text;
       setSearching(true);
+      setSearchTopic(topic);
+      setSearchStep("searching");
       try {
         const history: ChatMessage[] = [...messages, userMsg]
           .filter((m) => m.id !== 0)
@@ -628,13 +633,31 @@ export function ForgeAssistant() {
             role: m.role === "user" ? ("user" as const) : ("model" as const),
             parts: m.content,
           }));
-        const { text: reply } = await searchAndTeach(
-          topic,
+
+        // Agent 1 — Perplexity Sonar: search the web
+        let webContent = "";
+        let sources: string[] = [];
+        try {
+          const result = await searchWeb(topic);
+          webContent = result.content;
+          sources = result.sources;
+        } catch { /* fall through — teach from training data */ }
+
+        // Agent 2 — GPT-4o-mini: compose the lesson
+        setSearchStep("composing");
+        const { text: reply } = await teachFromContent(
+          webContent,
           history,
           buildAssistantDateContext(new Date()),
           forgeMemory || undefined,
         );
-        setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
+
+        setMessages((prev) => [...prev, {
+          id: Date.now(),
+          role: "assistant",
+          content: reply,
+          sources: sources.length > 0 ? sources : undefined,
+        }]);
         if (speakReply && voiceModeRef.current) speakText(reply);
       } catch {
         const errMsg = "Couldn't reach the search agent right now — try again in a moment.";
@@ -642,6 +665,8 @@ export function ForgeAssistant() {
         if (speakReply && voiceModeRef.current) speakText(errMsg);
       } finally {
         setSearching(false);
+        setSearchStep(null);
+        setSearchTopic("");
         setLoading(false);
       }
       return;
@@ -1015,57 +1040,81 @@ export function ForgeAssistant() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0" style={{ background: "transparent" }}>
           {messages.map((m) => (
-            <div
-              key={m.id}
-              className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}
-            >
-              {m.role === "assistant" && (
+            <div key={m.id} className={cn("flex flex-col", m.role === "user" ? "items-end" : "items-start")}>
+              <div className={cn("flex", m.role === "user" ? "justify-end" : "justify-start") + " w-full"}>
+                {m.role === "assistant" && (
+                  <div
+                    className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mr-2 mt-1"
+                    style={{
+                      background: "var(--glass-bg-btn-dark)",
+                      border:     "1px solid var(--glass-border-dark)",
+                    }}
+                  >
+                    <Sparkles className="h-[9px] w-[9px] opacity-70" style={{ color: "var(--foreground)" }} aria-hidden="true" />
+                  </div>
+                )}
                 <div
-                  className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mr-2 mt-1"
-                  style={{
-                    background: "var(--glass-bg-btn-dark)",
-                    border:     "1px solid var(--glass-border-dark)",
-                  }}
+                  className={cn(
+                    "max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap",
+                    m.role === "user" ? "rounded-tr-sm relative overflow-hidden" : "rounded-tl-sm",
+                  )}
+                  style={
+                    m.role === "user"
+                      ? {
+                          background:           "var(--glass-bg-active-dark)",
+                          backdropFilter:       "blur(var(--glass-blur))",
+                          WebkitBackdropFilter: "blur(var(--glass-blur))",
+                          border:               "1px solid var(--glass-border-dark)",
+                          boxShadow:            "0 1px 0 rgba(255,255,255,0.12) inset",
+                          color:                "var(--foreground)",
+                        }
+                      : {
+                          background:           "var(--glass-bg-dark)",
+                          backdropFilter:       "blur(var(--glass-blur))",
+                          WebkitBackdropFilter: "blur(var(--glass-blur))",
+                          border:               "1px solid var(--glass-border-dark)",
+                          color:                "var(--foreground)",
+                        }
+                  }
                 >
-                  <Sparkles className="h-[9px] w-[9px] opacity-70" style={{ color: "var(--foreground)" }} aria-hidden="true" />
+                  {m.role === "user" && (
+                    <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none rounded-2xl" />
+                  )}
+                  <span className="relative">{m.content}</span>
+                </div>
+              </div>
+
+              {/* Sources — shown below assistant teaching messages */}
+              {m.role === "assistant" && m.sources && m.sources.length > 0 && (
+                <div className="ml-7 mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-wider">Sources</span>
+                  {m.sources.map((url, i) => {
+                    let host = url;
+                    try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { /* keep raw */ }
+                    return (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] transition-colors duration-150"
+                        style={{ color: "oklch(0.65 0.16 255 / 0.65)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "oklch(0.72 0.18 255)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "oklch(0.65 0.16 255 / 0.65)")}
+                      >
+                        [{i + 1}] {host}
+                      </a>
+                    );
+                  })}
                 </div>
               )}
-              <div
-                className={cn(
-                  "max-w-[78%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed whitespace-pre-wrap",
-                  m.role === "user" ? "rounded-tr-sm relative overflow-hidden" : "rounded-tl-sm",
-                )}
-                style={
-                  m.role === "user"
-                    ? {
-                        background:          "var(--glass-bg-active-dark)",
-                        backdropFilter:      "blur(var(--glass-blur))",
-                        WebkitBackdropFilter:"blur(var(--glass-blur))",
-                        border:              "1px solid var(--glass-border-dark)",
-                        boxShadow:           "0 1px 0 rgba(255,255,255,0.12) inset",
-                        color:               "var(--foreground)",
-                      }
-                    : {
-                        background:          "var(--glass-bg-dark)",
-                        backdropFilter:      "blur(var(--glass-blur))",
-                        WebkitBackdropFilter:"blur(var(--glass-blur))",
-                        border:              "1px solid var(--glass-border-dark)",
-                        color:               "var(--foreground)",
-                      }
-                }
-              >
-                {m.role === "user" && (
-                  <span className="absolute inset-0 bg-gradient-to-br from-white/15 to-transparent pointer-events-none rounded-2xl" />
-                )}
-                <span className="relative">{m.content}</span>
-              </div>
             </div>
           ))}
 
           {loading && (
-            <div className="flex justify-start items-end gap-2">
+            <div className="flex justify-start items-start gap-2">
               <div
-                className="h-5 w-5 rounded-lg grid place-items-center shrink-0"
+                className="h-5 w-5 rounded-lg grid place-items-center shrink-0 mt-0.5"
                 style={{
                   background: "var(--glass-bg-btn-dark)",
                   border:     "1px solid var(--glass-border-dark)",
@@ -1076,24 +1125,53 @@ export function ForgeAssistant() {
                   : <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
                 }
               </div>
-              <div
-                className="rounded-2xl rounded-tl-sm px-3 py-2.5"
-                style={{
-                  background:          "var(--glass-bg-dark)",
-                  backdropFilter:      "blur(var(--glass-blur))",
-                  WebkitBackdropFilter:"blur(var(--glass-blur))",
-                  border:              "1px solid var(--glass-border-dark)",
-                }}
-              >
-                {searching ? (
-                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1.5 px-0.5">
-                    <Search className="h-3 w-3 shrink-0" aria-hidden="true" />
-                    Searching the web…
-                  </p>
-                ) : (
+
+              {searching ? (
+                /* ── Animated search steps ── */
+                <div
+                  className="rounded-2xl rounded-tl-sm px-3 py-2.5 space-y-2"
+                  style={{
+                    background:           "var(--glass-bg-dark)",
+                    backdropFilter:       "blur(var(--glass-blur))",
+                    WebkitBackdropFilter: "blur(var(--glass-blur))",
+                    border:               "1px solid var(--glass-border-dark)",
+                    minWidth: 200,
+                  }}
+                >
+                  {/* Step 1 — Search */}
+                  <div className="flex items-center gap-2">
+                    {searchStep === "searching" ? (
+                      <Loader2 className="h-3 w-3 shrink-0 animate-spin text-muted-foreground/60" />
+                    ) : (
+                      <Check className="h-3 w-3 shrink-0" style={{ color: "oklch(0.72 0.17 140)" }} />
+                    )}
+                    <span className="text-[11px] text-muted-foreground/80">
+                      {searchStep === "searching"
+                        ? `Searching for "${searchTopic}"…`
+                        : `Searched "${searchTopic}"`}
+                    </span>
+                  </div>
+                  {/* Step 2 — Compose */}
+                  {searchStep === "composing" && (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 shrink-0 animate-spin text-muted-foreground/60" />
+                      <span className="text-[11px] text-muted-foreground/80">Composing your lesson…</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className="rounded-2xl rounded-tl-sm px-3 py-2.5"
+                  style={{
+                    background:           "var(--glass-bg-dark)",
+                    backdropFilter:       "blur(var(--glass-blur))",
+                    WebkitBackdropFilter: "blur(var(--glass-blur))",
+                    border:               "1px solid var(--glass-border-dark)",
+                  }}
+                >
                   <TypingDots />
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 

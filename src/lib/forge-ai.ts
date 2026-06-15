@@ -334,8 +334,8 @@ export async function sendForgeMessage(
 
 // ── Teaching pipeline ─────────────────────────────────────────────────────────
 // Two-agent flow:
-//   Agent 1 — Perplexity Sonar: searches the web and returns synthesised content
-//   Agent 2 — GPT-4o-mini: takes that content and delivers a structured lesson
+//   searchWeb()        — Perplexity Sonar: live web search → content + sources
+//   teachFromContent() — GPT-4o-mini: structures the lesson from that content
 
 const TEACH_SYSTEM = `You are Forge — a patient, engaging teacher who speaks like a smart friend, not a textbook.
 
@@ -349,40 +349,48 @@ Teaching rules:
 - Never start with "Great question!" or any filler. Jump straight in.
 - Write like you're texting a friend who wants to actually understand, not pass a test.`;
 
-export async function searchAndTeach(
-  topic: string,
+export interface SearchResult {
+  content: string;
+  sources: string[];
+}
+
+export async function searchWeb(query: string): Promise<SearchResult> {
+  const key = getORKey();
+  const res = await fetch(`${OR_BASE}/chat/completions`, {
+    method: "POST",
+    headers: orHeaders(key),
+    body: JSON.stringify({
+      model: "perplexity/sonar",
+      messages: [{
+        role: "user",
+        content: `Give me comprehensive, accurate information about: "${query}". Cover definitions, how it works, key concepts, and real-world examples. Be thorough and factual.`,
+      }],
+      max_tokens: 900,
+    }),
+  });
+  if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+  const data = await res.json() as {
+    choices: { message: { content: string } }[];
+    citations?: string[];
+  };
+  return {
+    content: data.choices[0].message.content,
+    sources: (data.citations ?? []).slice(0, 5),
+  };
+}
+
+export async function teachFromContent(
+  webContent: string,
   history: ChatMessage[],
   dateContext: string,
   memory?: string,
 ): Promise<ForgeResponse> {
   const key = getORKey();
 
-  // ── Agent 1: Perplexity Sonar — web search ────────────────────────────────
-  let webContent = "";
-  try {
-    const sr = await fetch(`${OR_BASE}/chat/completions`, {
-      method: "POST",
-      headers: orHeaders(key),
-      body: JSON.stringify({
-        model: "perplexity/sonar",
-        messages: [{
-          role: "user",
-          content: `Give me comprehensive, accurate information about: "${topic}". Cover definitions, how it works, key concepts, and real-world examples. Be thorough and factual.`,
-        }],
-        max_tokens: 900,
-      }),
-    });
-    if (sr.ok) {
-      const sd = await sr.json() as { choices: { message: { content: string } }[] };
-      webContent = sd.choices[0].message.content;
-    }
-  } catch { /* fall through — Agent 2 will use training knowledge */ }
-
-  // ── Agent 2: GPT-4o-mini — teaching ──────────────────────────────────────
   const system = [
     TEACH_SYSTEM,
     webContent
-      ? `\nWEB RESEARCH (use this as your primary source material):\n${webContent}`
+      ? `\nWEB RESEARCH (use this as your primary source):\n${webContent}`
       : "\nUse your training knowledge to teach this topic.",
     `\n${dateContext}`,
     memory ? `\nUSER MEMORY:\n${memory}` : "",
