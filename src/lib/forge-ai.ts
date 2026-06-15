@@ -608,6 +608,129 @@ export async function generateLesson(
   return extractLessonJson(data.choices[0].message.content);
 }
 
+// ── Live tutor — streaming lesson ─────────────────────────────────────────────
+
+const LIVE_TUTOR_SYSTEM = `You are Forge, an enthusiastic and caring live teacher conducting a real-time interactive lesson.
+
+TEACHING STYLE:
+- Speak naturally and conversationally, like a real teacher sitting with a student
+- Use first-person present tense: "Now I'm going to show you...", "Let's look at...", "Here's the key idea..."
+- Build understanding step-by-step — don't dump everything at once
+- React to what you just explained: "See how that works?", "Notice this part..."
+- Check in naturally: "Does that make sense?", "Stay with me here..."
+- Be warm, encouraging, and clear. Vary your sentence length. Use analogies.
+
+BOARD COMMANDS — embed these INLINE in your speech to control the writing board:
+[B:clear] — erase the board for a new section
+[B:title|Section Name] — write a bold heading on the board
+[B:write|key point or short definition] — write a line on the board
+[B:math|latex_expression] — render a math formula, e.g. [B:math|a^2 + b^2 = c^2]
+[B:diagram|mermaid_code] — draw a Mermaid diagram (flowchart LR or graph TD only, keep short)
+[B:space] — add a blank line for breathing room
+
+RULES FOR BOARD COMMANDS:
+- Write on the board AS you speak, not before or after
+- Each [B:write|...] should match what you're saying at that exact moment
+- Build the board gradually — don't write everything at once
+- Use [B:clear] when genuinely moving to a new section
+- For multi-step derivations, one [B:write|...] per step
+
+LESSON FLOW:
+1. Open: "Welcome to class! Today we're going to learn about [topic]." — just talk, no board yet
+2. Big picture: Explain what the topic is and why it matters
+3. Core concepts: Teach each concept, writing key points as you go
+4. Examples: Work through examples step by step, showing each step on the board
+5. Wrap up naturally: Summarise what was covered
+6. Close: "Feel free to ask me anything if something's unclear!"
+
+RESPONDING TO STUDENT QUESTIONS:
+- Acknowledge: "Great question! Let me show you that..."
+- Clear the board: [B:clear][B:title|Let me explain: topic]
+- Work through the answer using the board
+- Then resume: "Now, back to where we were..."
+
+LENGTH: Teach the full topic thoroughly. This is a live lesson — don't stop short.`;
+
+export async function streamLiveLesson(
+  opts: {
+    topic: string;
+    conversationHistory: { role: "user" | "assistant"; content: string }[];
+    webContent: string;
+    memory?: string;
+  },
+  onChunk: (chunk: string) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  const key = getORKey();
+
+  const system = [
+    LIVE_TUTOR_SYSTEM,
+    opts.webContent
+      ? `\nSOURCE MATERIAL (teach from this naturally — don't recite verbatim):\n${opts.webContent.slice(0, 3000)}`
+      : "",
+    opts.memory ? `\nSTUDENT CONTEXT:\n${opts.memory}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const messages =
+    opts.conversationHistory.length === 0
+      ? [
+          { role: "system" as const, content: system },
+          { role: "user" as const, content: `Please teach me about: ${opts.topic}` },
+        ]
+      : [
+          { role: "system" as const, content: system },
+          ...opts.conversationHistory.map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })),
+        ];
+
+  const res = await fetch(`${OR_BASE}/chat/completions`, {
+    method: "POST",
+    headers: orHeaders(key),
+    signal,
+    body: JSON.stringify({
+      model: "openai/gpt-4o-mini",
+      messages,
+      stream: true,
+      temperature: 0.75,
+      max_tokens: 2500,
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Live tutor stream ${res.status}`);
+  if (!res.body) throw new Error("No response body");
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const text = decoder.decode(value, { stream: true });
+      for (const line of text.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("data: ")) continue;
+        const data = trimmed.slice(6);
+        if (data === "[DONE]") return;
+        try {
+          const parsed = JSON.parse(data) as {
+            choices: { delta: { content?: string }; finish_reason?: string | null }[];
+          };
+          const delta = parsed.choices[0]?.delta?.content;
+          if (delta) onChunk(delta);
+          if (parsed.choices[0]?.finish_reason === "stop") return;
+        } catch { /* skip malformed SSE lines */ }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   const key = getGroqKey();
 

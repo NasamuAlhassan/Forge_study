@@ -27,9 +27,9 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent, generateImageUrl, analyzeWithVision, generateLesson } from "@/lib/forge-ai";
-import type { ChatMessage, TutoringLesson } from "@/lib/forge-ai";
-import { ForgeWhiteboard } from "@/components/dashboard/ForgeWhiteboard";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchWeb, teachFromContent, generateImageUrl, analyzeWithVision } from "@/lib/forge-ai";
+import type { ChatMessage } from "@/lib/forge-ai";
+import { ForgeLiveTutor } from "@/components/dashboard/ForgeLiveTutor";
 import {
   buildAssistantDateContext,
   buildEventInsert,
@@ -451,11 +451,12 @@ export function ForgeAssistant() {
   // Minimized — shows only the header bar
   const [minimized, setMinimized] = useState(false);
 
-  // Whiteboard lesson state
-  const [whiteboardLesson,  setWhiteboardLesson]  = useState<TutoringLesson | null>(null);
-  const [showWhiteboard,    setShowWhiteboard]    = useState(false);
-  const [pendingWhiteboard, setPendingWhiteboard] = useState(false);
-  const [wbLoading,         setWbLoading]         = useState(false);
+  // Live tutor state
+  const [liveTutorTopic,      setLiveTutorTopic]      = useState<string | null>(null);
+  const [liveTutorWebContent, setLiveTutorWebContent] = useState<string>("");
+  const [showWhiteboard,      setShowWhiteboard]      = useState(false);
+  const [pendingWhiteboard,   setPendingWhiteboard]   = useState(false);
+  const [wbLoading,           setWbLoading]           = useState(false);
 
   // Draggable position for the bubble button
   const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
@@ -952,7 +953,7 @@ export function ForgeAssistant() {
       return;
     }
 
-    // ── Whiteboard lesson pipeline ─────────────────────────────────────────
+    // ── Live tutor pipeline ────────────────────────────────────────────────
     const isWhiteboardIntent = WHITEBOARD_RE.test(text) || pendingWhiteboard;
     if (isWhiteboardIntent) {
       setPendingWhiteboard(false);
@@ -961,24 +962,24 @@ export function ForgeAssistant() {
       setMessages((prev) => [...prev, {
         id: introId,
         role: "assistant",
-        content: `Opening whiteboard for **${topic}**… Searching and building your lesson — this takes a moment.`,
+        content: `Getting ready to teach **${topic}**… gathering materials now.`,
       }]);
       setWbLoading(true);
       setLoading(false);
       try {
         const { content: webContent } = await searchWeb(topic).catch(() => ({ content: "", sources: [] }));
-        const lesson = await generateLesson(topic, webContent, forgeMemory || undefined);
-        setWhiteboardLesson(lesson);
+        setLiveTutorTopic(topic);
+        setLiveTutorWebContent(webContent);
         setShowWhiteboard(true);
         setMessages((prev) => prev.map((m) =>
           m.id === introId
-            ? { ...m, content: `Lesson ready! The whiteboard is now open. Use the sidebar to navigate sections, Space to pause, and click any completed section to re-explain it.` }
+            ? { ...m, content: `Live lesson starting! Forge is ready to teach you about **${topic}**. You can interrupt at any time by typing a question.` }
             : m,
         ));
       } catch {
         setMessages((prev) => prev.map((m) =>
           m.id === introId
-            ? { ...m, content: "Couldn't generate the lesson right now — try again in a moment." }
+            ? { ...m, content: "Couldn't start the lesson right now — try again in a moment." }
             : m,
         ));
       } finally {
@@ -1460,7 +1461,7 @@ export function ForgeAssistant() {
             {/* Whiteboard button */}
             <button
               onClick={() => {
-                if (showWhiteboard && whiteboardLesson) {
+                if (showWhiteboard && liveTutorTopic) {
                   // Re-open existing lesson
                   setShowWhiteboard(true);
                 } else {
@@ -2069,10 +2070,12 @@ export function ForgeAssistant() {
         </>}
       </div>
 
-      {/* Whiteboard overlay */}
-      {showWhiteboard && whiteboardLesson && (
-        <ForgeWhiteboard
-          lesson={whiteboardLesson}
+      {/* Live tutor overlay */}
+      {showWhiteboard && liveTutorTopic && (
+        <ForgeLiveTutor
+          topic={liveTutorTopic}
+          webContent={liveTutorWebContent}
+          memory={forgeMemory || undefined}
           onClose={() => setShowWhiteboard(false)}
         />
       )}
