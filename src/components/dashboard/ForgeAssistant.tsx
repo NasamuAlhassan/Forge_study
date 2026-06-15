@@ -29,23 +29,6 @@ import {
 } from "@/lib/forge-ai-actions";
 import { supabase } from "@/integrations/supabase/client";
 import type { EventBlock, Subject } from "@/lib/demo-data";
-import { DEMO_MODE } from "@/lib/demo-data";
-
-// ─── Demo-mode scripted replies (no API key required) ─────────────────────────
-function getDemoReply(text: string): string {
-  const t = text.toLowerCase();
-  if (/\b(hi|hey|hello|yo|sup)\b/.test(t))
-    return "Hey! I'm Forge, your study assistant. Ask me about your schedule, study sessions, or anything on your mind.";
-  if (/schedule|class|lecture|timetable/.test(t))
-    return "Your schedule looks solid — you have a good spread of classes through the week. Want me to add some study blocks around them?";
-  if (/study|revision|exam|test|quiz/.test(t))
-    return "For harder subjects I'd aim for 90-minute sessions in the morning when focus peaks. Want me to map that out for you?";
-  if (/add|create|block|book/.test(t))
-    return "In the live version I'd drop that into your calendar immediately. Explore the Calendar tab to see how your schedule looks right now.";
-  if (/streak|progress|stats/.test(t))
-    return "Check the Overview tab — your streak and study stats are tracked there automatically every time you visit.";
-  return "The full Forge AI connects live and can reschedule events, answer questions about your courses, and personalise advice. Explore the dashboard to see everything that's set up for you!";
-}
 
 // ─── Web Speech API minimal typings ──────────────────────────────────────────
 interface SRResult { readonly transcript: string; readonly isFinal: boolean; }
@@ -588,16 +571,6 @@ export function ForgeAssistant() {
     const userMsg: Message = { id: Date.now(), role: "user", content: text };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
-
-    // ── Demo mode: scripted reply, no API call ─────────────────────────────
-    if (DEMO_MODE) {
-      await new Promise<void>((r) => setTimeout(r, 700));
-      const reply = getDemoReply(text);
-      setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
-      if (speakReply && voiceModeRef.current) speakText(reply);
-      setLoading(false);
-      return;
-    }
 
     try {
       const history: ChatMessage[] = [...messages, userMsg]
