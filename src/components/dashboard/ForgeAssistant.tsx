@@ -52,6 +52,10 @@ type SRCtor = new () => SR;
 
 const PANEL_W = 360;
 const PANEL_H = 520;
+const MIN_W = 280;
+const MIN_H = 380;
+const MAX_W = 720;
+const MAX_H = 900;
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -269,6 +273,11 @@ export function ForgeAssistant() {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const dragging = useRef(false);
   const dragOffset = useRef({ dx: 0, dy: 0 });
+
+  // Resizable panel size
+  const [panelSize, setPanelSize] = useState({ w: PANEL_W, h: PANEL_H });
+  const resizing = useRef(false);
+  const resizeStart = useRef({ mx: 0, my: 0, w: PANEL_W, h: PANEL_H });
 
   // Draggable position for the bubble button
   const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
@@ -522,10 +531,11 @@ export function ForgeAssistant() {
   useEffect(() => {
     if (open && pos === null) {
       setPos({
-        x: Math.max(0, window.innerWidth - PANEL_W - 24),
-        y: Math.max(0, window.innerHeight - PANEL_H - 24),
+        x: Math.max(0, window.innerWidth - panelSize.w - 24),
+        y: Math.max(0, window.innerHeight - panelSize.h - 24),
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, pos]);
 
   // Auto-scroll to latest message
@@ -564,33 +574,49 @@ export function ForgeAssistant() {
 
   useEffect(() => {
     const onMouseMove = (e: MouseEvent) => {
+      if (resizing.current) {
+        const dw = e.clientX - resizeStart.current.mx;
+        const dh = e.clientY - resizeStart.current.my;
+        setPanelSize({
+          w: Math.max(MIN_W, Math.min(MAX_W, resizeStart.current.w + dw)),
+          h: Math.max(MIN_H, Math.min(MAX_H, resizeStart.current.h + dh)),
+        });
+        return;
+      }
       if (!dragging.current) return;
-      setPos({
-        x: Math.max(0, Math.min(window.innerWidth - PANEL_W, e.clientX - dragOffset.current.dx)),
-        y: Math.max(0, Math.min(window.innerHeight - PANEL_H, e.clientY - dragOffset.current.dy)),
+      setPanelSize((sz) => {
+        setPos({
+          x: Math.max(0, Math.min(window.innerWidth - sz.w, e.clientX - dragOffset.current.dx)),
+          y: Math.max(0, Math.min(window.innerHeight - sz.h, e.clientY - dragOffset.current.dy)),
+        });
+        return sz;
       });
     };
     const onTouchMove = (e: TouchEvent) => {
       if (!dragging.current) return;
       const t = e.touches[0];
-      setPos({
-        x: Math.max(0, Math.min(window.innerWidth - PANEL_W, t.clientX - dragOffset.current.dx)),
-        y: Math.max(0, Math.min(window.innerHeight - PANEL_H, t.clientY - dragOffset.current.dy)),
+      setPanelSize((sz) => {
+        setPos({
+          x: Math.max(0, Math.min(window.innerWidth - sz.w, t.clientX - dragOffset.current.dx)),
+          y: Math.max(0, Math.min(window.innerHeight - sz.h, t.clientY - dragOffset.current.dy)),
+        });
+        return sz;
       });
     };
-    const stopDrag = () => {
+    const stopAll = () => {
       dragging.current = false;
+      resizing.current = false;
     };
 
     document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", stopDrag);
+    document.addEventListener("mouseup", stopAll);
     document.addEventListener("touchmove", onTouchMove, { passive: true });
-    document.addEventListener("touchend", stopDrag);
+    document.addEventListener("touchend", stopAll);
     return () => {
       document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", stopDrag);
+      document.removeEventListener("mouseup", stopAll);
       document.removeEventListener("touchmove", onTouchMove);
-      document.removeEventListener("touchend", stopDrag);
+      document.removeEventListener("touchend", stopAll);
     };
   }, []);
 
@@ -1003,14 +1029,36 @@ export function ForgeAssistant() {
               }
             : {
                 ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
-                width: PANEL_W,
-                height: PANEL_H,
+                width: panelSize.w,
+                height: panelSize.h,
                 borderRadius: "24px",
                 backdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
                 WebkitBackdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
               }
         }
       >
+        {/* Resize handle — bottom-right corner (desktop only) */}
+        {!isMobile && (
+          <div
+            onMouseDown={(e) => {
+              resizing.current = true;
+              resizeStart.current = { mx: e.clientX, my: e.clientY, w: panelSize.w, h: panelSize.h };
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            className="absolute bottom-0 right-0 z-10 flex items-end justify-end p-2 cursor-nwse-resize"
+            style={{ width: 28, height: 28, touchAction: "none" }}
+            aria-hidden="true"
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
+              style={{ opacity: 0.35, color: "var(--foreground)" }}>
+              <circle cx="8.5" cy="8.5" r="1.1" />
+              <circle cx="5"   cy="8.5" r="1.1" />
+              <circle cx="8.5" cy="5"   r="1.1" />
+            </svg>
+          </div>
+        )}
+
         {/* Specular highlight — top-left light hit */}
         <div
           className="absolute inset-0 pointer-events-none"
