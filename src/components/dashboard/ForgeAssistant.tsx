@@ -77,6 +77,8 @@ interface Message {
   image?: { url: string; caption: string; source?: string };
   downloadable?: { filename: string; format: "pdf" | "md" };
   attachmentPreview?: { type: "image" | "file"; dataUrl?: string; filename: string };
+  /** Extracted text from an uploaded PDF/text file — persisted so follow-up turns can re-inject it */
+  fileContext?: string;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -899,6 +901,10 @@ export function ForgeAssistant() {
             dataUrl: currentAttachment.previewUrl,
           }
         : undefined,
+      // Persist extracted text so follow-up turns can still reference it
+      fileContext: currentAttachment && currentAttachment.type !== "image"
+        ? `=== UPLOADED FILE: ${currentAttachment.filename} ===\n${currentAttachment.data.slice(0, 6000)}\n=== END FILE ===`
+        : undefined,
     };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
@@ -998,11 +1004,13 @@ export function ForgeAssistant() {
           parts: m.content,
         }));
 
-      // Inject uploaded PDF/text as extra context
-      // At this point image attachments have already been handled via early return above
-      const fileCtx = currentAttachment
-        ? `\n\n=== UPLOADED FILE: ${currentAttachment.filename} ===\n${currentAttachment.data.slice(0, 6000)}\n=== END FILE ===`
-        : "";
+      // Inject uploaded PDF/text as extra context.
+      // Image attachments are handled via early return above.
+      // For follow-up questions we re-use fileContext stored on the original user message.
+      const recentFileCtx =
+        userMsg.fileContext ??
+        [...messages].reverse().find((m) => m.role === "user" && m.fileContext)?.fileContext;
+      const fileCtx = recentFileCtx ? `\n\n${recentFileCtx}` : "";
 
       // When in voice mode, inject personality-driven instructions
       const ctx = speakReply
