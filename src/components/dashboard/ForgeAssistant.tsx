@@ -6,6 +6,7 @@ import {
   Loader2,
   Mic,
   MicOff,
+  Search,
   Send,
   Sparkles,
   X,
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 import { useSchedule, broadcastScheduleUpdate } from "@/hooks/use-schedule";
 import { useAuth } from "@/hooks/use-auth";
 import { useVoicePersonality, buildVoiceContext, speedToRate } from "@/hooks/use-voice-personality";
-import { sendForgeMessage, transcribeAudio, isForgeConfigured } from "@/lib/forge-ai";
+import { sendForgeMessage, transcribeAudio, isForgeConfigured, searchAndTeach } from "@/lib/forge-ai";
 import type { ChatMessage } from "@/lib/forge-ai";
 import {
   buildAssistantDateContext,
@@ -148,6 +149,18 @@ function describeAction(action: ForgeAction, subjects: Subject[], events: EventB
   return `Remove "${target?.title ?? action.eventId}" from the schedule`;
 }
 
+// ─── Teaching intent detection ────────────────────────────────────────────────
+
+const TEACH_RE = /^(teach me|explain|what is|what are|what's|what was|what were|how does|how do|how is|how are|help me understand|i don't understand|i dont understand|break down|walk me through|tell me about|describe|why is|why are|why does|why do)/i;
+const SCHEDULE_RE = /schedule|timetable|calendar|add event|remove event|delete event|move event|edit event|my class|my lecture|my exam/i;
+
+function extractTopic(text: string): string {
+  return text
+    .replace(/^(teach me (about)?|explain( me| what| how)?|what (is|are|was|were)|what's|how (does|do|is|are|was|were)|help me understand( about)?|i (don't|dont) understand|break (down|it down)|walk me through|tell me about|describe|why (is|are|does|do))\s*/i, "")
+    .replace(/[?.]$/, "")
+    .trim();
+}
+
 // ─── Offline / unconfigured fallback ─────────────────────────────────────────
 
 function getFallbackReply(text: string): string {
@@ -202,6 +215,7 @@ export function ForgeAssistant() {
   const [messages, setMessages] = useState<Message[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [pendingActions, setPendingActions] = useState<ForgeAction[]>([]);
   const [pendingActionsTotal, setPendingActionsTotal] = useState(0);
 
@@ -599,6 +613,37 @@ export function ForgeAssistant() {
       setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
       if (speakReply && voiceModeRef.current) speakText(reply);
       setLoading(false);
+      return;
+    }
+
+    // ── Teaching pipeline ──────────────────────────────────────────────────
+    const isTeachIntent = TEACH_RE.test(text.trim()) && !SCHEDULE_RE.test(text);
+    if (isTeachIntent) {
+      const topic = extractTopic(text) || text;
+      setSearching(true);
+      try {
+        const history: ChatMessage[] = [...messages, userMsg]
+          .filter((m) => m.id !== 0)
+          .map((m) => ({
+            role: m.role === "user" ? ("user" as const) : ("model" as const),
+            parts: m.content,
+          }));
+        const { text: reply } = await searchAndTeach(
+          topic,
+          history,
+          buildAssistantDateContext(new Date()),
+          forgeMemory || undefined,
+        );
+        setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: reply }]);
+        if (speakReply && voiceModeRef.current) speakText(reply);
+      } catch {
+        const errMsg = "Couldn't reach the search agent right now — try again in a moment.";
+        setMessages((prev) => [...prev, { id: Date.now(), role: "assistant", content: errMsg }]);
+        if (speakReply && voiceModeRef.current) speakText(errMsg);
+      } finally {
+        setSearching(false);
+        setLoading(false);
+      }
       return;
     }
 
@@ -1026,7 +1071,10 @@ export function ForgeAssistant() {
                   border:     "1px solid var(--glass-border-dark)",
                 }}
               >
-                <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
+                {searching
+                  ? <Search className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
+                  : <Sparkles className="h-[9px] w-[9px] text-white/70" aria-hidden="true" />
+                }
               </div>
               <div
                 className="rounded-2xl rounded-tl-sm px-3 py-2.5"
@@ -1037,7 +1085,14 @@ export function ForgeAssistant() {
                   border:              "1px solid var(--glass-border-dark)",
                 }}
               >
-                <TypingDots />
+                {searching ? (
+                  <p className="text-[11px] text-muted-foreground/70 flex items-center gap-1.5 px-0.5">
+                    <Search className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    Searching the web…
+                  </p>
+                ) : (
+                  <TypingDots />
+                )}
               </div>
             </div>
           )}
