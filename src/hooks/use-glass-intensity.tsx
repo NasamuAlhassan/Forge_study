@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 const STORAGE_KEY = "forgeGlassIntensity";
-const DEFAULT_INTENSITY = 50;
+const DEFAULT_INTENSITY = 75;
 
 /**
  * Compute all glass CSS variables from a 0–100 intensity value.
@@ -25,14 +25,14 @@ export function applyGlassIntensity(intensity: number): void {
   const n = Math.max(0, Math.min(100, intensity));
   const root = document.documentElement;
 
-  // Blur: 36 px → 22 px → 8 px  (raised for stronger glass feel)
-  const blur = (Math.max(8, 36 - n * 0.28)).toFixed(1) + "px";
+  // Blur: 38 px → 30 px → 22 px — never drops below 22 for a strong glass feel
+  const blur = (Math.max(22, 38 - n * 0.16)).toFixed(1) + "px";
 
-  // ── Dark panel bg (blue tint): n=0 → 0.40, n=50 → 0.26, n=100 → 0.10 ─
-  const bgDark  = Math.max(0.10, 0.40 - n * 0.003);
+  // ── Dark panel bg (blue tint): n=0 → 0.52, n=50 → 0.40, n=100 → 0.28 ─
+  const bgDark  = Math.max(0.28, 0.52 - n * 0.0024);
 
-  // Light panel bg (white): n=0→0.80, n=50→0.625, n=100→0.45 — frosted glass over cream bg
-  const bgLight = Math.max(0.45, 0.80 - n * 0.0035);
+  // Light panel bg (white): n=0→0.85, n=50→0.72, n=100→0.60
+  const bgLight = Math.max(0.60, 0.85 - n * 0.0025);
 
   // ── Button tier ─────────────────────────────────────────────────────
   const bgBtnDark  = Math.min(0.60, bgDark  * 1.7);

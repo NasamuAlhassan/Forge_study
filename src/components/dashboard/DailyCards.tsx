@@ -1,4 +1,5 @@
-import { Sparkles, BookOpen, Bookmark, BookmarkCheck, X } from "lucide-react";
+import { useState } from "react";
+import { Sparkles, BookOpen, Bookmark, BookmarkCheck, X, ChevronDown } from "lucide-react";
 import { getTodayQuote } from "@/data/daily-quotes";
 import { getTodayVerse } from "@/data/daily-verses";
 import { useSavedItems, type SavedItem } from "@/hooks/use-saved-items";
@@ -73,6 +74,7 @@ interface DailyContentCardProps {
   type: "quote" | "verse";
   content: string;
   attribution: string;
+  explanation?: string;
   isSaved: boolean;
   onSave: () => void;
   onUnsave: () => void;
@@ -82,10 +84,12 @@ function DailyContentCard({
   type,
   content,
   attribution,
+  explanation,
   isSaved,
   onSave,
   onUnsave,
 }: DailyContentCardProps) {
+  const [expanded, setExpanded] = useState(false);
   const isQuote = type === "quote";
 
   const accentColor = isQuote ? "oklch(0.72 0.17 58)" : "oklch(0.68 0.16 285)";
@@ -176,6 +180,42 @@ function DailyContentCard({
           — {attribution}
         </p>
       </div>
+
+      {/* Explanation toggle */}
+      {explanation && (
+        <div
+          className="relative rounded-xl overflow-hidden transition-all duration-300"
+          style={{
+            background: `color-mix(in oklch, ${accentColor} 6%, transparent)`,
+            border: `1px solid ${accentBorder.replace("0.30)", "0.15)")}`,
+          }}
+        >
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 text-left"
+            aria-expanded={expanded}
+          >
+            <span className="text-[11px] font-semibold" style={{ color: accentColor }}>
+              {isQuote ? "What does this mean?" : "What does this verse mean?"}
+            </span>
+            <ChevronDown
+              className="h-3.5 w-3.5 shrink-0 transition-transform duration-200"
+              style={{
+                color: accentColor,
+                transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+              }}
+            />
+          </button>
+          {expanded && (
+            <p
+              className="px-3.5 pb-3.5 text-[12px] leading-relaxed"
+              style={{ color: "var(--foreground)", opacity: 0.78 }}
+            >
+              {explanation}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -254,6 +294,7 @@ export function DailyCards() {
           type="quote"
           content={todayQuote.text}
           attribution={todayQuote.author}
+          explanation={todayQuote.explanation}
           isSaved={isSaved(todayQuote.text)}
           onSave={handleSaveQuote}
           onUnsave={handleUnsaveQuote}
@@ -262,6 +303,7 @@ export function DailyCards() {
           type="verse"
           content={todayVerse.text}
           attribution={todayVerse.reference}
+          explanation={todayVerse.explanation}
           isSaved={isSaved(todayVerse.text)}
           onSave={handleSaveVerse}
           onUnsave={handleUnsaveVerse}

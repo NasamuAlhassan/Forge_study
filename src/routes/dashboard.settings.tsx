@@ -335,9 +335,9 @@ function SettingsPage() {
 
             {/* Three-point labels */}
             <div className="grid grid-cols-3 text-[11px] text-muted-foreground select-none mt-0.5">
-              <span className="text-left">❄️ Frost</span>
-              <span className="text-center opacity-70">◈ Neutral</span>
-              <span className="text-right">💧 Glass</span>
+              <span className="text-left">Frost</span>
+              <span className="text-center opacity-70">Neutral</span>
+              <span className="text-right">Glass</span>
             </div>
 
             {/* Tick marks under the slider */}
@@ -457,8 +457,8 @@ function SettingsPage() {
                 aria-label="Tone — 0 casual, 100 professional"
               />
               <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
-                <span className="text-left">😎 Casual</span>
-                <span className="text-right">💼 Professional</span>
+                <span className="text-left">Casual</span>
+                <span className="text-right">Professional</span>
               </div>
             </div>
 
@@ -488,8 +488,8 @@ function SettingsPage() {
                 aria-label="Expressiveness — 0 calm, 100 animated"
               />
               <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
-                <span className="text-left">🧊 Chill</span>
-                <span className="text-right">🎉 Animated</span>
+                <span className="text-left">Chill</span>
+                <span className="text-right">Animated</span>
               </div>
             </div>
 
@@ -519,8 +519,8 @@ function SettingsPage() {
                 aria-label="Reply length — 0 brief, 100 detailed"
               />
               <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
-                <span className="text-left">⚡ Ultra-brief</span>
-                <span className="text-right">📖 Detailed</span>
+                <span className="text-left">Ultra-brief</span>
+                <span className="text-right">Detailed</span>
               </div>
             </div>
 
@@ -550,8 +550,8 @@ function SettingsPage() {
                 aria-label="Speech speed — 0 slow, 100 fast"
               />
               <div className="grid grid-cols-2 text-[11px] text-muted-foreground select-none">
-                <span className="text-left">🐢 Slow</span>
-                <span className="text-right">⚡ Fast</span>
+                <span className="text-left">Slow</span>
+                <span className="text-right">Fast</span>
               </div>
             </div>
           </div>

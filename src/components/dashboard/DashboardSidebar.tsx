@@ -13,8 +13,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { useEffect, useMemo, useState } from "react";
-import { useSchedule } from "@/hooks/use-schedule";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useStreak } from "@/hooks/use-streak";
 
 const items = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -27,18 +28,8 @@ const items = [
 
 function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?: () => void }) {
   const path = useRouterState({ select: (r) => r.location.pathname });
-  const { events, hasData } = useSchedule();
-
-  const streak = useMemo(() => {
-    if (!hasData) return 0;
-    const todayDow = (new Date().getDay() + 6) % 7;
-    let count = 0;
-    for (let d = todayDow; d >= 0; d--) {
-      if (events.some((e) => e.day === d)) count++;
-      else break;
-    }
-    return count;
-  }, [events, hasData]);
+  const { user } = useAuth();
+  const { streak } = useStreak(user?.id);
 
   return (
     <div className="flex flex-col h-full">
@@ -115,8 +106,8 @@ function SidebarNav({ onNavigate, onFocus }: { onNavigate?: () => void; onFocus?
             {streak >= 5
               ? "You're on fire. Keep going."
               : streak > 0
-                ? "Good start. Show up tomorrow."
-                : "Add events to start your streak."}
+                ? "Good start. Visit again tomorrow."
+                : "Visit daily to build your streak."}
           </p>
           {/* Streak progress dots */}
           {streak > 0 && (
