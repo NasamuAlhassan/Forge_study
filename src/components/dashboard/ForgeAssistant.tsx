@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
   Check,
+  ChevronDown,
+  ChevronUp,
   GripHorizontal,
   Loader2,
   Mic,
@@ -278,6 +280,9 @@ export function ForgeAssistant() {
   const [panelSize, setPanelSize] = useState({ w: PANEL_W, h: PANEL_H });
   const resizing = useRef(false);
   const resizeStart = useRef({ mx: 0, my: 0, w: PANEL_W, h: PANEL_H });
+
+  // Minimized — shows only the header bar
+  const [minimized, setMinimized] = useState(false);
 
   // Draggable position for the bubble button
   const [bubblePos, setBubblePos] = useState<{ x: number; y: number } | null>(null);
@@ -1030,15 +1035,16 @@ export function ForgeAssistant() {
             : {
                 ...(pos ? { left: pos.x, top: pos.y } : { right: 24, bottom: 24 }),
                 width: panelSize.w,
-                height: panelSize.h,
+                height: minimized ? "auto" : panelSize.h,
                 borderRadius: "24px",
                 backdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
                 WebkitBackdropFilter: `blur(var(--glass-blur)) saturate(180%)`,
+                transition: "height 0.22s cubic-bezier(0.23,1,0.32,1)",
               }
         }
       >
-        {/* Resize handle — bottom-right corner (desktop only) */}
-        {!isMobile && (
+        {/* Resize handle — bottom-right corner (desktop only, hidden when minimized) */}
+        {!isMobile && !minimized && (
           <div
             onMouseDown={(e) => {
               resizing.current = true;
@@ -1116,6 +1122,14 @@ export function ForgeAssistant() {
               <GripHorizontal className="h-3.5 w-3.5 text-muted-foreground/25" aria-hidden="true" />
             )}
             <button
+              onClick={() => setMinimized((m) => !m)}
+              className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
+              style={{ border: "1px solid var(--border)" }}
+              aria-label={minimized ? "Restore assistant" : "Minimise assistant"}
+            >
+              {minimized ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+            </button>
+            <button
               onClick={() => setOpen(false)}
               className="h-7 w-7 rounded-xl grid place-items-center text-muted-foreground hover:text-foreground hover:bg-white/[0.08] active:scale-[0.93] transition-all duration-150"
               style={{
@@ -1127,6 +1141,9 @@ export function ForgeAssistant() {
             </button>
           </div>
         </div>
+
+        {/* Body — hidden when minimized */}
+        {!minimized && <>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0" style={{ background: "transparent" }}>
@@ -1583,6 +1600,8 @@ export function ForgeAssistant() {
             {voiceMode ? "Listening for your voice · tap the waveform to end" : "Enter to send · Shift+Enter for new line · tap waveform to talk"}
           </p>
         </div>
+
+        </>}
       </div>
     </>
   );
